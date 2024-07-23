@@ -28,9 +28,6 @@ COPY models/ /usr/paddle-ocr/models/
 # Copy requirements.txt
 COPY requirements.txt /usr/paddle-ocr/
 
-# Copy font
-COPY src/simfang.ttf /usr/paddle-ocr/
-
 
 RUN pip install --no-cache-dir -r requirements.txt
 

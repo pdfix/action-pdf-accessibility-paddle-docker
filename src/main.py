@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 
-from ocr import ocr
+from autotag import autotag
 
 
 def main():
@@ -37,7 +37,7 @@ def main():
 
     if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
         try:
-            ocr(input_file, output_file, args.name, args.key, args.lang)
+            autotag(input_file, output_file, args.name, args.key, args.lang)
         except Exception as e:
             sys.exit("Failed to run OCR: {}".format(e))
 
