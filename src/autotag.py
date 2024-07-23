@@ -86,11 +86,11 @@ def autotag_page(
         #img = Image.open(tmp.name + ".jpg")
         img = cv2.imread(tmp.name + ".jpg")
         result = ocr_engine(img)
-        save_structure_res(
-            result,
-            os.path.dirname(tmp.name + ".jpg"),
-            os.path.basename(tmp.name + ".jpg").split(".")[0],
-        )
+        #save_structure_res(
+        #    result,
+        #    os.path.dirname(tmp.name + ".jpg"),
+        #    os.path.basename(tmp.name + ".jpg").split(".")[0],
+        #)
 
         # Prepare page view for coordinate transformation
         page_width = page.GetCropBox()
