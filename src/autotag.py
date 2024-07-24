@@ -1,12 +1,27 @@
 import tempfile
-from paddleocr import PPStructure, save_structure_res
-from pdfixsdk.Pdfix import *
-from tqdm import tqdm
+
 import cv2
-import os
-import sys
-from paddle.utils import try_import
-from PIL import Image
+from layout import layout_analysis
+from pdfixsdk.Pdfix import (
+    kSaveFull,
+    PdfPage,
+    Pdfix,
+    kRotate0,
+    kImageDIBFormatArgb,
+    PdsStructElement,
+    GetPdfix,
+    PdfPageRenderParams,
+    kPsTruncate,
+    PdfImageParams,
+    kImageFormatJpg,
+    kRotate90,
+    kRotate270,
+    PdfDevRect,
+    PdeElement,
+    kPdeText,
+    PdfTagsParams,
+)
+from tqdm import tqdm
 
 
 class PdfixException(Exception):
@@ -17,7 +32,7 @@ class PdfixException(Exception):
 
 def autotag_page(
     page: PdfPage, pdfix: Pdfix, lang: str, doc_struct_elem: PdsStructElement
-) -> bytes:
+):
     """
     Renders a PDF page into a temporary file, which is then used for OCR.
 
@@ -30,10 +45,6 @@ def autotag_page(
     lang : str
         The language identifier for OCR.
 
-    Returns
-    -------
-    bytes
-        Raw PDF bytes.
     """
 
     zoom = 2.0
@@ -68,36 +79,15 @@ def autotag_page(
         if not image.SaveToStream(stm, imgParams):
             raise PdfixException("Unable to save the image to the stream")
 
-        ocr_engine = PPStructure(show_log=True, lang='en')
-        # ocr_engine = PPStructure(show_log=True, image_orientation=True)
-        # ocr_engine = PPStructure(table=True, ocr=False, show_log=True, lang='en')
-        """
-        ocr_engine = PPStructure(
-            show_log=True,
-            lang="en",
-            enable_mkldnn=True,  # results may be unstable
-            layout_model_dir="models/layout/picodet_lcnet_x1_0_fgd_layout_infer/",
-            table_model_dir="models/table/en_ppstructure_mobile_v2.0_SLANet_infer/",
-            det_model_dir="models/det/en_PP-OCRv3_det_infer/",
-            rec_model_dir="models/rec/en_PP-OCRv4_rec_infer/",
-        )
-        """
-        
-        #img = Image.open(tmp.name + ".jpg")
         img = cv2.imread(tmp.name + ".jpg")
-        result = ocr_engine(img)
-        #save_structure_res(
-        #    result,
-        #    os.path.dirname(tmp.name + ".jpg"),
-        #    os.path.basename(tmp.name + ".jpg").split(".")[0],
-        #)
+        result = layout_analysis(img)
 
         # Prepare page view for coordinate transformation
-        page_width = page.GetCropBox()
+        page_crop = page.GetCropBox()
         rotate = page.GetRotate()
-        page_width = page_width.right - page_width.left
+        page_width = page_crop.right - page_crop.left
         if rotate == kRotate90 or rotate == kRotate270:
-            page_width = page_width.top - page_width.bottom
+            page_width = page_crop.top - page_crop.bottom
         zoom = width / page_width
         page_view = page.AcquirePageView(zoom, 0)
 
