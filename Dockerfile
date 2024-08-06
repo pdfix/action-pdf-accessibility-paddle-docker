@@ -20,9 +20,6 @@ ENV VIRTUAL_ENV=venv
 RUN python3 -m venv venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-
-# Copy the source code
-COPY src/ /usr/paddle-ocr/src/
 # Copy models
 COPY models/ /usr/paddle-ocr/models/
 # Copy requirements.txt
@@ -31,5 +28,7 @@ COPY requirements.txt /usr/paddle-ocr/
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the source code
+COPY src/ /usr/paddle-ocr/src/
 
 ENTRYPOINT ["venv/bin/python3", "src/main.py"]
