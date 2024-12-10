@@ -28,6 +28,9 @@ COPY requirements.txt /usr/paddle-ocr/
 
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY python/ /usr/autotag-tesseract/python/
+RUN pip install /usr/autotag-tesseract/python/pdfix_sdk-8.2.0.tar.gz
+
 # Copy the source code
 COPY src/ /usr/paddle-ocr/src/
 

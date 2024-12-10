@@ -1,8 +1,8 @@
 import tempfile
-
 import cv2
 
-from pdfixsdk.Pdfix import (
+"""
+from pdfixsdk import (
     kSaveFull,
     PdfPage,
     Pdfix,
@@ -21,8 +21,10 @@ from pdfixsdk.Pdfix import (
     kPdeText,
     PdfTagsParams,
 )
-from tqdm import tqdm
+"""
+from pdfixsdk import *
 
+from tqdm import tqdm
 from paddleocr import PPStructure
 
 
@@ -46,19 +48,19 @@ class PdfixException(Exception):
 
 
 def autotag_page(
-    page: PdfPage, pdfix: Pdfix, lang: str, doc_struct_elem: PdsStructElement
+    page: PdfPage, pdfix: Pdfix, doc_struct_elem: PdsStructElement
 ):
     """
-    Renders a PDF page into a temporary file, which is then used for OCR.
+    Render a PDF page into a temporary file, which is then used for Paddle layout recognition
 
     Parameters
     ----------
     page : PdfPage
-        The PDF page to be processed for OCR.
+        The PDF page to be processed
     pdfix : Pdfix
-        The Pdfix SDK object.
-    lang : str
-        The language identifier for OCR.
+        The Pdfix SDK object
+    doc_struct_elem : PdsStructElement
+        PDF Tag for the page
 
     """
 
@@ -67,9 +69,9 @@ def autotag_page(
     if pageView is None:
         raise PdfixException("Unable to acquire the page view")
 
+    # Create an image
     width = pageView.GetDeviceWidth()
     height = pageView.GetDeviceHeight()
-    # Create an image
     image = pdfix.CreateImage(width, height, kImageDIBFormatArgb)
     if image is None:
         raise PdfixException("Unable to create the image")
@@ -95,7 +97,12 @@ def autotag_page(
             raise PdfixException("Unable to save the image to the stream")
 
         img = cv2.imread(tmp.name + ".jpg")
-        result = layout_analysis(img)
+        #result = layout_analysis(img)
+
+        ocr_engine = PPStructure(
+            show_log=True,
+            lang="en")
+        result = ocr_engine(img)
 
         # Prepare page view for coordinate transformation
         page_crop = page.GetCropBox()
@@ -176,20 +183,20 @@ def autotag(
     lang: str = "en",
 ) -> None:
     """
-    Run layput recognition using Paddle.
+    Run layput recognition using Paddle
 
     Parameters
     ----------
     input_path : str
-        Input path to the PDF file.
+        Input path to the PDF file
     output_path : str
-        Output path for saving the PDF file.
+        Output path for saving the PDF file
     license_name : str
-        Pdfix SDK license name.
+        Pdfix SDK license name
     license_key : str
-        Pdfix SDK license key.
+        Pdfix SDK license key
     lang : str, optional
-        Language identifier for OCR Paddle. Default value "en".
+        Language identifier for OCR Paddle. Default value "en"
     """
 
     pdfix = GetPdfix()
@@ -209,6 +216,7 @@ def autotag(
 
     # Remove old structure and prepare an empty structure tree
     doc.RemoveTags()
+    doc.RemoveStructTree()
     struct_tree = doc.CreateStructTree()
     doc_struct_elem = struct_tree.GetStructElementFromObject(struct_tree.GetObject())
 
@@ -222,7 +230,7 @@ def autotag(
             raise PdfixException("Unable to acquire the page")
 
         try:
-            autotag_page(page, pdfix, lang, doc_struct_elem)
+            autotag_page(page, pdfix, doc_struct_elem)
         except Exception as e:
             raise e
 
