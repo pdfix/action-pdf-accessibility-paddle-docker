@@ -17,7 +17,6 @@ from pdfixsdk import (
     kPdeImage,
     kPdeTable,
     kPdeText,
-    kPdeEquation,
     kPsTruncate,
     kRotate0,
     kRotate90,
@@ -154,8 +153,8 @@ def autotag_page(
                 pde_elem_type = kPdeTable
             elif region["type"].lower() == "figure":
                 pde_elem_type = kPdeImage
-            elif region["type"].lower() == "equation":
-                pde_elem_type = kPdeEquation
+            # elif region["type"].lower() == "equation":
+            #     pde_elem_type = kPdeEquation
 
             elem = page_map.CreateElement(pde_elem_type, parent)
             elem.SetBBox(bbox)
