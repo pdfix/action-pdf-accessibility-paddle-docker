@@ -1,0 +1,39 @@
+{
+  "actions": [
+    {
+      "name": "Autotag Paddle",
+      "desc": "A Docker image that automatically tags PDF files using PDFix SDK and Paddle-OCR",
+      "version": {
+        "major": 1,
+        "minor": 0
+      },
+      "icon": "add_photo_alternate",
+      "category": "Tags",
+      "configurations": [
+        {
+          "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/autotag-paddle:latest --name \"${license_name}\" --key \"${license_key}\" tag -i \"${input_pdf}\" -o \"${output_pdf}\"",
+          "name": "Autotag PDF",
+          "desc": "Autotag PDF"
+        }
+      ],
+      "args": [
+        {
+          "name": "input_pdf",
+          "desc": "Input PDF file",
+          "flags": 2,
+          "type": "file_path",
+          "ext": "pdf",
+          "value": ""
+        },
+        {
+          "name": "output_pdf",
+          "desc": "Output PDF file",
+          "flags": 4,
+          "type": "file_path",
+          "ext": "pdf",
+          "value": ""
+        }
+      ]
+    }
+  ]
+}
