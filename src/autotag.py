@@ -1,44 +1,43 @@
 import tempfile
-import cv2
 
-"""
+import cv2
+from paddleocr import PPStructure
 from pdfixsdk import (
-    kSaveFull,
-    PdfPage,
-    Pdfix,
-    kRotate0,
-    kImageDIBFormatArgb,
-    PdsStructElement,
     GetPdfix,
-    PdfPageRenderParams,
-    kPsTruncate,
+    PdeElement,
+    PdfDevRect,
     PdfImageParams,
+    Pdfix,
+    PdfPage,
+    PdfPageRenderParams,
+    PdfTagsParams,
+    PdsStructElement,
+    kImageDIBFormatArgb,
     kImageFormatJpg,
+    kPdeImage,
+    kPdeTable,
+    kPdeText,
+    kPdeEquation,
+    kPsTruncate,
+    kRotate0,
     kRotate90,
     kRotate270,
-    PdfDevRect,
-    PdeElement,
-    kPdeText,
-    PdfTagsParams,
+    kSaveFull,
+    kTextH1,
 )
-"""
-from pdfixsdk import *
 
+# from pdfixsdk import *
 from tqdm import tqdm
-from paddleocr import PPStructure
 
-
-def layout_analysis(img):
-    ocr_engine = PPStructure(
-        show_log=True,
-        lang="en",
-        enable_mkldnn=True,  # results may be unstable
-        layout_model_dir="models/layout/picodet_lcnet_x1_0_fgd_layout_infer/",
-        table_model_dir="models/table/en_ppstructure_mobile_v2.0_SLANet_infer/",
-        det_model_dir="models/det/en_PP-OCRv3_det_infer/",
-        rec_model_dir="models/rec/en_PP-OCRv4_rec_infer/",
-    )
-    return ocr_engine(img)
+PP_ENGINE = PPStructure(
+    show_log=True,
+    lang="en",
+    enable_mkldnn=True,  # results may be unstable
+    layout_model_dir="models/layout/picodet_lcnet_x1_0_fgd_layout_infer/",
+    table_model_dir="models/table/en_ppstructure_mobile_v2.0_SLANet_infer/",
+    det_model_dir="models/det/en_PP-OCRv3_det_infer/",
+    rec_model_dir="models/rec/en_PP-OCRv4_rec_infer/",
+)
 
 
 class PdfixException(Exception):
@@ -48,10 +47,11 @@ class PdfixException(Exception):
 
 
 def autotag_page(
-    page: PdfPage, pdfix: Pdfix, doc_struct_elem: PdsStructElement
-):
-    """
-    Render a PDF page into a temporary file, which is then used for Paddle layout recognition
+    page: PdfPage,
+    pdfix: Pdfix,
+    doc_struct_elem: PdsStructElement,
+) -> None:
+    """Render a PDF page into a temporary file, which is then used for Paddle layout recognition.
 
     Parameters
     ----------
@@ -62,25 +62,24 @@ def autotag_page(
     doc_struct_elem : PdsStructElement
         PDF Tag for the page
 
-    """
-
+    """  # noqa: E501
     zoom = 2.0
-    pageView = page.AcquirePageView(zoom, kRotate0)
-    if pageView is None:
+    page_view = page.AcquirePageView(zoom, kRotate0)
+    if page_view is None:
         raise PdfixException("Unable to acquire the page view")
 
     # Create an image
-    width = pageView.GetDeviceWidth()
-    height = pageView.GetDeviceHeight()
+    width = page_view.GetDeviceWidth()
+    height = page_view.GetDeviceHeight()
     image = pdfix.CreateImage(width, height, kImageDIBFormatArgb)
     if image is None:
         raise PdfixException("Unable to create the image")
 
     # Render page
-    renderParams = PdfPageRenderParams()
-    renderParams.image = image
-    renderParams.matrix = pageView.GetDeviceMatrix()
-    if not page.DrawContent(renderParams):
+    render_params = PdfPageRenderParams()
+    render_params.image = image
+    render_params.matrix = page_view.GetDeviceMatrix()
+    if not page.DrawContent(render_params):
         raise PdfixException("Unable to draw the content")
 
     # Create temp file for rendering
@@ -90,25 +89,25 @@ def autotag_page(
         if stm is None:
             raise PdfixException("Unable to create the file stream")
 
-        imgParams = PdfImageParams()
-        imgParams.format = kImageFormatJpg
-        imgParams.quality = 100
-        if not image.SaveToStream(stm, imgParams):
+        img_params = PdfImageParams()
+        img_params.format = kImageFormatJpg
+        img_params.quality = 100
+        if not image.SaveToStream(stm, img_params):
             raise PdfixException("Unable to save the image to the stream")
 
         img = cv2.imread(tmp.name + ".jpg")
-        #result = layout_analysis(img)
+        # result = layout_analysis(img)
 
-        ocr_engine = PPStructure(
-            show_log=True,
-            lang="en")
-        result = ocr_engine(img)
+        # ocr_engine = PPStructure(
+        # show_log=True,
+        # lang="en")
+        result = PP_ENGINE(img)
 
         # Prepare page view for coordinate transformation
         page_crop = page.GetCropBox()
         rotate = page.GetRotate()
         page_width = page_crop.right - page_crop.left
-        if rotate == kRotate90 or rotate == kRotate270:
+        if rotate in (kRotate90, kRotate270):
             page_width = page_crop.top - page_crop.bottom
         zoom = width / page_width
         page_view = page.AcquirePageView(zoom, 0)
@@ -123,8 +122,9 @@ def autotag_page(
             # roi_img = region.pop("img")
             # f.write("{}\n".format(json.dumps(region)))
 
-            # print (region["type"])
-            # print (region["bbox"])
+            print(region["type"])
+            print(region["bbox"])
+            print(region[])
 
             # if (
             #    region["type"].lower() == "table"
@@ -150,13 +150,15 @@ def autotag_page(
 
             # Create initial element
             parent = PdeElement(None)
-            pdeElemType = kPdeText  # text (default)
+            pde_elem_type = kPdeText  # text (default)
             if region["type"].lower() == "table":
-                pdeElemType = kPdeTable
+                pde_elem_type = kPdeTable
             elif region["type"].lower() == "figure":
-                pdeElemType = kPdeImage
+                pde_elem_type = kPdeImage
+            elif region["type"].lower() == "equation":
+                pde_elem_type = kPdeEquation
 
-            elem = page_map.CreateElement(pdeElemType, parent)
+            elem = page_map.CreateElement(pde_elem_type, parent)
             elem.SetBBox(bbox)
             if region["type"].lower() == "title":  # title
                 elem.SetTextStyle(kTextH1)
@@ -166,7 +168,8 @@ def autotag_page(
 
         # Prepare the struct element for page
         page_elem = doc_struct_elem.AddNewChild(
-            "NonStruct", doc_struct_elem.GetNumChildren()
+            "NonStruct",
+            doc_struct_elem.GetNumChildren(),
         )
         page_map.AddTags(page_elem, False, PdfTagsParams())
 
@@ -182,8 +185,7 @@ def autotag(
     license_key: str,
     lang: str = "en",
 ) -> None:
-    """
-    Run layput recognition using Paddle
+    """Run layput recognition using Paddle.
 
     Parameters
     ----------
@@ -197,8 +199,8 @@ def autotag(
         Pdfix SDK license key
     lang : str, optional
         Language identifier for OCR Paddle. Default value "en"
-    """
 
+    """
     pdfix = GetPdfix()
     if pdfix is None:
         raise Exception("Pdfix Initialization fail")
