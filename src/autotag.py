@@ -124,7 +124,6 @@ def autotag_page(
 
             print(region["type"])
             print(region["bbox"])
-            print(region[])
 
             # if (
             #    region["type"].lower() == "table"
