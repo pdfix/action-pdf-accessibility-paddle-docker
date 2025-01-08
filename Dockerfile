@@ -25,6 +25,8 @@ COPY models/ /usr/paddle-ocr/models/
 # Copy requirements.txt
 COPY requirements.txt /usr/paddle-ocr/
 
+COPY config.json /usr/paddle-ocr/
+
 RUN pip install --no-cache-dir -r requirements.txt
 
 # COPY python/ /usr/autotag-tesseract/python/
