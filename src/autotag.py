@@ -120,9 +120,18 @@ def autotag_page(
         for region in result:
             # roi_img = region.pop("img")
             # f.write("{}\n".format(json.dumps(region)))
+            layout_type = region["type"]
+            layout_bbox = region["bbox"]
+            layout_table_html = (
+                region["res"]["html"] if region["type"] == "table" else None
+            )
 
-            print(region["type"])
-            print(region["bbox"])
+            layout_table_bboxes = (
+                region["res"]["cell_bbox"] if region["type"] == "table" else None
+            )
+            print("Type: {} {}".format(layout_type, layout_bbox))
+            if layout_table_html is not None:
+                print("{}\n{}".format(layout_table_html, layout_table_bboxes))
 
             # if (
             #    region["type"].lower() == "table"
