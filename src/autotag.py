@@ -2,28 +2,7 @@ import tempfile
 
 import cv2
 from paddleocr import PPStructure
-from pdfixsdk import (
-    GetPdfix,
-    PdeElement,
-    PdfDevRect,
-    PdfImageParams,
-    Pdfix,
-    PdfPage,
-    PdfPageRenderParams,
-    PdfTagsParams,
-    PdsStructElement,
-    kImageDIBFormatArgb,
-    kImageFormatJpg,
-    kPdeImage,
-    kPdeTable,
-    kPdeText,
-    kPsTruncate,
-    kRotate0,
-    kRotate90,
-    kRotate270,
-    kSaveFull,
-    kTextH1,
-)
+from pdfixsdk import *
 
 # from pdfixsdk import *
 from tqdm import tqdm
@@ -31,7 +10,7 @@ from tqdm import tqdm
 PP_ENGINE = PPStructure(
     show_log=True,
     lang="en",
-    enable_mkldnn=True,  # results may be unstable
+    enable_mkldnn=False,  # results may be unstable
     layout_model_dir="models/layout/picodet_lcnet_x1_0_fgd_layout_infer/",
     table_model_dir="models/table/en_ppstructure_mobile_v2.0_SLANet_infer/",
     det_model_dir="models/det/en_PP-OCRv3_det_infer/",
@@ -43,6 +22,61 @@ class PdfixException(Exception):
     def __init__(self, message: str = ""):
         self.errno = GetPdfix().GetErrorType()
         self.add_note(message if len(message) else str(GetPdfix().GetError()))
+
+
+def drawRect(image, rect):
+    # Rect coordinates (top-left and bottom-right corner)
+    start_point = (rect.left, rect.top)  # X, Y
+    end_point = (rect.right, rect.bottom)  # X, Y
+    # Color (B, G, R) and width
+    color = (0, 255, 0)
+    thickness = 2
+    cv2.rectangle(image, start_point, end_point, color, thickness)
+
+
+def updateTableCells(elem: PdeElement, region: dict, page_view: PdfPageView, img):
+    if not region["res"]:
+        return
+
+    page_map = elem.GetPageMap()
+    table = PdeTable(elem.obj)
+    col = 0
+    row = 0
+    left = -1  # initial x-coordinate
+    rect = PdfDevRect()
+    rect.left = int(region["bbox"][0])
+    rect.top = int(region["bbox"][1])
+    rect.right = int(region["bbox"][2])
+    rect.bottom = int(region["bbox"][3])
+    bbox = page_view.RectToPage(rect)
+    # print(f"Table: {bbox.left}, {bbox.bottom}, {bbox.right}, {bbox.top}")
+
+    for cell_bbox in region["res"]["cell_bbox"]:
+        rect = PdfDevRect()
+        rect.left = int(cell_bbox[0] + region["bbox"][0]) - 2
+        rect.top = int(cell_bbox[1] + region["bbox"][1]) - 2
+        rect.right = int(cell_bbox[2] + region["bbox"][0]) + 2
+        rect.bottom = int(cell_bbox[3] + region["bbox"][1]) + 2
+        drawRect(img, rect)
+
+        bbox = page_view.RectToPage(rect)
+        # print(f"Cell {bbox.left}, {bbox.bottom}, {bbox.right}, {bbox.top}")
+
+        cell = PdeCell(page_map.CreateElement(kPdeCell, table).obj)
+        cell.SetColNum(col)
+        cell.SetRowNum(row)
+        cell.SetBBox(bbox)
+        cell.SetColSpan(1)
+        cell.SetRowSpan(1)
+
+        col += 1  # count cols
+        if left > rect.left:
+            row += 1  # count rows
+            col = 0
+        left = rect.left
+
+    table.SetNumCols(col + 1)
+    table.SetNumRows(row + 1)
 
 
 def autotag_page(
@@ -62,7 +96,7 @@ def autotag_page(
         PDF Tag for the page
 
     """  # noqa: E501
-    zoom = 2.0
+    zoom = 4.0
     page_view = page.AcquirePageView(zoom, kRotate0)
     if page_view is None:
         raise PdfixException("Unable to acquire the page view")
@@ -84,7 +118,9 @@ def autotag_page(
     # Create temp file for rendering
     with tempfile.NamedTemporaryFile() as tmp:
         # Save image to file
-        stm = pdfix.CreateFileStream(tmp.name + ".jpg", kPsTruncate)
+        img_name = tmp.name + ".jpg"
+        img_name = "image.jpg"
+        stm = pdfix.CreateFileStream(img_name, kPsTruncate)
         if stm is None:
             raise PdfixException("Unable to create the file stream")
 
@@ -94,7 +130,7 @@ def autotag_page(
         if not image.SaveToStream(stm, img_params):
             raise PdfixException("Unable to save the image to the stream")
 
-        img = cv2.imread(tmp.name + ".jpg")
+        img = cv2.imread(img_name)
         # result = layout_analysis(img)
 
         # ocr_engine = PPStructure(
@@ -133,21 +169,6 @@ def autotag_page(
             if layout_table_html is not None:
                 print("{}\n{}".format(layout_table_html, layout_table_bboxes))
 
-            # if (
-            #    region["type"].lower() == "table"
-            #    and len(region["res"]) > 0
-            #    and "html" in region["res"]
-            # ):
-            #    to_excel(region["res"]["html"], excel_path)
-            # elif region["type"].lower() == "figure":
-            #    cv2.imwrite(img_path, roi_img)
-
-            # Get image height
-            # img_h = img.shape[0]
-            # struct_elem['BBox'] = region["bbox"]
-            # struct_elem['BBox'] = [b.block.x_1 * scale, (img_h - b.block.y_2) * scale,
-            #                       b.block.x_2 * scale, (img_h - b.block.y_1) * scale]
-
             rect = PdfDevRect()
             rect.left = int(region["bbox"][0])
             rect.top = int(region["bbox"][1])
@@ -155,23 +176,32 @@ def autotag_page(
             rect.bottom = int(region["bbox"][3])
             bbox = page_view.RectToPage(rect)
 
+            drawRect(img, rect)
+
             # Create initial element
-            parent = PdeElement(None)
+            # parent = PdeElement(None)
             pde_elem_type = kPdeText  # text (default)
             if region["type"].lower() == "table":
                 pde_elem_type = kPdeTable
             elif region["type"].lower() == "figure":
                 pde_elem_type = kPdeImage
+            elif region["type"].lower() == "list":
+                pde_elem_type = kPdeList
             # elif region["type"].lower() == "equation":
             #     pde_elem_type = kPdeEquation
 
-            elem = page_map.CreateElement(pde_elem_type, parent)
+            elem = page_map.CreateElement(pde_elem_type, None)
             elem.SetBBox(bbox)
             if region["type"].lower() == "title":  # title
                 elem.SetTextStyle(kTextH1)
+            # elif region["type"].lower() == "table":
+            #     updateTableCells(elem, region, page_view, img)
+
+        cv2.imwrite("output.jpg", img)
 
         # Recognize page
-        page_map.CreateElements()
+        if not page_map.CreateElements():
+            raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
 
         # Prepare the struct element for page
         page_elem = doc_struct_elem.AddNewChild(
