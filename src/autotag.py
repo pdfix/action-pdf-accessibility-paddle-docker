@@ -187,7 +187,7 @@ def add_initial_elements(page_map: PdePageMap, page_view: PdfPageView, regions: 
         #     update_table_cells(element, region, page_view, image)    
 
 
-def auto_tag_page(page: PdfPage, doc_struct_elem: PdsStructElement):
+def autotag_page(page: PdfPage, doc_struct_elem: PdsStructElement):
     """
     Automatically tags a PDF page by analyzing its layout and mapping the detected elements
     to the document structure.
@@ -271,7 +271,7 @@ def autotag_pdf(input_pdf: str, output_pdf: str):
             raise PdfixException("Unable to acquire the page")
 
         try:
-            auto_tag_page(page, docStructElem)  # Removed unnecessary pdfix argument
+            autotag_page(page, docStructElem)  # Removed unnecessary pdfix argument
         except Exception as e:
             raise e
 
