@@ -34,7 +34,16 @@ def draw_rect(image, rect):
     cv2.rectangle(image, start_point, end_point, color, thickness)
 
 
-def update_table_cells(pdf_element: PdeElement, region_data: dict, pdf_page_view: PdfPageView, image):
+def update_table_cells(pdf_element: PdeElement, region_data: dict, page_view: PdfPageView, image):
+    """
+    Updates the table element with detected cells
+
+    Args:
+        pdf_element (PdeElement): The table element to edit.
+        region_data (dict): The data containing the cell bounding boxes.
+        page_view (PdfPageView): The view of the PDF page used for coordinate conversion.
+        image (any): The image representation of the page for visualization.
+    """    
     # Return early if no cells exist in the region
     if not region_data["res"]:
         return
@@ -61,7 +70,7 @@ def update_table_cells(pdf_element: PdeElement, region_data: dict, pdf_page_view
         draw_rect(image, cell_rect)
 
         # Convert cell rectangle to page coordinates
-        cell_bbox = pdf_page_view.RectToPage(cell_rect)
+        cell_bbox = page_view.RectToPage(cell_rect)
 
         # Create a new cell element and set its properties
         cell = PdeCell(page_map.CreateElement(kPdeCell, table).obj)
@@ -87,13 +96,21 @@ def update_table_cells(pdf_element: PdeElement, region_data: dict, pdf_page_view
     table.SetNumRows(row + 1)
 
 
-def render_page(pdf_page: PdfPage, pdf_page_view: PdfPageView):
+def render_page(pdf_page: PdfPage, page_view: PdfPageView):
+    """
+    Renders the PDF page into an opencv image
+
+    Args:
+        pdf_page (PdfPage): The page to render.
+        page_view (PdfPageView): The view of the PDF page used for coordinate conversion.
+        image (any): The image representation of the page for visualization.
+    """     
     # Initialize PDFix instance
     pdfix = GetPdfix()
 
     # Get the dimensions of the page view (device width and height)
-    page_width = pdf_page_view.GetDeviceWidth()
-    page_height = pdf_page_view.GetDeviceHeight()
+    page_width = page_view.GetDeviceWidth()
+    page_height = page_view.GetDeviceHeight()
 
     # Create an image with the specified dimensions and ARGB format
     page_image = pdfix.CreateImage(page_width, page_height, kImageDIBFormatArgb)
@@ -103,7 +120,7 @@ def render_page(pdf_page: PdfPage, pdf_page_view: PdfPageView):
     # Set up rendering parameters
     render_params = PdfPageRenderParams()
     render_params.image = page_image
-    render_params.matrix = pdf_page_view.GetDeviceMatrix()
+    render_params.matrix = page_view.GetDeviceMatrix()
 
     # Render the page content onto the image
     if not pdf_page.DrawContent(render_params):
@@ -166,8 +183,8 @@ def add_initial_elements(page_map: PdePageMap, page_view: PdfPageView, regions: 
         
         if region_type == "title":
             element.SetTextStyle(kTextH1)
-        # elif region["type"].lower() == "table":
-        #     updateTableCells(elem, region, page_view, img)    
+        # elif region_type == "table":
+        #     update_table_cells(element, region, page_view, image)    
 
 
 def auto_tag_page(page: PdfPage, doc_struct_elem: PdsStructElement):
