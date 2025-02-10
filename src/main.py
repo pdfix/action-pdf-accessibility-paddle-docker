@@ -4,7 +4,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from autotag import autotag
+from autotag import autotag_pdf
 
 
 def get_config(path: str) -> None:
@@ -84,7 +84,7 @@ def main() -> None:
 
         if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
             try:
-                autotag(input_file, output_file, args.name, args.key)
+                autotag_pdf(input_file, output_file)
             except Exception as e:
                 sys.exit("Failed to run Paddle {}".format(e))
 

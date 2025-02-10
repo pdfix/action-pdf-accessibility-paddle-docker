@@ -24,7 +24,7 @@ class PdfixException(Exception):
         self.add_note(message if len(message) else str(GetPdfix().GetError()))
 
 
-def drawRect(image, rect):
+def draw_rect(image, rect):
     # Rect coordinates (top-left and bottom-right corner)
     start_point = (rect.left, rect.top)  # X, Y
     end_point = (rect.right, rect.bottom)  # X, Y
@@ -34,246 +34,232 @@ def drawRect(image, rect):
     cv2.rectangle(image, start_point, end_point, color, thickness)
 
 
-def updateTableCells(elem: PdeElement, region: dict, page_view: PdfPageView, img):
-    if not region["res"]:
+def update_table_cells(pdf_element: PdeElement, region_data: dict, pdf_page_view: PdfPageView, image):
+    # Return early if no cells exist in the region
+    if not region_data["res"]:
         return
 
-    page_map = elem.GetPageMap()
-    table = PdeTable(elem.obj)
-    col = 0
+    # Get the page map and create the table object
+    page_map = pdf_element.GetPageMap()
+    table = PdeTable(pdf_element.obj)
+
+    # Initialize variables for row, column, and previous x-coordinate
+    column = 0
     row = 0
-    left = -1  # initial x-coordinate
-    rect = PdfDevRect()
-    rect.left = int(region["bbox"][0])
-    rect.top = int(region["bbox"][1])
-    rect.right = int(region["bbox"][2])
-    rect.bottom = int(region["bbox"][3])
-    bbox = page_view.RectToPage(rect)
-    # print(f"Table: {bbox.left}, {bbox.bottom}, {bbox.right}, {bbox.top}")
+    previous_left = -1  # Initialize the previous left x-coordinate
 
-    for cell_bbox in region["res"]["cell_bbox"]:
-        rect = PdfDevRect()
-        rect.left = int(cell_bbox[0] + region["bbox"][0]) - 2
-        rect.top = int(cell_bbox[1] + region["bbox"][1]) - 2
-        rect.right = int(cell_bbox[2] + region["bbox"][0]) + 2
-        rect.bottom = int(cell_bbox[3] + region["bbox"][1]) + 2
-        drawRect(img, rect)
+    # Loop through each cell's bounding box in the region
+    for cell_bbox in region_data["res"]["cell_bbox"]:
+        # Define the cell bounding box with some padding
+        cell_rect = PdfDevRect()
+        cell_rect.left = int(cell_bbox[0] + region_data["bbox"][0]) - 2
+        cell_rect.top = int(cell_bbox[1] + region_data["bbox"][1]) - 2
+        cell_rect.right = int(cell_bbox[2] + region_data["bbox"][0]) + 2
+        cell_rect.bottom = int(cell_bbox[3] + region_data["bbox"][1]) + 2
+        
+        # Draw the cell rectangle on the image for visualization (optional step)
+        draw_rect(image, cell_rect)
 
-        bbox = page_view.RectToPage(rect)
-        # print(f"Cell {bbox.left}, {bbox.bottom}, {bbox.right}, {bbox.top}")
+        # Convert cell rectangle to page coordinates
+        cell_bbox = pdf_page_view.RectToPage(cell_rect)
 
+        # Create a new cell element and set its properties
         cell = PdeCell(page_map.CreateElement(kPdeCell, table).obj)
-        cell.SetColNum(col)
+        cell.SetColNum(column)
         cell.SetRowNum(row)
-        cell.SetBBox(bbox)
+        cell.SetBBox(cell_bbox)
         cell.SetColSpan(1)
         cell.SetRowSpan(1)
 
-        col += 1  # count cols
-        if left > rect.left:
-            row += 1  # count rows
-            col = 0
-        left = rect.left
+        # Update the column count
+        column += 1
 
-    table.SetNumCols(col + 1)
+        # Check if we need to move to the next row (if the current cell's left is less than the previous left)
+        if previous_left > cell_rect.left:
+            row += 1  # Move to the next row
+            column = 0  # Reset column to 0 for the new row
+        
+        # Update the previous left value
+        previous_left = cell_rect.left
+
+    # Set the number of columns and rows in the table based on the last values of column and row
+    table.SetNumCols(column + 1)
     table.SetNumRows(row + 1)
 
 
-def autotag_page(
-    page: PdfPage,
-    pdfix: Pdfix,
-    doc_struct_elem: PdsStructElement,
-) -> None:
-    """Render a PDF page into a temporary file, which is then used for Paddle layout recognition.
+def render_page(pdf_page: PdfPage, pdf_page_view: PdfPageView):
+    # Initialize PDFix instance
+    pdfix = GetPdfix()
 
-    Parameters
-    ----------
-    page : PdfPage
-        The PDF page to be processed
-    pdfix : Pdfix
-        The Pdfix SDK object
-    doc_struct_elem : PdsStructElement
-        PDF Tag for the page
+    # Get the dimensions of the page view (device width and height)
+    page_width = pdf_page_view.GetDeviceWidth()
+    page_height = pdf_page_view.GetDeviceHeight()
 
-    """  # noqa: E501
-    zoom = 4.0
-    page_view = page.AcquirePageView(zoom, kRotate0)
-    if page_view is None:
-        raise PdfixException("Unable to acquire the page view")
-
-    # Create an image
-    width = page_view.GetDeviceWidth()
-    height = page_view.GetDeviceHeight()
-    image = pdfix.CreateImage(width, height, kImageDIBFormatArgb)
-    if image is None:
+    # Create an image with the specified dimensions and ARGB format
+    page_image = pdfix.CreateImage(page_width, page_height, kImageDIBFormatArgb)
+    if page_image is None:
         raise PdfixException("Unable to create the image")
 
-    # Render page
+    # Set up rendering parameters
     render_params = PdfPageRenderParams()
-    render_params.image = image
-    render_params.matrix = page_view.GetDeviceMatrix()
-    if not page.DrawContent(render_params):
+    render_params.image = page_image
+    render_params.matrix = pdf_page_view.GetDeviceMatrix()
+
+    # Render the page content onto the image
+    if not pdf_page.DrawContent(render_params):
         raise PdfixException("Unable to draw the content")
-
-    # Create temp file for rendering
-    with tempfile.NamedTemporaryFile() as tmp:
-        # Save image to file
-        img_name = tmp.name + ".jpg"
-        img_name = "image.jpg"
-        stm = pdfix.CreateFileStream(img_name, kPsTruncate)
-        if stm is None:
-            raise PdfixException("Unable to create the file stream")
-
-        img_params = PdfImageParams()
-        img_params.format = kImageFormatJpg
-        img_params.quality = 100
-        if not image.SaveToStream(stm, img_params):
+    
+    # Save the rendered image to a temporary file in JPG format
+    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+        file_stream = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
+        
+        # Set image parameters (format and quality)
+        image_params = PdfImageParams()
+        image_params.format = kImageFormatJpg
+        image_params.quality = 100
+        
+        # Save the image to the file stream
+        if not page_image.SaveToStream(file_stream, image_params):                 
             raise PdfixException("Unable to save the image to the stream")
+        
+        # Clean up resources
+        file_stream.Destroy()
+        page_image.Destroy()
+    
+        # Return the saved image as a NumPy array using OpenCV
+        return cv2.imread(temp_file.name)
 
-        img = cv2.imread(img_name)
-        # result = layout_analysis(img)
+    
+def add_initial_elements(page_map: PdePageMap, page_view: PdfPageView, regions: list, image: any):
+    """
+    Adds initial structural elements to the page map based on detected regions.
 
-        # ocr_engine = PPStructure(
-        # show_log=True,
-        # lang="en")
-        result = PP_ENGINE(img)
+    Args:
+        page_map (PdePageMap): The page map where elements will be added.
+        page_view (PdfPageView): The view of the PDF page used for coordinate conversion.
+        regions (list): A list of detected regions, each containing bounding box and type.
+        image (any): The image representation of the page for visualization.
+    """
+    for region in regions:
+        rect = PdfDevRect()
+        rect.left = int(region["bbox"][0])
+        rect.top = int(region["bbox"][1])
+        rect.right = int(region["bbox"][2])
+        rect.bottom = int(region["bbox"][3])
+        bbox = page_view.RectToPage(rect)
 
-        # Prepare page view for coordinate transformation
-        page_crop = page.GetCropBox()
-        rotate = page.GetRotate()
-        page_width = page_crop.right - page_crop.left
-        if rotate in (kRotate90, kRotate270):
-            page_width = page_crop.top - page_crop.bottom
-        zoom = width / page_width
-        page_view = page.AcquirePageView(zoom, 0)
+        # Draw the cell rectangle on the image for visualization (optional step)
+        draw_rect(image, rect)
 
-        # Pre-create objects from Paddle engine to the pagemap
-        page_map = page.AcquirePageMap()
-
-        # Iterate blocks. It's only one level in this model
-        # res_cp = deepcopy(result)
-        # save res
-        for region in result:
-            # roi_img = region.pop("img")
-            # f.write("{}\n".format(json.dumps(region)))
-            layout_type = region["type"]
-            layout_bbox = region["bbox"]
-            layout_table_html = (
-                region["res"]["html"] if region["type"] == "table" else None
-            )
-
-            layout_table_bboxes = (
-                region["res"]["cell_bbox"] if region["type"] == "table" else None
-            )
-            print("Type: {} {}".format(layout_type, layout_bbox))
-            if layout_table_html is not None:
-                print("{}\n{}".format(layout_table_html, layout_table_bboxes))
-
-            rect = PdfDevRect()
-            rect.left = int(region["bbox"][0])
-            rect.top = int(region["bbox"][1])
-            rect.right = int(region["bbox"][2])
-            rect.bottom = int(region["bbox"][3])
-            bbox = page_view.RectToPage(rect)
-
-            drawRect(img, rect)
-
-            # Create initial element
-            # parent = PdeElement(None)
-            pde_elem_type = kPdeText  # text (default)
-            if region["type"].lower() == "table":
-                pde_elem_type = kPdeTable
-            elif region["type"].lower() == "figure":
-                pde_elem_type = kPdeImage
-            elif region["type"].lower() == "list":
-                pde_elem_type = kPdeList
-            # elif region["type"].lower() == "equation":
-            #     pde_elem_type = kPdeEquation
-
-            elem = page_map.CreateElement(pde_elem_type, None)
-            elem.SetBBox(bbox)
-            if region["type"].lower() == "title":  # title
-                elem.SetTextStyle(kTextH1)
-            # elif region["type"].lower() == "table":
-            #     updateTableCells(elem, region, page_view, img)
-
-        cv2.imwrite("output.jpg", img)
-
-        # Recognize page
-        if not page_map.CreateElements():
-            raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
-
-        # Prepare the struct element for page
-        page_elem = doc_struct_elem.AddNewChild(
-            "NonStruct",
-            doc_struct_elem.GetNumChildren(),
-        )
-        page_map.AddTags(page_elem, False, PdfTagsParams())
-
-        # Cleanup
-        page_view.Release()
-        page_map.Release()
+        # Determine element type
+        element_type = kPdeText  # Default to text
+        region_type = region["type"].lower()
+        if region_type == "table":
+            element_type = kPdeTable
+        elif region_type == "figure":
+            element_type = kPdeImage
+        elif region_type == "list":
+            element_type = kPdeList
+        
+        element = page_map.CreateElement(element_type, None)
+        element.SetBBox(bbox)
+        
+        if region_type == "title":
+            element.SetTextStyle(kTextH1)
+        # elif region["type"].lower() == "table":
+        #     updateTableCells(elem, region, page_view, img)    
 
 
-def autotag(
-    input_path: str,
-    output_path: str,
-    license_name: str,
-    license_key: str,
-    lang: str = "en",
-) -> None:
-    """Run layput recognition using Paddle.
+def auto_tag_page(page: PdfPage, doc_struct_elem: PdsStructElement):
+    """
+    Automatically tags a PDF page by analyzing its layout and mapping the detected elements
+    to the document structure.
 
-    Parameters
-    ----------
-    input_path : str
-        Input path to the PDF file
-    output_path : str
-        Output path for saving the PDF file
-    license_name : str
-        Pdfix SDK license name
-    license_key : str
-        Pdfix SDK license key
-    lang : str, optional
-        Language identifier for OCR Paddle. Default value "en"
+    Args:
+        page (PdfPage): The PDF page to process.
+        doc_struct_elem (PdsStructElement): The root structure element where tags will be added.
+    """
+    pdfix = GetPdfix()
 
+    # Define zoom level and rotation for rendering the page
+    zoom = 4.0
+    rotate = kRotate0
+    page_view = page.AcquirePageView(zoom, rotate)
+
+    # Render the page as an image
+    img = render_page(page, page_view)
+
+    # Run layout analysis using the Paddle engine
+    result = PP_ENGINE(img)
+
+    # Acquire the page map to store recognized elements
+    pageMap = page.AcquirePageMap()
+
+    # Add detected elements to the page map based on the analysis result
+    add_initial_elements(pageMap, page_view, result, img)
+
+    # Debugging: Save the rendered image for inspection
+    # cv2.imwrite("output.jpg", img)
+
+    # Generate structured elements from the page map
+    if not pageMap.CreateElements():
+        raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
+
+    # Create a new structural element for the page
+    pageElem = doc_struct_elem.AddNewChild("NonStruct", doc_struct_elem.GetNumChildren())
+    
+    # Assign recognized elements as tags to the structure element
+    if not pageMap.AddTags(pageElem, False, PdfTagsParams()):
+        raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
+
+    # Release resources
+    pageMap.Release()
+    page_view.Release()
+
+
+def autotag_pdf(input_pdf: str, output_pdf: str):
+    """
+    Automatically tags a PDF document by analyzing its structure and applying tags to each page.
+
+    Args:
+        input_pdf (str): Path to the input PDF file.
+        output_pdf (str): Path to save the output tagged PDF file.
     """
     pdfix = GetPdfix()
     if pdfix is None:
-        raise Exception("Pdfix Initialization fail")
+        raise Exception("Pdfix Initialization failed")
 
-    if license_name and license_key:
-        if not pdfix.GetAccountAuthorization().Authorize(license_name, license_key):
-            raise Exception("Pdfix Authorization fail")
-    else:
-        print("No license name or key provided. Using Pdfix trial")
+    # TODO: Add authorization here
 
-    # Open doc
-    doc = pdfix.OpenDoc(input_path, "")
+    # Open the document
+    doc = pdfix.OpenDoc(input_pdf, "")
     if doc is None:
-        raise Exception("Unable to open the PDF " + pdfix.GetError())
+        raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
 
     # Remove old structure and prepare an empty structure tree
     doc.RemoveTags()
     doc.RemoveStructTree()
-    struct_tree = doc.CreateStructTree()
-    doc_struct_elem = struct_tree.GetStructElementFromObject(struct_tree.GetObject())
+    structTree = doc.CreateStructTree()
+    docStructElem = structTree.GetStructElementFromObject(structTree.GetObject())
+    if docStructElem is None:
+        raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
 
-    doc_num_pages = doc.GetNumPages()
+    numPages = doc.GetNumPages()
 
     # Process each page
-    for i in tqdm(range(0, doc_num_pages), desc="Processing pages"):
-        # Acquire page
+    for i in tqdm(range(0, numPages), desc="Processing pages"):
+        # Acquire the page
         page = doc.AcquirePage(i)
         if page is None:
             raise PdfixException("Unable to acquire the page")
 
         try:
-            autotag_page(page, pdfix, doc_struct_elem)
+            auto_tag_page(page, docStructElem)  # Removed unnecessary pdfix argument
         except Exception as e:
             raise e
 
         page.Release()
 
-    if not doc.Save(output_path, kSaveFull):
-        raise Exception("Unable to save PDF " + pdfix.GetError())
+    # Save the processed document
+    if not doc.Save(output_pdf, kSaveFull):
+        raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
