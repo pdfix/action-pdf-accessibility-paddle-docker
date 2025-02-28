@@ -8,6 +8,7 @@ from pathlib import Path
 # from pdfixsdk import *
 from tqdm import tqdm
 
+# https://paddlepaddle.github.io/PaddleOCR/v2.9.1/en/ppstructure/models_list.html
 PP_ENGINE = PPStructure(
     show_log=True,
     lang="en",
