@@ -4,7 +4,7 @@ import shutil
 import sys
 from pathlib import Path
 
-from autotag import autotag_pdf
+from autotag import autotag_pdf, autotag_folder
 
 
 def get_config(path: str) -> None:
@@ -78,16 +78,20 @@ def main() -> None:
         input_file = args.input
         output_file = args.output
 
-        if not os.path.isfile(input_file):
-            sys.exit(f"Error: The input file '{input_file}' does not exist")
-            return
+        # if not os.path.isfile(input_file):
+        #     sys.exit(f"Error: The input file '{input_file}' does not exist")
+        #     return
 
         if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
-            try:
+            try:                
                 autotag_pdf(input_file, output_file)
             except Exception as e:
                 sys.exit("Failed to run Paddle {}".format(e))
-
+        elif Path(input_file).is_dir():
+            try:                
+                autotag_folder(input_file, output_file)
+            except Exception as e:
+                sys.exit("Failed to run Paddle {}".format(e))
         else:
             print("Input and output file must be PDF")
 
