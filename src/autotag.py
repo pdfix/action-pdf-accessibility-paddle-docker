@@ -4,11 +4,9 @@ import cv2
 from paddleocr import PPStructure
 from pdfixsdk import *
 from pathlib import Path
-
-# from pdfixsdk import *
 from tqdm import tqdm
 
-# https://paddlepaddle.github.io/PaddleOCR/v2.9.1/en/ppstructure/models_list.html
+# https://paddlepaddle.github.io/PaddleOCR/main/en/ppstructure/models_list.html
 PP_ENGINE = PPStructure(
     show_log=True,
     lang="en",
@@ -17,6 +15,7 @@ PP_ENGINE = PPStructure(
     table_model_dir="models/table/en_ppstructure_mobile_v2.0_SLANet_infer/",
     det_model_dir="models/det/en_PP-OCRv3_det_infer/",
     rec_model_dir="models/rec/en_PP-OCRv4_rec_infer/",
+    formula_model_dir="models/formula/rec_latex_ocr_infer/"
 )
 
 
@@ -221,7 +220,7 @@ def add_initial_elements(id: str, page_map: PdePageMap, page_view: PdfPageView, 
         # if region_type == "title":
         #     element.SetTextStyle(kTextH1)
         # elif region_type == "table":
-        #     update_table_cells(element, region, page_view, image)    
+        #     update_table_cells(element, region, page_view, image)
 
 
 def autotag_page(id: str, page: PdfPage, doc_struct_elem: PdsStructElement):
@@ -257,7 +256,7 @@ def autotag_page(id: str, page: PdfPage, doc_struct_elem: PdsStructElement):
 
     # Debugging: Save the rendered image for inspection
     images = Path(f"images-{zoom}")
-    images.mkdir(exist_ok=True)    
+    images.mkdir(exist_ok=True)
     cv2.imwrite(f"{str(images)}/{id}_{page.GetNumber()+1}.jpg", img)
 
     # Generate structured elements from the page map
