@@ -8,10 +8,10 @@ Docker image based PDF text recogntion with OCR Paddle and PDFix SDK
 ## Run a Docker image 
 
 ### Build docker image
-Build the docker image with the name `pdfix-paddle-ocr`. You can choose another name if you want.
+Build the docker image with the name `pdfix-paddlex`. You can choose another name if you want.
 
 ```
-docker build -t pdfix-paddle-ocr .
+docker build -t pdfix-paddlex .
 ```
 
 ### Run docker container
@@ -25,27 +25,26 @@ Example:
 Path `/home/pdfs_in` is mapped to `/data_in` and `/home/pdfs_out` is mapped to `/data_out`
 
 ```
-docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -it pdfix-paddle-ocr --name $LICENSE_NAME --key $LICENSE_KEY tag --input /data_in/scanned.pdf --output /data_out/ocred.pdf
+docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -it pdfix-paddlex --name $LICENSE_NAME --key $LICENSE_KEY tag --input /data_in/scanned.pdf --output /data_out/ocred.pdf
 ```
 Arguments `--input`, `--output`, `--name`, `--key` are the same as the CLI.
 Argument `tag` says that pdf should be autotaged.
 Argument `config` can be used instead and that just prints or copies `config.json`.
 
-### Run debug docker container
-To add debug features you need to share folders to container:
-- source code is located in `/usr/paddle-ocr/src`
-- folder for image outputs where bboxes recognized by paddle are visualized is located at `/usr/paddle-ocr/images-1.0`
+### Run docker container with debug intermediates
+To add debug features you need to share folder to container:
+- folder for image outputs where bboxes recognized by paddle are visualized is located at `/usr/paddlex/output`
 
-In example under this your development code is located in `/home/src` and after run you will see what paddle recognised in `/home/pdf-images`.
-Both folders need to exists before running docker.
+In example under after docker run you will see what paddle recognised in `/home/debug-output`.
+Folder need to exists before running docker.
 
 ```
-docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -v /home/src:/usr/paddle-ocr/src -v /home/pdf-images:/usr/paddle-ocr/images-1.0 -it tag pdfix-paddle-ocr --input /data_in/scanned.pdf --output /data_out/ocred.pdf --lang eng --name $LICENSE_NAME --key $LICENSE_KEY
+docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -v /home/debug-output:/usr/paddlex/output -it pdfix-paddlex --name $LICENSE_NAME --key $LICENSE_KEY tag --input /data_in/scanned.pdf --output /data_out/ocred.pdf
 ```
 
 ## License & libraries used
 - PDFix SDK - https://pdfix.net/terms
-- OCR Paddle - https://github.com/PaddlePaddle/PaddleOCR
+- PaddleX - https://paddlepaddle.github.io/PaddleX
 
 Trial version of the PDFix SDK may apply a watermark on the page and redact random parts of the PDF.
 
