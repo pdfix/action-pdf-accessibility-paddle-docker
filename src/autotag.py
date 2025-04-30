@@ -1,7 +1,9 @@
-import cv2
 import json
 from pathlib import Path
+
+import cv2
 from pdfixsdk import (
+    GetPdfix,
     PdeCell,
     PdeElement,
     PdePageMap,
@@ -9,10 +11,9 @@ from pdfixsdk import (
     PdfDevRect,
     Pdfix,
     PdfPage,
-    PdfTagsParams,
     PdfPageView,
+    PdfTagsParams,
     PdsStructElement,
-    GetPdfix,
     kPdeCell,
     kPdeImage,
     kPdeList,
@@ -37,11 +38,7 @@ from visualize_results import fill_image_with_recognized_places
 
 
 class AutotagByPaddle:
-    def __init__(self,
-                 license_name: str,
-                 license_key: str,
-                 input_path: str,
-                 output_path: str) -> None:
+    def __init__(self, license_name: str, license_key: str, input_path: str, output_path: str) -> None:
         """
         Initialize class for tagging pdf(s).
 
@@ -99,8 +96,7 @@ class AutotagByPaddle:
         doc.RemoveTags()
         doc.RemoveStructTree()
         struct_tree = doc.CreateStructTree()
-        doc_struct_elem = \
-            struct_tree.GetStructElementFromObject(struct_tree.GetObject())
+        doc_struct_elem = struct_tree.GetStructElementFromObject(struct_tree.GetObject())
         if doc_struct_elem is None:
             raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
 
@@ -137,11 +133,7 @@ class AutotagByPaddle:
             if not authorization.Authorize(self.license_name, self.license_key):
                 raise PdfixAuthorizationFailedException()
 
-    def _process_pdf_file_page(self,
-                               pdfix: Pdfix,
-                               id: str,
-                               page: PdfPage,
-                               doc_struct_elem: PdsStructElement) -> None:
+    def _process_pdf_file_page(self, pdfix: Pdfix, id: str, page: PdfPage, doc_struct_elem: PdsStructElement) -> None:
         """
         Automatically tag one PDF document page.
 
@@ -171,8 +163,7 @@ class AutotagByPaddle:
 
         # Write recognised tags with as much information as possible
         # into PDF structure data.
-        self._write_found_elements_directy_into_structure(page, page_view,
-            results, pdfix, doc_struct_elem)
+        self._write_found_elements_directy_into_structure(page, page_view, results, pdfix, doc_struct_elem)
 
         # Release resources
         page_view.Release()
@@ -194,17 +185,14 @@ class AutotagByPaddle:
             match result["type"].lower():
                 case "list":
                     # Process list data into more usable structure
-                    enhanced_result["custom"] = \
-                        self._process_list_result_into_usable_structure(result)
+                    enhanced_result["custom"] = self._process_list_result_into_usable_structure(result)
                 case "table":
                     # Process table data into more usable structure
-                    enhanced_result["custom"] = \
-                        self._process_table_result_into_usable_structure(result)
+                    enhanced_result["custom"] = self._process_table_result_into_usable_structure(result)
             enhanced_results.append(enhanced_result)
         return enhanced_results
 
-    def _process_list_result_into_usable_structure(self,
-                                                   list_result: dict) -> list:
+    def _process_list_result_into_usable_structure(self, list_result: dict) -> list:
         """
         Calculating bboxes for texts inside list.
 
@@ -217,6 +205,7 @@ class AutotagByPaddle:
         Returns:
             List of bboxes created from those 4 points.
         """
+
         def calculate_bbox(points: list) -> list:
             min_x: float = points[0][0]
             max_x: float = points[0][0]
@@ -237,8 +226,7 @@ class AutotagByPaddle:
             bboxes.append(bbox)
         return bboxes
 
-    def _process_table_result_into_usable_structure(self,
-                                                    table_result: dict) -> list:
+    def _process_table_result_into_usable_structure(self, table_result: dict) -> list:
         """
         Parsing paddle output specific html. There are no <th> and there are
         multiple assumptions. This is not generic way to parse html page
@@ -256,18 +244,19 @@ class AutotagByPaddle:
         html_content: str = table_result["res"]["html"]
         bboxes: list = table_result["res"]["cell_bbox"]
         table_bbox: list = table_result["bbox"]
-        content: str = html_content.replace("<html><body><table>",
-            "").replace("</table></body></html>", "")
+        content: str = html_content.replace("<html><body><table>", "").replace("</table></body></html>", "")
         sections: list = content.split("</thead>")
         thead: str = sections[0].replace("<thead>", "")
         bodies: str = sections[1]
 
-        def parse_section(data: str,
-                          is_header: bool,
-                          row_number: int,
-                          table_bbox: list,
-                          bboxes: list,
-                          index: int) -> tuple[list, int, int]:
+        def parse_section(
+            data: str,
+            is_header: bool,
+            row_number: int,
+            table_bbox: list,
+            bboxes: list,
+            index: int,
+        ) -> tuple[list, int, int]:
             output: list = []
             for row in data.split("</tr>"):
                 if row == "":
@@ -285,7 +274,7 @@ class AutotagByPaddle:
                         table_bbox[0] + bbox_inside_table[0],
                         table_bbox[1] + bbox_inside_table[1],
                         table_bbox[0] + bbox_inside_table[2],
-                        table_bbox[1] + bbox_inside_table[3]
+                        table_bbox[1] + bbox_inside_table[3],
                     ]
                     cell = {
                         "row": row_number,
@@ -293,7 +282,7 @@ class AutotagByPaddle:
                         "is_header": is_header,
                         "text": text,
                         "bbox": bbox_inside_table,
-                        "page_bbox": bbox_inside_page
+                        "page_bbox": bbox_inside_page,
                     }
                     index += 1
                     output.append(cell)
@@ -302,26 +291,30 @@ class AutotagByPaddle:
         bboxes_index: int = 0
         row_number: int = 0
         cell_results: list = []
-        header_results, row_number, bboxes_index = parse_section(thead, True,
-            row_number, table_bbox, bboxes, bboxes_index)
+        header_results, row_number, bboxes_index = parse_section(
+            thead, True, row_number, table_bbox, bboxes, bboxes_index
+        )
         cell_results += header_results
 
         for body in bodies.split("</tbody>"):
             if body == "":
                 continue
             body_data: str = body.replace("<tbody>", "").replace("</tbody>", "")
-            body_results, row_number, bboxes_index = parse_section(body_data,
-                False, row_number, table_bbox, bboxes, bboxes_index)
+            body_results, row_number, bboxes_index = parse_section(
+                body_data, False, row_number, table_bbox, bboxes, bboxes_index
+            )
             cell_results += body_results
 
         return cell_results
 
-    def _debug_paddle_output(self,
-                             zoom: float,
-                             id: str,
-                             page: PdfPage,
-                             results: list,
-                             image: cv2.typing.MatLike) -> None:
+    def _debug_paddle_output(
+        self,
+        zoom: float,
+        id: str,
+        page: PdfPage,
+        results: list,
+        image: cv2.typing.MatLike,
+    ) -> None:
         """
         Function just for easier debuggingof PaddleOCR results.
 
@@ -358,7 +351,7 @@ class AutotagByPaddle:
             if "res" in result:
                 expected_results += 1
                 print(f"res: {result['res']}")
-                if len(result['res']) == 0:
+                if len(result["res"]) == 0:
                     # sometimes Paddle returns text region without any text:
                     print("!!!!!!!!!!! WARNING NOTHING IN RESULT !!!!!!!!!!!!")
             print(f"img_idx: {result['img_idx']}")
@@ -381,14 +374,16 @@ class AutotagByPaddle:
         # Json from results
         elems = create_json_from_results(results)
         print(json.dumps(elems))
-        #print(json.dumps(elems, indent=2))
+        # print(json.dumps(elems, indent=2))
 
-    def _write_found_elements_directy_into_structure(self,
-            page: PdfPage,
-            page_view: PdfPageView,
-            results: list,
-            pdfix: Pdfix,
-            doc_struct_elem: PdsStructElement) -> None:
+    def _write_found_elements_directy_into_structure(
+        self,
+        page: PdfPage,
+        page_view: PdfPageView,
+        results: list,
+        pdfix: Pdfix,
+        doc_struct_elem: PdsStructElement,
+    ) -> None:
         """
         Tries to tag elements into PDF structure for given page.
 
@@ -413,8 +408,7 @@ class AutotagByPaddle:
             raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
 
         # Create a new structural element for the page
-        page_element = doc_struct_elem.AddNewChild("NonStruct",
-            doc_struct_elem.GetNumChildren())
+        page_element = doc_struct_elem.AddNewChild("NonStruct", doc_struct_elem.GetNumChildren())
 
         # Assign recognized elements as tags to the structure element
         if not page_map.AddTags(page_element, False, PdfTagsParams()):
@@ -423,10 +417,7 @@ class AutotagByPaddle:
         # Release resources
         page_map.Release()
 
-    def _add_found_elements(self,
-                            page_map: PdePageMap,
-                            page_view: PdfPageView,
-                            results: list) -> None:
+    def _add_found_elements(self, page_map: PdePageMap, page_view: PdfPageView, results: list) -> None:
         """
         Adds initial structural elements to the page map based
         on detected results.
@@ -477,10 +468,7 @@ class AutotagByPaddle:
                 case "table":
                     self._add_table_data(element, result["custom"], page_view)
 
-    def _add_list_data(self,
-                        pdf_element: PdeElement,
-                        list_result: list,
-                        page_view: PdfPageView) -> None:
+    def _add_list_data(self, pdf_element: PdeElement, list_result: list, page_view: PdfPageView) -> None:
         """
         Updates the list element with detected bullet sections. For this
         PaddleOCR it is just all lines.
@@ -494,10 +482,7 @@ class AutotagByPaddle:
         """TODO"""
         pass
 
-    def _add_table_data(self,
-                        pdf_element: PdeElement,
-                        table_result: list,
-                        page_view: PdfPageView) -> None:
+    def _add_table_data(self, pdf_element: PdeElement, table_result: list, page_view: PdfPageView) -> None:
         """
         Updates the table element with detected cells
 
@@ -514,24 +499,24 @@ class AutotagByPaddle:
         max_row = 0
         max_column = 0
 
-        for cell in table_result:
+        for table_cell in table_result:
             cell_rect = PdfDevRect()
-            cell_rect.left = int(cell["page_bbox"][0]) - 2
-            cell_rect.top = int(cell["page_bbox"][1]) - 2
-            cell_rect.right = int(cell["page_bbox"][2]) + 2
-            cell_rect.bottom = int(cell["page_bbox"][3]) + 2
+            cell_rect.left = int(table_cell["page_bbox"][0]) - 2
+            cell_rect.top = int(table_cell["page_bbox"][1]) - 2
+            cell_rect.right = int(table_cell["page_bbox"][2]) + 2
+            cell_rect.bottom = int(table_cell["page_bbox"][3]) + 2
 
             # Convert cell rectangle to page coordinates
             cell_bbox = page_view.RectToPage(cell_rect)
 
             # Create a new cell element and set its properties
             cell = PdeCell(page_map.CreateElement(kPdeCell, table).obj)
-            row = cell["row"]
-            column = cell["column"]
+            row = table_cell["row"]
+            column = table_cell["column"]
             cell.SetColNum(column)
             cell.SetRowNum(row)
             cell.SetBBox(cell_bbox)
-            cell.SetHeader(cell["is_header"])
+            cell.SetHeader(table_cell["is_header"])
             cell.SetColSpan(1)
             cell.SetRowSpan(1)
 
@@ -541,5 +526,5 @@ class AutotagByPaddle:
 
         # Set the number of columns and rows in the table based
         # on the last values of column and row
-        table.SetNumCols(max_column) # TODO check if +1 needed?
-        table.SetNumRows(max_row) # TODO check if +1 needed?
+        table.SetNumCols(max_column)  # TODO check if +1 needed?
+        table.SetNumRows(max_row)  # TODO check if +1 needed?

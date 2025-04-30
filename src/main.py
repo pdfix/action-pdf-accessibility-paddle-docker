@@ -33,8 +33,7 @@ def main() -> None:
         description="Process a PDF file using Paddle layout recognition",
     )
 
-    parser.add_argument("--name", type=str, default="",
-                        help="Pdfix license name")
+    parser.add_argument("--name", type=str, default="", help="Pdfix license name")
     parser.add_argument("--key", type=str, default="", help="Pdfix license key")
 
     subparsers = parser.add_subparsers(dest="subparser")
@@ -87,8 +86,7 @@ def main() -> None:
         output_file = args.output
 
         autotag = AutotagByPaddle(args.name, args.key, args.input, args.output)
-        if input_file.lower().endswith(".pdf") \
-            and output_file.lower().endswith(".pdf"):
+        if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
             try:
                 autotag.process_file()
             except Exception as e:

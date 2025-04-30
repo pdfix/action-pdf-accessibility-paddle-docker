@@ -32,7 +32,7 @@ def create_json_from_results(results: list) -> list:
                 elem["type"] = "pde_image"
             case "list":
                 elem["type"] = "pde_list"
-                #TODO label + lbody
+                # TODO label + lbody
             case "table":
                 elem["type"] = "pde_table"
                 # TODO

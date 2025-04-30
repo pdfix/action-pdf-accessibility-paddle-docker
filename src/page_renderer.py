@@ -1,21 +1,21 @@
+import tempfile
+
 import cv2
 from pdfixsdk import (
+    GetPdfix,
     PdfImageParams,
     PdfPage,
     PdfPageRenderParams,
     PdfPageView,
-    GetPdfix,
     kImageDIBFormatArgb,
     kImageFormatJpg,
-    kPsTruncate
+    kPsTruncate,
 )
-import tempfile
 
 from exceptions import PdfixException
 
 
-def create_image_from_pdf_page(pdf_page: PdfPage,
-                               page_view: PdfPageView) -> cv2.typing.MatLike:
+def create_image_from_pdf_page(pdf_page: PdfPage, page_view: PdfPageView) -> cv2.typing.MatLike:
     """
     Renders the PDF page into an opencv image of size 792x612.
 

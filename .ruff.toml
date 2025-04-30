@@ -1,0 +1,26 @@
+line-length = 120
+indent-width = 4
+
+# Assume Python 3.12
+target-version = "py312"
+
+[format]
+# quote-style = "double"
+# indent-style = "space"
+# skip-magic-trailing-comma = false
+# line-ending = "auto"
+# docstring-code-format = false
+
+[lint]
+# https://docs.astral.sh/ruff/rules/#isort-i
+select = [
+    "E", # pycodestyle error
+    "F", # Pyflakes
+    "I", # isort
+    "PLE", # pylint error
+    "PLW", # pylint warning
+    "W" , # pycodestyle warning
+]
+# ignore = []
+# fixable = ["ALL"]
+# unfixable = []

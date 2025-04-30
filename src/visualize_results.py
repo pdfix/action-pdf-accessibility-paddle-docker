@@ -1,12 +1,15 @@
-import cv2
 from pathlib import Path
+
+import cv2
 from pdfixsdk import PdfDevRect, PdfPage
 
 
-def draw_rect(image: cv2.typing.MatLike,
-              rect: PdfDevRect, color:
-              cv2.typing.Scalar,
-              thickness: int) -> None:
+def draw_rect(
+    image: cv2.typing.MatLike,
+    rect: PdfDevRect,
+    color: cv2.typing.Scalar,
+    thickness: int,
+) -> None:
     """
     Draw rectangle with in image with desired size, color and width
 
@@ -16,18 +19,12 @@ def draw_rect(image: cv2.typing.MatLike,
         color (cv2.typing.Scalar): Color in RGB form 0 to 255
         thickness (int): Width of lines in pixels
     """
-    cv2.rectangle(image,
-                  (rect.left, rect.top),
-                  (rect.right, rect.bottom),
-                  color,
-                  thickness)
+    cv2.rectangle(image, (rect.left, rect.top), (rect.right, rect.bottom), color, thickness)
 
 
-def fill_image_with_recognized_places(zoom: float,
-                                      id: str,
-                                      page: PdfPage,
-                                      results: list,
-                                      image: cv2.typing.MatLike) -> None:
+def fill_image_with_recognized_places(
+    zoom: float, id: str, page: PdfPage, results: list, image: cv2.typing.MatLike
+) -> None:
     """
     Visualize recognized elements in PDF page
 
@@ -44,7 +41,7 @@ def fill_image_with_recognized_places(zoom: float,
         rect.top = int(result["bbox"][1])
         rect.right = int(result["bbox"][2])
         rect.bottom = int(result["bbox"][3])
-        draw_rect(image, rect, (0, 255, 0), 2) # green
+        draw_rect(image, rect, (0, 255, 0), 2)  # green
 
         if result["type"].lower() == "table":
             # table recognition is turned off
@@ -67,9 +64,9 @@ def fill_image_with_recognized_places(zoom: float,
                 li_rect.top = int(li_bbox[1])
                 li_rect.right = int(li_bbox[2])
                 li_rect.bottom = int(li_bbox[3])
-                draw_rect(image, li_rect, (0, 0, 255), 1) # red
+                draw_rect(image, li_rect, (0, 0, 255), 1)  # red
 
     # Debugging: Save the rendered image for inspection
     images = Path(f"images-{zoom}")
     images.mkdir(exist_ok=True)
-    cv2.imwrite(f"{str(images)}/{id}_{page.GetNumber()+1}.jpg", image)
+    cv2.imwrite(f"{str(images)}/{id}_{page.GetNumber() + 1}.jpg", image)
