@@ -1,3 +1,5 @@
+from typing import Any
+
 from pdfixsdk import PdfDevRect
 
 
@@ -16,7 +18,7 @@ def create_json_from_results(results: list) -> list:
     elements = []
 
     for result in results:
-        elem = {}
+        elem: dict[str, Any] = {}
 
         rect = PdfDevRect()
         rect.left = int(result["bbox"][0])
