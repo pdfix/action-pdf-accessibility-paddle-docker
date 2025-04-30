@@ -1,5 +1,7 @@
-paddleocr==2.10.0
+opencv-python==4.11.0.86
 paddlepaddle==3.0.0
+paddlex==3.0.0rc1
+paddlex[ocr]==3.0.0rc1
 pdfix-sdk==8.5.3
-setuptools==79.0.0
+setuptools==80.0.0
 tqdm==4.67.1
