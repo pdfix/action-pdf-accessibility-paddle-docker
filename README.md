@@ -11,7 +11,7 @@ Docker image based PDF text recogntion with OCR Paddle and PDFix SDK
 Build the docker image with the name `pdfix-paddle-ocr`. You can choose another name if you want.
 
 ```
-docker build --target=primary -t pdfix-paddle-ocr .
+docker build -t pdfix-paddle-ocr .
 ```
 
 ### Run docker container
@@ -23,13 +23,13 @@ Example:
 - Your output PDF is: `/home/pdfs_out/ocred.pdf`
 
 Path `/home/pdfs_in` is mapped to `/data_in` and `/home/pdfs_out` is mapped to `/data_out`
-Argument `tag` says that pdf should be autotaged. It can be replaced by `config` where json is provided that helps autotaging in PDFixer.
 
 ```
-docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -it tag pdfix-paddle-ocr --input /data_in/scanned.pdf --output /data_out/ocred.pdf --lang eng --name $LICENSE_NAME --key $LICENSE_KEY
+docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -it pdfix-paddle-ocr --name $LICENSE_NAME --key $LICENSE_KEY tag --input /data_in/scanned.pdf --output /data_out/ocred.pdf
 ```
-Arguments `--input`, `--output`, `--lang`, `--name`, `--key` are the same as the CLI
-
+Arguments `--input`, `--output`, `--name`, `--key` are the same as the CLI.
+Argument `tag` says that pdf should be autotaged.
+Argument `config` can be used instead and that just prints or copies `config.json`.
 
 ### Run debug docker container
 To add debug features you need to share folders to container:

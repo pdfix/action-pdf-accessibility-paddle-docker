@@ -4,10 +4,17 @@ import shutil
 import sys
 from pathlib import Path
 
-from autotag import autotag_pdf, autotag_folder
+from autotag import AutotagByPaddle
 
 
 def get_config(path: str) -> None:
+    """
+        If Path is not provided, output content of config.
+        If Path is provided, copy config to destination path.
+
+    Args:
+        path (string): Destination path
+    """
     if path is None:
         with open(
             os.path.join(Path(__file__).parent.absolute(), "../config.json"),
@@ -26,7 +33,8 @@ def main() -> None:
         description="Process a PDF file using Paddle layout recognition",
     )
 
-    parser.add_argument("--name", type=str, default="", help="Pdfix license name")
+    parser.add_argument("--name", type=str, default="",
+                        help="Pdfix license name")
     parser.add_argument("--key", type=str, default="", help="Pdfix license key")
 
     subparsers = parser.add_subparsers(dest="subparser")
@@ -78,22 +86,21 @@ def main() -> None:
         input_file = args.input
         output_file = args.output
 
-        # if not os.path.isfile(input_file):
-        #     sys.exit(f"Error: The input file '{input_file}' does not exist")
-        #     return
-
-        if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
-            try:                
-                autotag_pdf(input_file, output_file)
+        autotag = AutotagByPaddle(args.name, args.key, args.input, args.output)
+        if input_file.lower().endswith(".pdf") \
+            and output_file.lower().endswith(".pdf"):
+            try:
+                autotag.process_file()
             except Exception as e:
-                sys.exit("Failed to run Paddle {}".format(e))
+                sys.exit("Failed to run tagging by Paddle: {}".format(e))
         elif Path(input_file).is_dir():
-            try:                
-                autotag_folder(input_file, output_file)
+            try:
+                autotag.process_folder()
             except Exception as e:
-                sys.exit("Failed to run Paddle {}".format(e))
+                sys.exit("Failed to run tagging by Paddle: {}".format(e))
         else:
             print("Input and output file must be PDF")
+            sys.exit(1)
 
 
 if __name__ == "__main__":

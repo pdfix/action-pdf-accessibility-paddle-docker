@@ -1,7 +1,7 @@
 # Use the official Debian slim image as a base
 FROM debian:stable-slim
 
-# Install Paddle OCR and necessary dependencies
+# Update system and Install python3
 RUN apt-get update && \
     apt-get install -y \
     python3 \
@@ -13,26 +13,20 @@ RUN apt-get update && \
 
 WORKDIR /usr/paddle-ocr/
 
+
+# Create a virtual environment and install paddle and dependencies
 ENV VIRTUAL_ENV=venv
-
-
-# Create a virtual environment and install dependencies
 RUN python3 -m venv venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# Copy models
-COPY models/ /usr/paddle-ocr/models/
-# Copy requirements.txt
 COPY requirements.txt /usr/paddle-ocr/
+RUN pip3 install --no-cache-dir -r requirements.txt
 
+
+# Copy models, config, source code, ...
+COPY models/ /usr/paddle-ocr/models/
 COPY config.json /usr/paddle-ocr/
-
-RUN pip install --no-cache-dir -r requirements.txt
-
-# COPY python/ /usr/autotag-tesseract/python/
-# RUN pip install /usr/autotag-tesseract/python/pdfix_sdk-8.2.0.tar.gz
-
-# Copy the source code
 COPY src/ /usr/paddle-ocr/src/
+COPY images/ /usr/paddle-ocr/images-1.0/
+
 
 ENTRYPOINT ["/usr/paddle-ocr/venv/bin/python3", "/usr/paddle-ocr/src/main.py"]
