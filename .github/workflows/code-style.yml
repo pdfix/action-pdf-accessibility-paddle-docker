@@ -7,10 +7,10 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
       - name: Check formatting
-        uses: chartboost/ruff-action@v1
+        uses: astral-sh/ruff-action@v3
         with:
-          args: 'format --check'
+          args: format --check --config .ruff.toml
       - name: Check coding style
-        uses: chartboost/ruff-action@v1
+        uses: astral-sh/ruff-action@v3
         with:
-          args: 'check --select F,E,W,I,PLW'
+          args: check --output-format=github . --config .ruff.toml
