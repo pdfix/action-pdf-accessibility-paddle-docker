@@ -67,3 +67,22 @@ def create_image_from_pdf_page(pdf_page: PdfPage, page_view: PdfPageView) -> cv2
 
         # Return the saved image as a NumPy array using OpenCV
         return cv2.imread(temp_file.name)
+
+
+def create_image_from_part_of_page(image: cv2.typing.MatLike, box: list, offset: int) -> cv2.typing.MatLike:
+    """
+    Takes rendered PDF page and cuts box from it with specified offset
+
+    Args:
+        image (cv2.typing.MatLike): Rendered PDF page.
+        box (list): Bounding box of wanted area
+        offset (int): How many pixel around bounding box should be also taken.
+
+    Returns:
+        Cut image as MatLike object.
+    """
+    min_x = int(box[0]) - offset
+    min_y = int(box[1]) - offset
+    max_x = int(box[2]) + offset
+    max_y = int(box[3]) + offset
+    return image[min_y:max_y, min_x:max_x]

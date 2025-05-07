@@ -2,6 +2,7 @@ import argparse
 import os
 import shutil
 import sys
+import traceback
 from pathlib import Path
 
 from autotag import AutotagByPaddle
@@ -90,6 +91,7 @@ def main() -> None:
             try:
                 autotag.process_file()
             except Exception as e:
+                print(traceback.format_exc())
                 sys.exit("Failed to run tagging by Paddle: {}".format(e))
         elif Path(input_file).is_dir():
             try:
