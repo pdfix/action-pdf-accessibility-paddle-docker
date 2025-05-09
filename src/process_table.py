@@ -167,27 +167,6 @@ def calculate_indexes_position_span(min: int, max: int, lines: list) -> tuple[in
     return min_index, max_index, position, span
 
 
-def calculate_position_and_span(min: int, max: int, lines: list) -> tuple[int, int]:
-    """
-    Calculate cell position and cell span in one direction
-
-    Args:
-        min (int): cell's min coordinate in one direction
-        max (int): cell's max coordinate in one direction
-        lines (list): List of all table lines in one direction
-
-    Returns:
-        Cell position in one direction
-        Cell span in one direction
-    """
-    min_index = find_line_index(min, lines)
-    max_index = find_line_index(max, lines)
-
-    span = max_index - min_index
-    position = min_index + 1
-    return position, span
-
-
 def find_line_index(target_line: int, lines: list) -> int:
     """
     Find index of closest line to target_line
