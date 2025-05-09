@@ -2,7 +2,7 @@ import math
 from datetime import date
 from typing import Any
 
-from pdfixsdk import PdfDevRect, PdfPageView, __version__
+from pdfixsdk import PdfDevRect, PdfPageView, PdfRect, __version__
 
 
 def create_json_for_document(pages: list) -> dict:
@@ -134,11 +134,11 @@ def create_json_for_elements(results: dict, page_view: PdfPageView) -> list:
                 element["type"] = "pde_text"
 
             case "footer":
-                element["flag"] = "footer"
+                element["flag"] = "footer|artifact"
                 element["type"] = "pde_text"
 
             case "footer_image":
-                element["flag"] = "footer"
+                element["flag"] = "footer|artifact"
                 element["type"] = "pde_image"
 
             case "footnote":
@@ -160,11 +160,11 @@ def create_json_for_elements(results: dict, page_view: PdfPageView) -> list:
                 pass
 
             case "header":
-                element["flag"] = "header"  # TODO decide "header|artifact" also for footer
+                element["flag"] = "header|artifact"
                 element["type"] = "pde_text"
 
             case "header_image":
-                element["flag"] = "header"
+                element["flag"] = "header|artifact"
                 element["type"] = "pde_image"
 
             case "image":
@@ -172,12 +172,13 @@ def create_json_for_elements(results: dict, page_view: PdfPageView) -> list:
 
             case "number":
                 element["comment"] = "number"
-                element["flag"] = "footer"  # TODO can be on top "header" - check bbox
+                number_flag = is_footer_or_header(page_view, bbox)
+                element["flag"] = f"{number_flag}|artifact"
                 element["type"] = "pde_text"
 
             case "paragraph_title":
                 element["comment"] = "paragraph_title"
-                element["heading"] = "h2"
+                element["heading"] = "h1"
                 element["type"] = "pde_text"
 
             case "reference":
@@ -221,6 +222,10 @@ def create_json_for_elements(results: dict, page_view: PdfPageView) -> list:
                 element["comment"] = f"Unknown type: {label}"
                 element["type"] = "pde_text"
 
+        if element["type"] == "pde_text":
+            # 10% increase of bbox
+            element["bbox"] = increase_bbox(bbox, 1.1)
+
         elements.append(element)
 
     return elements
@@ -242,10 +247,14 @@ def create_table_cells(result: dict, page_view: PdfPageView) -> list:
 
     for cell in result["cells"]:
         rect = PdfDevRect()
-        rect.left = math.floor(cell["bbox"][0])  # min_x
-        rect.top = math.floor(cell["bbox"][1])  # min_y
-        rect.right = math.ceil(cell["bbox"][2])  # max_x
-        rect.bottom = math.ceil(cell["bbox"][3])  # max_y
+        # rect.left = math.floor(cell["bbox"][0])  # min_x
+        # rect.top = math.floor(cell["bbox"][1])  # min_y
+        # rect.right = math.ceil(cell["bbox"][2])  # max_x
+        # rect.bottom = math.ceil(cell["bbox"][3])  # max_y
+        rect.left = math.ceil(cell["bbox"][0])  # min_x
+        rect.top = math.ceil(cell["bbox"][1])  # min_y
+        rect.right = math.floor(cell["bbox"][2])  # max_x
+        rect.bottom = math.floor(cell["bbox"][3])  # max_y
         bbox = page_view.RectToPage(rect)
 
         create_cell: dict = {
@@ -266,4 +275,46 @@ def create_table_cells(result: dict, page_view: PdfPageView) -> list:
 
 
 def convert_bool_to_str(value: bool) -> str:
+    """
+    Create value for json as pdfix template expects
+
+    Args:
+        value (bool): calue to convert
+
+    Returns:
+        Converted bool to string for json purposes
+    """
     return "true" if value else "false"
+
+
+def is_footer_or_header(page_view: PdfPageView, bbox: PdfRect) -> str:
+    """
+    According to Y coordinate of bbox return if it is "header" or "footer"
+
+    Args:
+        page_view (PdfPageView): Page view to get page heigh
+        bbox (PdfRect): Bounding box in PDF coordinates (Y=0 is bottom)
+
+    Returns:
+        "header" or "footer"
+    """
+    page_height = page_view.GetDeviceHeight()
+    half_height = page_height / 2
+    return "footer" if bbox.top < half_height else "header"
+
+
+def increase_bbox(bbox: PdfRect, multiplier: float) -> list:
+    def get_offset(min: int, max: int, multiplier: float) -> int:
+        size = max - min
+        new_size = math.ceil(size * multiplier)
+        return math.ceil((new_size - size) / 2.0)
+
+    offset_x = get_offset(bbox.left, bbox.right, multiplier)
+    offset_y = get_offset(bbox.bottom, bbox.top, multiplier)
+
+    return [
+        str(bbox.left - offset_x),
+        str(bbox.bottom - offset_y),
+        str(bbox.right + offset_x),
+        str(bbox.top + offset_y),
+    ]

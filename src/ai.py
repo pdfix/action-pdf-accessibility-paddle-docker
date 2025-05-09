@@ -3,6 +3,7 @@ from paddlex import create_model
 from tqdm import tqdm
 
 from page_renderer import create_image_from_part_of_page
+from process_table import create_custom_result_from_paddlex_cell_result
 
 
 def process_pdf_page_image_with_ai(
@@ -173,26 +174,8 @@ def process_table_image_with_ai_v2(image: cv2.typing.MatLike, coordinate: list, 
             # cell_results.print()
             cell_results.save_to_img(save_path=output_file_path)
 
-            # processing table results into usable structure
-            size_rows, size_columns, cells = create_table_structure(cell_results)
-
-            # calculating page bounding box
-            x: float = coordinate[0]
-            y: float = coordinate[1]
-            for cell in cells:
-                cell["bbox"] = [
-                    cell["box"][0] + x,
-                    cell["box"][1] + y,
-                    cell["box"][2] + x,
-                    cell["box"][3] + y,
-                ]
-
-            # it should never return more than 1 result:
-            return {
-                "rows": size_rows,
-                "columns": size_columns,
-                "cells": cells,
-            }
+            # we are processing 1 table so we are expecting just 1 result:
+            return create_custom_result_from_paddlex_cell_result(cell_results, coordinate)
 
     return {}
 
@@ -211,106 +194,6 @@ def use_wired_model(result: dict) -> bool:
         return result["label_names"][0] == "wired_table"
     else:
         return result["label_names"][0] == "wireless_table"
-
-
-def create_table_structure(result: dict) -> tuple[int, int, list]:
-    """
-    From results of table cell recognition create data for each cell:
-        - row number
-        - row span
-        - column number
-        - column span
-
-    Args:
-        result (dict): Result from table cell recognition
-
-    Returns:
-        Number of rows in table.
-        Number of columns in table.
-        List of all cell with all additional data
-    """
-    row_lines: list = []
-    column_lines: list = []
-
-    for box in result["boxes"]:
-        # vertical lines
-        left_line: float = int(box["coordinate"][0])
-        right_line: float = int(box["coordinate"][2])
-        if left_line not in column_lines:
-            column_lines.append(left_line)
-        if right_line not in column_lines:
-            column_lines.append(right_line)
-
-        # horizontal lines
-        top_line: int = int(box["coordinate"][1])
-        bottom_line: int = int(box["coordinate"][3])
-        if top_line not in row_lines:
-            row_lines.append(top_line)
-        if bottom_line not in row_lines:
-            row_lines.append(bottom_line)
-
-    def clean_lines(lines: list) -> list:
-        # sort lines in ascending order
-        lines.sort()
-
-        # choose number smaller than any possible, All lines are 0 or greater
-        previous: int = -10
-
-        # add only lines that are not close to each other (difference of at least 2)
-        result_lines: list = []
-
-        for line in lines:
-            if line - previous > 1:
-                result_lines.append(line)
-            previous = line
-
-        return result_lines
-
-    row_lines = clean_lines(row_lines)
-    column_lines = clean_lines(column_lines)
-    number_rows: int = len(row_lines) - 1
-    number_columns: int = len(column_lines) - 1
-
-    def calculate_cell_data(min: int, max: int, lines: list) -> tuple[int, int]:
-        def find_index(target: int, sorted_list: list) -> int:
-            lower_bound = target - 2
-            upper_bound = target + 2
-            for index, value in enumerate(sorted_list):
-                if lower_bound <= value <= upper_bound:
-                    return index
-            # not found
-            return -1
-
-        min_index = find_index(min, lines)
-        max_index = find_index(max, lines)
-
-        span = max_index - min_index
-        n = min_index + 1
-        return n, span
-
-    cells_with_data: list = []
-    for box in result["boxes"]:
-        left: float = box["coordinate"][0]
-        top: float = box["coordinate"][1]
-        right: float = box["coordinate"][2]
-        bottom: float = box["coordinate"][3]
-
-        row_number, row_span = calculate_cell_data(int(top), int(bottom), row_lines)
-        column_number, column_span = calculate_cell_data(int(left), int(right), column_lines)
-
-        cell_result: dict = {
-            "row": row_number,
-            "column": column_number,
-            "row_span": row_span,
-            "column_span": column_span,
-            "box": [left, top, right, bottom],
-        }
-        cells_with_data.append(cell_result)
-
-    # sort cells by ascending coordinates: Y (row) and X (column)
-    cells_with_data = sorted(cells_with_data, key=lambda x: (x["row"], x["column"]))
-
-    return number_rows, number_columns, cells_with_data
 
 
 def process_formula_image_with_ai(image: cv2.typing.MatLike, output_file_path: str) -> str:
@@ -338,6 +221,4 @@ def process_formula_image_with_ai(image: cv2.typing.MatLike, output_file_path: s
         # res.print()
         return res["rec_formula"]
 
-    print("No results for formula")
-    cv2.imwrite(output_file_path, image)
     return ""

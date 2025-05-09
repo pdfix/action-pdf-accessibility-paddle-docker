@@ -109,10 +109,7 @@ class AutotagByPaddle:
         with open(f"./output/{id}-template_json.json", "w") as file:
             file.write(json.dumps(template_json, indent=2))
 
-        return  # TODO debug later
-
         # Convert template json to memory stream
-        print("Loading template into document")
         memory_stream = GetPdfix().CreateMemStream()
         raw_data, raw_data_size = self._json_to_raw_data(template_json)
         if not memory_stream.Write(0, raw_data, raw_data_size):
@@ -125,13 +122,11 @@ class AutotagByPaddle:
         memory_stream.Destroy()
 
         # Autotag document
-        print("Autotagging document")
         tagsParams = PdfTagsParams()
         if not doc.AddTags(tagsParams):
             raise Exception(pdfix.GetError())
 
         # Save the processed document
-        print("Saving document")
         if not doc.Save(self.output_path_str, kSaveFull):
             raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
 
