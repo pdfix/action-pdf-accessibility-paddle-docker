@@ -13,7 +13,7 @@ from pdfixsdk import (
 )
 from tqdm import tqdm
 
-from ai import process_pdf_page_image_with_ai
+from ai import PaddleXEngine
 from exceptions import (
     InvalidDirectoryException,
     PdfixAuthorizationException,
@@ -22,10 +22,10 @@ from exceptions import (
     SameDirectoryException,
 )
 from page_renderer import create_image_from_pdf_page
-from template_json import create_json_for_document, create_json_for_page
+from template_json import TemplateJsonCreator
 
 
-class AutotagByPaddle:
+class AutotagUsingPaddleXRecognition:
     def __init__(self, license_name: str, license_key: str, input_path: str, output_path: str) -> None:
         """
         Initialize class for tagging pdf(s).
@@ -86,7 +86,7 @@ class AutotagByPaddle:
         doc.RemoveStructTree()
 
         num_pages = doc.GetNumPages()
-        template_json_pages: list = []
+        template_json_creator = TemplateJsonCreator()
 
         # Process each page
         max_formulas_and_tables_per_page = 1000
@@ -96,22 +96,21 @@ class AutotagByPaddle:
             page = doc.AcquirePage(page_index)
             if page is None:
                 raise PdfixException("Unable to acquire the page")
-            processed: dict = self._process_pdf_file_page(
-                id, page, page_index, progress_bar, max_formulas_and_tables_per_page
+            self._process_pdf_file_page(
+                id, page, page_index, template_json_creator, progress_bar, max_formulas_and_tables_per_page
             )
-            template_json_pages.append(processed)
             page.Release()
 
         # Create template json for whole document
-        template_json: dict = create_json_for_document(template_json_pages)
+        template_json_dict: dict = template_json_creator.create_json_dict_for_document()
 
         # Save template json to file
         with open(f"./output/{id}-template_json.json", "w") as file:
-            file.write(json.dumps(template_json, indent=2))
+            file.write(json.dumps(template_json_dict, indent=2))
 
         # Convert template json to memory stream
         memory_stream = GetPdfix().CreateMemStream()
-        raw_data, raw_data_size = self._json_to_raw_data(template_json)
+        raw_data, raw_data_size = self._json_to_raw_data(template_json_dict)
         if not memory_stream.Write(0, raw_data, raw_data_size):
             raise Exception(GetPdfix().GetError())
 
@@ -167,8 +166,14 @@ class AutotagByPaddle:
                 raise PdfixAuthorizationFailedException()
 
     def _process_pdf_file_page(
-        self, id: str, page: PdfPage, page_index: int, progress_bar: tqdm, max_formulas_and_tables_per_page: int
-    ) -> dict:
+        self,
+        id: str,
+        page: PdfPage,
+        page_index: int,
+        templateJsonCreator: TemplateJsonCreator,
+        progress_bar: tqdm,
+        max_formulas_and_tables_per_page: int,
+    ) -> None:
         """
         Create template json for current PDF document page.
 
@@ -192,12 +197,13 @@ class AutotagByPaddle:
         image = create_image_from_pdf_page(page, page_view)
 
         # Run layout analysis using the PaddleX engine
-        results = process_pdf_page_image_with_ai(image, id, page_number, progress_bar, max_formulas_and_tables_per_page)
+        paddlex = PaddleXEngine()
+        results = paddlex.process_pdf_page_image_with_ai(
+            image, id, page_number, progress_bar, max_formulas_and_tables_per_page
+        )
 
         # Create template json from PaddleX results for this page
-        json_data = create_json_for_page(results, page_number, page_view)
+        templateJsonCreator.process_page(results, page_number, page_view)
 
         # Release resources
         page_view.Release()
-
-        return json_data

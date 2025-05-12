@@ -5,7 +5,7 @@ import sys
 import traceback
 from pathlib import Path
 
-from autotag import AutotagByPaddle
+from autotag import AutotagUsingPaddleXRecognition
 
 
 def get_config(path: str) -> None:
@@ -86,7 +86,7 @@ def main() -> None:
         input_file = args.input
         output_file = args.output
 
-        autotag = AutotagByPaddle(args.name, args.key, args.input, args.output)
+        autotag = AutotagUsingPaddleXRecognition(args.name, args.key, args.input, args.output)
         if input_file.lower().endswith(".pdf") and output_file.lower().endswith(".pdf"):
             try:
                 autotag.process_file()
