@@ -49,6 +49,34 @@
           ]
         }
       ]
+    },
+    {
+      "title": "Generate Alternate Text for Formula",
+      "name": "generate_alt_text_formula",
+      "desc": "Automatically generates alternate description for formula using Paddle",
+      "icon": "add_photo_alternate",
+      "version": "v0.0.0",
+      "subtype": "set_alt",
+      "category": "Paddle",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix-paddlex:latest generate-alt-text -i \"${input_json}\" -o \"${output_json}\"",
+      "args": [
+        {
+          "name": "input_json",
+          "desc": "Input JSON file with image data for formula",
+          "flags": 2,
+          "type": "file_path",
+          "ext": "json",
+          "value": ""
+        },
+        {
+          "name": "output_json",
+          "desc": "Output JSON file containing alternate description for formula",
+          "flags": 4,
+          "type": "file_path",
+          "ext": "json",
+          "value": ""
+        }
+      ]
     }
   ]
 }
