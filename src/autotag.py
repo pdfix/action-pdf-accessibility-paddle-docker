@@ -26,21 +26,24 @@ from template_json import TemplateJsonCreator
 
 
 class AutotagUsingPaddleXRecognition:
-    def __init__(self, license_name: str, license_key: str, input_path: str, output_path: str) -> None:
+    def __init__(self, license_name: str, license_key: str, input_path: str, output_path: str, model: str) -> None:
         """
         Initialize class for tagging pdf(s).
 
         Args:
             license_name (string): Pdfix sdk license name (e-mail)
             license_key (string): Pdfix sdk license key
-            input_path (string): Path to one pdf or folder.
+            input_path (string): Path to one pdf or folder
             output_path (string): Path where proccessed pdf(s) should be
-                written, if input is 1 pdf output should be also 1 pdf ...
+                written, if input is 1 pdf output should be also 1 pdf,
+                if input is folder output should also be folder
+            model (string): Paddle model for layout recognition
         """
         self.license_name = license_name
         self.license_key = license_key
         self.input_path_str = input_path
         self.output_path_str = output_path
+        self.model = model
 
     def process_folder(self) -> None:
         """
@@ -197,7 +200,7 @@ class AutotagUsingPaddleXRecognition:
         image = create_image_from_pdf_page(page, page_view)
 
         # Run layout analysis using the PaddleX engine
-        paddlex = PaddleXEngine()
+        paddlex = PaddleXEngine(self.model)
         results = paddlex.process_pdf_page_image_with_ai(
             image, id, page_number, progress_bar, max_formulas_and_tables_per_page
         )

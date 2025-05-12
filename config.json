@@ -2,7 +2,7 @@
   "actions": [
     {
       "name": "Autotag Paddle",
-      "desc": "A Docker image that automatically tags PDF files using PDFix SDK and Paddle-OCR",
+      "desc": "A Docker imnage that automatically tags PDF using Paddle and PDFix SDK",
       "version": {
         "major": 1,
         "minor": 0
@@ -11,9 +11,9 @@
       "category": "Tags",
       "configurations": [
         {
-          "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/autotag-paddle:latest --name \"${license_name}\" --key \"${license_key}\" tag -i \"${input_pdf}\" -o \"${output_pdf}\"",
-          "name": "Autotag PDF",
-          "desc": "Autotag PDF"
+          "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix-paddlex:latest --name \"${license_name}\" --key \"${license_key}\" tag -i \"${input_pdf}\" -o \"${output_pdf}\"",
+          "name": "Autotag PDF by Paddle",
+          "desc": "Autotag PDF using Paddle recognition and PDFix SDK"
         }
       ],
       "args": [
@@ -32,6 +32,21 @@
           "type": "file_path",
           "ext": "pdf",
           "value": ""
+        },
+        {
+          "title": "Paddle Model",
+          "name": "model",
+          "desc": "Layout prediction model that Paddle should use",
+          "type": "string",
+          "value": "PP-DocLayout-L",
+          "set": [
+            {
+              "value": "PP-DocLayout-L"
+            },
+            {
+              "value": "RT-DETR-H_layout_17cls"
+            }
+          ]
         }
       ]
     }

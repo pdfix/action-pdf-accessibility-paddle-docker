@@ -1,14 +1,14 @@
 # TODO change to layout
-# TODO change to pdfix/autotag-paddle:latest
+# TODO change "pdfix-paddlex" to "pdfix/autotag-paddle:latest"
 # TODO download PDFix-sdk 8.6.0 aarch64 version
 
-# PDFix OCR with Paddle
+# Autotag using Paddle and PDFix SDK
 
-Docker image based PDF text recogntion with PaddleX and PDFix SDK
+Docker image based autotag PDF with PaddleX and PDFix SDK
 
 ## Table of Contents
 
-- [PDFix OCR with Paddle](#autotag-paddle)
+- [Autotag using Paddle and PDFix SDK](#autotag-paddle)
   - [Table of Contents](#table-of-contents)
   - [System Requirements](#system-requirements)
   - [Run a Docker image ](#run-docker-image)
