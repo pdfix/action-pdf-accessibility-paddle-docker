@@ -56,8 +56,8 @@ COPY src/ /usr/paddlex/src/
 RUN mkdir -p output
 
 
-# update pdfix-sdk to 6.3.0 #TODO build aarch64
-RUN curl -o pdfix_sdk-8.6.0.tar.gz.zip -L https://github.com/pdfix/pdfix_sdk_builds/releases/download/v8.6.0-beta-3/python-pdfix_sdk-8.6.0_676a7ab6.tar.gz.zip
+# update pdfix-sdk to 8.6.0
+RUN curl -o pdfix_sdk-8.6.0.tar.gz.zip -L https://github.com/pdfix/pdfix_sdk_builds/releases/download/v8.6.0-beta-4/python-pdfix_sdk-8.6.0_e7d97f9d.tar.gz.zip
 RUN unzip pdfix_sdk-8.6.0.tar.gz.zip
 RUN pip install pdfix_sdk-8.6.0.tar.gz
 RUN rm pdfix_sdk-8.6.0.tar.gz.zip pdfix_sdk-8.6.0.tar.gz

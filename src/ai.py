@@ -16,55 +16,51 @@ class PaddleXEngine:
         self.model_dir = f"models/{model}"
         match model:
             case "PP-DocLayout-L":
-                self.threshold = (
-                    {
-                        0: 0.3,  # paragraph_title
-                        1: 0.5,  # image
-                        2: 0.5,  # text
-                        3: 0.5,  # number
-                        4: 0.5,  # abstract
-                        5: 0.5,  # content
-                        6: 0.5,  # figure_title
-                        7: 0.3,  # formula
-                        8: 0.5,  # table
-                        9: 0.5,  # table_title
-                        10: 0.5,  # reference
-                        11: 0.5,  # doc_title
-                        12: 0.5,  # footnote
-                        13: 0.3,  # header (default 0.5)
-                        14: 0.5,  # algorithm
-                        15: 0.5,  # footer
-                        16: 0.3,  # seal
-                        17: 0.5,  # chart_title
-                        18: 0.5,  # chart
-                        19: 0.5,  # formula_number
-                        20: 0.3,  # header_image (default 0.5)
-                        21: 0.5,  # footer_image
-                        22: 0.5,  # aside_text
-                    },
-                )
+                self.threshold = {
+                    0: 0.3,  # paragraph_title
+                    1: 0.5,  # image
+                    2: 0.5,  # text
+                    3: 0.5,  # number
+                    4: 0.5,  # abstract
+                    5: 0.5,  # content
+                    6: 0.5,  # figure_title
+                    7: 0.3,  # formula
+                    8: 0.5,  # table
+                    9: 0.5,  # table_title
+                    10: 0.5,  # reference
+                    11: 0.5,  # doc_title
+                    12: 0.5,  # footnote
+                    13: 0.3,  # header (default 0.5)
+                    14: 0.5,  # algorithm
+                    15: 0.5,  # footer
+                    16: 0.3,  # seal
+                    17: 0.5,  # chart_title
+                    18: 0.5,  # chart
+                    19: 0.5,  # formula_number
+                    20: 0.3,  # header_image (default 0.5)
+                    21: 0.5,  # footer_image
+                    22: 0.5,  # aside_text
+                }
             case "RT-DETR-H_layout_17cls":
-                self.threshold = (
-                    {
-                        0: 0.3,  # paragraph_title
-                        1: 0.3,  # image (default 0.5)
-                        2: 0.5,  # text
-                        3: 0.5,  # number
-                        4: 0.5,  # abstract
-                        5: 0.5,  # content
-                        6: 0.5,  # figure_title
-                        7: 0.3,  # formula
-                        8: 0.5,  # table
-                        9: 0.5,  # table_title
-                        10: 0.5,  # reference
-                        11: 0.3,  # doc_title (default 0.5)
-                        12: 0.5,  # footnote
-                        13: 0.3,  # header (default 0.5)
-                        14: 0.5,  # algorithm
-                        15: 0.5,  # footer
-                        16: 0.3,  # seal
-                    },
-                )
+                self.threshold = {
+                    0: 0.3,  # paragraph_title
+                    1: 0.3,  # image (default 0.5)
+                    2: 0.5,  # text
+                    3: 0.5,  # number
+                    4: 0.5,  # abstract
+                    5: 0.5,  # content
+                    6: 0.5,  # figure_title
+                    7: 0.3,  # formula
+                    8: 0.5,  # table
+                    9: 0.5,  # table_title
+                    10: 0.5,  # reference
+                    11: 0.3,  # doc_title (default 0.5)
+                    12: 0.5,  # footnote
+                    13: 0.3,  # header (default 0.5)
+                    14: 0.5,  # algorithm
+                    15: 0.5,  # footer
+                    16: 0.3,  # seal
+                }
 
     def process_pdf_page_image_with_ai(
         self,
@@ -144,7 +140,7 @@ class PaddleXEngine:
                             formula_image = create_image_from_part_of_page(image, coordinate, 1)
 
                             # Process formula
-                            formula_rec = self._process_formula_image_with_ai(formula_image)
+                            formula_rec = self.process_formula_image_with_ai(formula_image)
 
                             # Save as additional data to PaddleX result
                             box["custom"] = formula_rec
@@ -159,6 +155,32 @@ class PaddleXEngine:
         # No layout output
         progress_bar.update(max_formulas_and_tables_per_page)
         return {}
+
+    def process_formula_image_with_ai(self, image: cv2.typing.MatLike) -> str:
+        """
+        Let AI do its magic for formula image.
+
+        Args:
+            image (cv2.typing.MatLike): Rendered image of formula.
+
+        Returns:
+            TBE, currently empty dictionary
+        """
+
+        # Formula model prediction
+        formula_model = create_model(
+            model_name="PP-FormulaNet-L",
+            model_dir="models/PP-FormulaNet-L",
+            device="cpu",
+        )
+
+        output = formula_model.predict(input=image, batch_size=1)
+
+        for res in output:
+            return res["rec_formula"]
+
+        # No formula output
+        return ""
 
     def _process_table_image_with_ai_v2(
         self, image: cv2.typing.MatLike, coordinate: list, output_file_path: str
@@ -224,29 +246,3 @@ class PaddleXEngine:
             return result["label_names"][0] == "wired_table"
         else:
             return result["label_names"][0] == "wireless_table"
-
-    def _process_formula_image_with_ai(self, image: cv2.typing.MatLike) -> str:
-        """
-        Let AI do its magic for formula image.
-
-        Args:
-            image (cv2.typing.MatLike): Rendered image of formula.
-
-        Returns:
-            TBE, currently empty dictionary
-        """
-
-        # Formula model prediction
-        formula_model = create_model(
-            model_name="PP-FormulaNet-L",
-            model_dir="models/PP-FormulaNet-L",
-            device="cpu",
-        )
-
-        output = formula_model.predict(input=image, batch_size=1)
-
-        for res in output:
-            return res["rec_formula"]
-
-        # No formula output
-        return ""

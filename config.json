@@ -3,12 +3,9 @@
     {
       "name": "Autotag Paddle",
       "desc": "A Docker imnage that automatically tags PDF using Paddle and PDFix SDK",
-      "version": {
-        "major": 1,
-        "minor": 0
-      },
+      "version": "v0.0.0",
       "icon": "add_photo_alternate",
-      "category": "Tags",
+      "category": "Paddle",
       "configurations": [
         {
           "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix-paddlex:latest --name \"${license_name}\" --key \"${license_key}\" tag -i \"${input_pdf}\" -o \"${output_pdf}\"",

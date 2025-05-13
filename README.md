@@ -29,7 +29,7 @@ Docker image based autotag PDF with PaddleX and PDFix SDK
 Build the docker image with the name `pdfix-paddlex`. You can choose another name if you want.
 Build downloads models that can be used and fonts that PaddleX requires and would normaly download for each container run.
 
-```
+```bash
 docker build -t pdfix-paddlex .
 ```
 

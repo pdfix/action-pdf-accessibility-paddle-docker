@@ -6,6 +6,7 @@ import traceback
 from pathlib import Path
 
 from autotag import AutotagUsingPaddleXRecognition
+from formula import FormulaDescriptionUsingPaddle
 
 
 def add_config_arguments(config_subparser: argparse.ArgumentParser) -> None:
@@ -113,8 +114,8 @@ def autotagging_pdf(license_name: str, license_key: str, input_path: str, output
 
 
 def describing_formula(input_path: str, output_path: str) -> None:
-    # TODO
-    pass
+    ai = FormulaDescriptionUsingPaddle()
+    ai.describe_formula(input_path, output_path)
 
 
 def main() -> None:
