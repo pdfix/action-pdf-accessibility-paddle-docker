@@ -85,33 +85,37 @@ class AutotagUsingPaddleXRecognition:
         if doc is None:
             raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
 
-        # Remove old structure and prepare an empty structure tree
-        doc.RemoveTags()
-        doc.RemoveStructTree()
-
+        # Process images of each page
         num_pages = doc.GetNumPages()
         template_json_creator = TemplateJsonCreator()
-
-        # Process each page
         max_formulas_and_tables_per_page = 1000
         progress_bar = tqdm(total=num_pages * max_formulas_and_tables_per_page, desc="Processing pages")
+
         for page_index in range(0, num_pages):
             # Acquire the page
             page = doc.AcquirePage(page_index)
             if page is None:
                 raise PdfixException("Unable to acquire the page")
+
+            # Process the page
             self._process_pdf_file_page(
                 id, page, page_index, template_json_creator, progress_bar, max_formulas_and_tables_per_page
             )
+
+            # Clean-up
             page.Release()
 
         # Create template json for whole document
-        template_json_dict: dict = template_json_creator.create_json_dict_for_document()
+        template_json_dict: dict = template_json_creator.create_json_dict_for_document(self.model)
 
         # Save template json to fileoutput_name = f"{id}-page{page_number}.png"
         template_path = os.path.join(Path(__file__).parent.absolute(), f"../output/{id}-template_json.json")
         with open(template_path, "w") as file:
             file.write(json.dumps(template_json_dict, indent=2))
+
+        # Remove old structure and prepare an empty structure tree
+        doc.RemoveTags()
+        doc.RemoveStructTree()
 
         # Convert template json to memory stream
         memory_stream = GetPdfix().CreateMemStream()
@@ -201,7 +205,7 @@ class AutotagUsingPaddleXRecognition:
         # Render the page as an image
         image = create_image_from_pdf_page(page, page_view)
 
-        # Run layout analysis using the PaddleX engine
+        # Run layout model analysis and formula and table model analysis using the PaddleX engine
         paddlex = PaddleXEngine(self.model)
         results = paddlex.process_pdf_page_image_with_ai(
             image, id, page_number, progress_bar, max_formulas_and_tables_per_page

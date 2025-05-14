@@ -13,23 +13,24 @@ class TemplateJsonCreator:
     def __init__(self) -> None:
         self.template_json_pages: list = []
 
-    def create_json_dict_for_document(self) -> dict:
+    def create_json_dict_for_document(self, model: str) -> dict:
         """
-        Prepare json template for PDFix SDK for one page.
+        Prepare PDFix SDK json template for whole document.
 
         Args:
-            pages (list): list containing each page as prepared template json
+            model (list): Paddle layout model name.
 
         Returns:
             Template json for whole document
         """
         document: dict = {}
+        external_action_version = "v0.0.0"
         created_date = date.today().strftime("%Y-%m-%d")
         metadata: dict = {
-            "author": "PaddleX",
+            "author": f"Autotag Paddle {external_action_version}",  # TODO test
             "created": created_date,
             "modified": created_date,
-            "notes": "Created using PaddleX models",
+            "notes": f"Created using PaddleX layout model: {model}",
             "sdk_version": __version__,
             # we are creating first one always so it is always "1"
             "version": "1",
@@ -43,6 +44,17 @@ class TemplateJsonCreator:
         return document
 
     def process_page(self, results: dict, page_number: int, page_view: PdfPageView) -> None:
+        """
+        Prepare json template for PDFix SDK for one page and save it internally to use later in
+        create_json_dict_for_document.
+
+        Args:
+            results (dict): Dictionary of results from Paddle, where are
+                list of detected elements, ...
+            page_number (int): PDF file page number.
+            page_view (PdfPageView): The view of the PDF page used
+                for coordinate conversion.
+        """
         json_for_page = self._create_json_dict_for_page(results, page_number, page_view)
         self.template_json_pages.append(json_for_page)
 
@@ -61,9 +73,7 @@ class TemplateJsonCreator:
             Template json for one page
         """
         element_create_for_page: dict = {}
-        element_create_for_page["comment"] = (
-            f"Tag text on page {page_number}"  # TODO unique ID + some info about PaddleX
-        )
+        element_create_for_page["comment"] = f"Tag PDF page {page_number}"  # TODO unique ID + some info about PaddleX
         element_create_for_page["elements"] = self._create_json_for_elements(results, page_view)
         one_query: dict = {}
         first_member: dict = {}
@@ -235,7 +245,7 @@ class TemplateJsonCreator:
                     element["type"] = "pde_text"
 
             if element["type"] == "pde_text":
-                # 10% increase of bbox
+                # 10% increase of bbox #TODO for small Y it should be more (p in one line etc.)
                 element["bbox"] = self._increase_bbox(bbox, 1.1)
 
             elements.append(element)

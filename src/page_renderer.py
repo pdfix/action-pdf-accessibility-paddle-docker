@@ -1,6 +1,8 @@
+import base64
 import tempfile
 
 import cv2
+import numpy as np
 from pdfixsdk import (
     GetPdfix,
     PdfImageParams,
@@ -86,3 +88,19 @@ def create_image_from_part_of_page(image: cv2.typing.MatLike, box: list, offset:
     max_x = int(box[2]) + offset
     max_y = int(box[3]) + offset
     return image[min_y:max_y, min_x:max_x]
+
+
+def convert_base64_image_to_matlike_image(base64_data: str) -> cv2.typing.MatLike:
+    """
+    Converts image data from base64 encoded format to cv2 MatLike (numpy array) format
+
+    Args:
+        base64_data (str): Data containing header and encoded image
+
+    Returns:
+        MatLike image
+    """
+    header, encoded = base64_data.split(",", 1)
+    image_data = base64.b64decode(encoded)
+    numpy_array = np.frombuffer(image_data, np.uint8)
+    return cv2.imdecode(numpy_array, cv2.IMREAD_COLOR)
