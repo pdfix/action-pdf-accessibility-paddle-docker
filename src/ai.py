@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 import cv2
 from paddlex import create_model
 from tqdm import tqdm
@@ -13,7 +16,8 @@ class PaddleXEngine:
 
     def __init__(self, model: str = "PP-DocLayout-L") -> None:
         self.model_name = model
-        self.model_dir = f"models/{model}"
+        model_path = os.path.join(Path(__file__).parent.absolute(), f"../models/{model}")
+        self.model_dir = model_path
         match model:
             case "PP-DocLayout-L":
                 self.threshold = {
@@ -95,7 +99,9 @@ class PaddleXEngine:
         output = model.predict(input=image, batch_size=1, layout_nms=True)
 
         for res in output:
-            res.save_to_img(save_path=f"./output/{id}-page{page_number}.png")
+            output_name = f"{id}-page{page_number}.png"
+            output_path = os.path.join(Path(__file__).parent.absolute(), f"../output/{output_name}")
+            res.save_to_img(save_path=output_path)
 
             table_index = 0
 
@@ -124,7 +130,10 @@ class PaddleXEngine:
                             table_image = create_image_from_part_of_page(image, coordinate, 1)
 
                             # Process table
-                            output_file_path = f"./output/{id}_{page_number}-table{table_index}.png"
+                            output_file_name = f"{id}_{page_number}-table{table_index}.png"
+                            output_file_path = os.path.join(
+                                Path(__file__).parent.absolute(), f"../output/{output_file_name}"
+                            )
                             table_index += 1
                             table_dict = self._process_table_image_with_ai_v2(table_image, coordinate, output_file_path)
 
@@ -166,11 +175,13 @@ class PaddleXEngine:
         Returns:
             TBE, currently empty dictionary
         """
+        model_name = "PP-FormulaNet-L"
+        model_path = os.path.join(Path(__file__).parent.absolute(), f"../models/{model_name}")
 
         # Formula model prediction
         formula_model = create_model(
-            model_name="PP-FormulaNet-L",
-            model_dir="models/PP-FormulaNet-L",
+            model_name=model_name,
+            model_dir=model_path,
             device="cpu",
         )
 
@@ -191,15 +202,18 @@ class PaddleXEngine:
         Args:
             image (cv2.typing.MatLike): Rendered image of table.
             coordinate (list): Bounding box of table in rendered PDF page
-            output_file_path (string): Unique file path.
+            output_file_path (string): Unique absolute file path.
 
         Returns:
             List of recognized cell elements with additional data
         """
+        model_name = "PP-LCNet_x1_0_table_cls"
+        model_path = os.path.join(Path(__file__).parent.absolute(), f"../models/{model_name}")
+
         # Table classification model prediction
         model = create_model(
-            model_name="PP-LCNet_x1_0_table_cls",
-            model_dir="models/PP-LCNet_x1_0_table_cls",
+            model_name=model_name,
+            model_dir=model_path,
             device="cpu",
         )
 
@@ -212,7 +226,7 @@ class PaddleXEngine:
             table_cell_model_name = (
                 "RT-DETR-L_wired_table_cell_det" if is_wired else "RT-DETR-L_wireless_table_cell_det"
             )
-            table_cell_model_dir = f"models/{table_cell_model_name}"
+            table_cell_model_dir = os.path.join(Path(__file__).parent.absolute(), f"../models/{table_cell_model_name}")
 
             table_cell_model = create_model(
                 model_name=table_cell_model_name,

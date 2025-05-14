@@ -1,18 +1,15 @@
 {
+  "name": "Paddle functions",
+  "version": "v0.0.0",
   "actions": [
     {
-      "name": "Autotag Paddle",
+      "title": "Autotag PDF document using Paddle and PDFix",
+      "name": "autotag_paddle",
       "desc": "A Docker imnage that automatically tags PDF using Paddle and PDFix SDK",
       "version": "v0.0.0",
       "icon": "add_photo_alternate",
       "category": "Paddle",
-      "configurations": [
-        {
-          "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix-paddlex:latest --name \"${license_name}\" --key \"${license_key}\" tag -i \"${input_pdf}\" -o \"${output_pdf}\"",
-          "name": "Autotag PDF by Paddle",
-          "desc": "Autotag PDF using Paddle recognition and PDFix SDK"
-        }
-      ],
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix-paddlex:latest --name \"${license_name}\" --key \"${license_key}\" tag -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\"",
       "args": [
         {
           "name": "input_pdf",
@@ -55,7 +52,7 @@
       "version": "v0.0.0",
       "subtype": "set_alt",
       "category": "Paddle",
-      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix-paddlex:latest generate-alt-text -i \"${input_json}\" -o \"${output_json}\"",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix-paddlex:latest generate_alt_text_formula -i \"/data/${input_json}\" -o \"/data/${output_json}\"",
       "args": [
         {
           "name": "input_json",

@@ -13,6 +13,7 @@ RUN apt-get update && \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Change working directory for install purposes
 WORKDIR /usr/paddlex/
 
 
@@ -46,21 +47,24 @@ RUN font_path=/usr/paddlex/venv/lib/python3.12/site-packages/paddlex/utils/fonts
     done
 
 
-# Copy config for PDFix
-COPY config.json /usr/paddlex/
+# Create required folders
+RUN mkdir -p /usr/paddlex/output \
+    && mkdir -p /data
 
-# Copy source code
+# Copy config and sources
+COPY config.json /usr/paddlex/
 COPY src/ /usr/paddlex/src/
 
-# Create output folder for debug purposes
-RUN mkdir -p output
+
+# Update pdfix-sdk to 8.6.0
+RUN curl -o pdfix_sdk-8.6.0.tar.gz.zip -L https://github.com/pdfix/pdfix_sdk_builds/releases/download/v8.6.0-beta-4/python-pdfix_sdk-8.6.0_e7d97f9d.tar.gz.zip ; \
+    unzip pdfix_sdk-8.6.0.tar.gz.zip ; \
+    pip install pdfix_sdk-8.6.0.tar.gz ; \
+    rm pdfix_sdk-8.6.0.tar.gz.zip pdfix_sdk-8.6.0.tar.gz
 
 
-# update pdfix-sdk to 8.6.0
-RUN curl -o pdfix_sdk-8.6.0.tar.gz.zip -L https://github.com/pdfix/pdfix_sdk_builds/releases/download/v8.6.0-beta-4/python-pdfix_sdk-8.6.0_e7d97f9d.tar.gz.zip
-RUN unzip pdfix_sdk-8.6.0.tar.gz.zip
-RUN pip install pdfix_sdk-8.6.0.tar.gz
-RUN rm pdfix_sdk-8.6.0.tar.gz.zip pdfix_sdk-8.6.0.tar.gz
+# Change working directory for running purposes
+WORKDIR /data
 
 
 ENTRYPOINT ["/usr/paddlex/venv/bin/python3", "/usr/paddlex/src/main.py"]

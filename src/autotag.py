@@ -1,5 +1,6 @@
 import ctypes
 import json
+import os
 from pathlib import Path
 
 from pdfixsdk import (
@@ -107,8 +108,9 @@ class AutotagUsingPaddleXRecognition:
         # Create template json for whole document
         template_json_dict: dict = template_json_creator.create_json_dict_for_document()
 
-        # Save template json to file
-        with open(f"./output/{id}-template_json.json", "w") as file:
+        # Save template json to fileoutput_name = f"{id}-page{page_number}.png"
+        template_path = os.path.join(Path(__file__).parent.absolute(), f"../output/{id}-template_json.json")
+        with open(template_path, "w") as file:
             file.write(json.dumps(template_json_dict, indent=2))
 
         # Convert template json to memory stream
