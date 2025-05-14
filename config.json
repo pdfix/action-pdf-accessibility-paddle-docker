@@ -1,21 +1,15 @@
 {
+  "name": "PDF Accessibility Paddle",
+  "version": "v0.0.0",
   "actions": [
     {
-      "name": "Autotag Paddle",
-      "desc": "A Docker image that automatically tags PDF files using PDFix SDK and Paddle-OCR",
-      "version": {
-        "major": 1,
-        "minor": 0
-      },
+      "title": "Autotag PDF document using Paddle and PDFix",
+      "name": "autotag_paddle",
+      "desc": "A Docker imnage that automatically tags PDF using Paddle and PDFix SDK",
+      "version": "v0.0.0",
       "icon": "add_photo_alternate",
-      "category": "Tags",
-      "configurations": [
-        {
-          "program": "docker run --platform linux/amd64 -v \"${working_directory}:/data\" -w /data --rm pdfix/autotag-paddle:latest --name \"${license_name}\" --key \"${license_key}\" tag -i \"${input_pdf}\" -o \"${output_pdf}\"",
-          "name": "Autotag PDF",
-          "desc": "Autotag PDF"
-        }
-      ],
+      "category": "Paddle",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest --name \"${license_name}\" --key \"${license_key}\" tag -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\"",
       "args": [
         {
           "name": "input_pdf",
@@ -31,6 +25,49 @@
           "flags": 4,
           "type": "file_path",
           "ext": "pdf",
+          "value": ""
+        },
+        {
+          "title": "Paddle Model",
+          "name": "model",
+          "desc": "Layout prediction model that Paddle should use",
+          "type": "string",
+          "value": "PP-DocLayout-L",
+          "set": [
+            {
+              "value": "PP-DocLayout-L"
+            },
+            {
+              "value": "RT-DETR-H_layout_17cls"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Generate Alternate Text for Formula",
+      "name": "generate_alt_text_formula",
+      "desc": "Automatically generates alternate description for formula using Paddle",
+      "icon": "add_photo_alternate",
+      "version": "v0.0.0",
+      "subtype": "set_alt",
+      "category": "Paddle",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest generate_alt_text_formula -i \"/data/${input_json}\" -o \"/data/${output_json}\"",
+      "args": [
+        {
+          "name": "input_json",
+          "desc": "Input JSON file with image data for formula",
+          "flags": 2,
+          "type": "file_path",
+          "ext": "json",
+          "value": ""
+        },
+        {
+          "name": "output_json",
+          "desc": "Output JSON file containing alternate description for formula",
+          "flags": 4,
+          "type": "file_path",
+          "ext": "json",
           "value": ""
         }
       ]

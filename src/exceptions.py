@@ -7,7 +7,7 @@ class PdfixException(Exception):
         self.add_note(message if len(message) else str(GetPdfix().GetError()))
 
 
-class UnvalidDirectoryException(Exception):
+class InvalidDirectoryException(Exception):
     def __init__(self, path: str) -> None:
         self.add_note(f"Error: '{path}' is not a valid directory.")
 

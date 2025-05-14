@@ -10,7 +10,7 @@ on:
 
 env:
   DOCKER_HUB_NAMESPACE: pdfix
-  DOCKER_HUB_REPOSITORY: autotag-paddle
+  DOCKER_HUB_REPOSITORY: pdf-accessibility-paddle
 
 jobs:
   push_to_registry:
