@@ -1,6 +1,8 @@
 import base64
 import json
 
+# import os
+# from pathlib import Path
 import cv2
 import numpy as np
 
@@ -32,9 +34,13 @@ class FormulaDescriptionUsingPaddle:
             data = json.load(input_file)
 
         base64_image = data["image"]
-        image_data = base64.b64decode(base64_image)
+        header, encoded = base64_image.split(",", 1)
+        image_data = base64.b64decode(encoded)
         numpy_array = np.frombuffer(image_data, np.uint8)
         image = cv2.imdecode(numpy_array, cv2.IMREAD_COLOR)
+
+        # image_path = os.path.join(Path(__file__).parent.absolute(), f"../output/formula-{Path(input_path).stem}.png")
+        # cv2.imwrite(image_path, image)
 
         ai = PaddleXEngine()
         formula_rec = ai.process_formula_image_with_ai(image)
