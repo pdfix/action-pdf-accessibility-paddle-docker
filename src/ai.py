@@ -15,6 +15,14 @@ class PaddleXEngine:
     """
 
     def __init__(self, model: str = "PP-DocLayout-L") -> None:
+        """
+        Initializes Paddle Engine
+
+        Args:
+            model (str): One of supported Paddle Layout Models
+                Currently supported are: "PP-DocLayout-L"
+                and "RT-DETR-H_layout_17cls"
+        """
         self.model_name = model
         model_path = os.path.join(Path(__file__).parent.absolute(), f"../models/{model}")
         self.model_dir = model_path

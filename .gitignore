@@ -8,5 +8,4 @@ env/
 venv/
 .env/
 output/
-fonts/
 models/

@@ -114,8 +114,16 @@ def autotagging_pdf(license_name: str, license_key: str, input_path: str, output
 
 
 def describing_formula(input_path: str, output_path: str) -> None:
-    ai = FormulaDescriptionUsingPaddle()
-    ai.describe_formula(input_path, output_path)
+    """
+    Taking input and output arguments and passing them to formula description
+    that uses Paddle Engine to describe what it sees.
+
+    Args:
+        input_path (string): Path to json
+        output_path (string): Path to json
+    """
+    ai = FormulaDescriptionUsingPaddle(input_path, output_path)
+    ai.describe_formula()
 
 
 def main() -> None:

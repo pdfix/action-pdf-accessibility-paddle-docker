@@ -27,6 +27,10 @@ from template_json import TemplateJsonCreator
 
 
 class AutotagUsingPaddleXRecognition:
+    """
+    Class that takes care of Autotagging provided PDF document using Paddle Engine.
+    """
+
     def __init__(self, license_name: str, license_key: str, input_path: str, output_path: str, model: str) -> None:
         """
         Initialize class for tagging pdf(s).

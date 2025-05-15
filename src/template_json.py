@@ -11,6 +11,9 @@ class TemplateJsonCreator:
     """
 
     def __init__(self) -> None:
+        """
+        Initializes pdfix sdk template json creation by preparing list for each page.
+        """
         self.template_json_pages: list = []
 
     def create_json_dict_for_document(self, model: str) -> dict:

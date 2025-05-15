@@ -3,9 +3,9 @@
   "version": "v0.0.0",
   "actions": [
     {
-      "title": "Autotag PDF document using Paddle and PDFix",
+      "title": "Autotag PDF document",
       "name": "autotag_paddle",
-      "desc": "A Docker imnage that automatically tags PDF using Paddle and PDFix SDK",
+      "desc": "A Docker image that automatically tags PDF using Paddle and PDFix SDK",
       "version": "v0.0.0",
       "icon": "add_photo_alternate",
       "category": "Paddle",
