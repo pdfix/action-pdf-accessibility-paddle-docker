@@ -24,13 +24,12 @@ if [ ! -f "config.json" ]; then
 fi
 
 # Replace "latest" with the provided argument in config.json
-# usually program argument
 sed -i "s/latest/$1/g" config.json
 
 echo "Replaced all occurrences of 'latest' with '$1' in config.json."
 
-# Replace "v0.0.0" with the provided argument in config.json
-# usually "version" : "v0.0.0"
-sed -i "s/v0\.0\.0/v$1/g" config.json
+# Replace in config.json in "version" : "v0.0.0"
+# "v0.0.0" in with the provided argument
+sed -i "s/v0\.0\.0/$1/g" config.json
 
-echo "Replaced all occurrences of 'v0.0.0' with 'v$1' in config.json."
+echo "Replaced all occurrences of 'v0.0.0' with '$1' in config.json."
