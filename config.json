@@ -9,7 +9,7 @@
       "version": "v0.0.0",
       "icon": "add_photo_alternate",
       "category": "Paddle",
-      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest --name \"${license_name}\" --key \"${license_key}\" tag -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\"",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest tag --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\"",
       "args": [
         {
           "name": "input_pdf",

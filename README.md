@@ -1,10 +1,10 @@
-# Autotag using Paddle and PDFix SDK
+# Autotag PDF document using Paddle and PDFix SDK
 
 Docker image based autotag PDF document with PaddleX and PDFix SDK
 
 ## Table of Contents
 
-- [Autotag using Paddle and PDFix SDK](#autotag-paddle)
+- [Autotag PDF document using Paddle and PDFix SDK](#autotag-paddle)
   - [Table of Contents](#table-of-contents)
   - [Getting Started](#getting-started)
   - [Run a Docker image ](#run-docker-image)
@@ -47,7 +47,7 @@ Contact support for more infomation.
 So command will look like:
 
 ```bash
-docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -it pdfix/pdf-accessibility-paddle:latest --name $LICENSE_NAME --key $LICENSE_KEY tag --model PP-DocLayout-L --input /data_in/document.pdf --output /data_out/tagged.pdf
+docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -it pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY --model PP-DocLayout-L --input /data_in/document.pdf --output /data_out/tagged.pdf
 ```
 
 ### Run docker container with visual output from models
@@ -58,7 +58,7 @@ Example:
 - Your folder where images with recognised layout is : `/home/output`
 
 ```bash
-docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -v /home/output:/usr/paddlex/output -it pdfix/pdf-accessibility-paddle:latest --name $LICENSE_NAME --key $LICENSE_KEY tag --input /data_in/document.pdf --output /data_out/tagged.pdf
+docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -v /home/output:/usr/paddlex/output -it pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY --input /data_in/document.pdf --output /data_out/tagged.pdf
 ```
 
 ### Run docker container for formula description in latex
