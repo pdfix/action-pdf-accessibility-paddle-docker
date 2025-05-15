@@ -1,6 +1,6 @@
 # Autotag PDF document using Paddle and PDFix SDK
 
-Docker image based autotag PDF document with PaddleX and PDFix SDK
+Docker image-based autotagging of PDF documents with PaddleX and PDFix SDK
 
 ## Table of Contents
 
@@ -23,46 +23,46 @@ To use this Docker application, you'll need to have Docker installed on your sys
 ## Run a Docker image
 
 ### Run docker container for autotagging
-To run docker container you should map directories with PDF documents to the container (`-v` parameter) and pass paths to input/output PDF document in the running container
+To run the Docker container, you should map directories containing PDF documents to the container (using the `-v` parameter) and pass the paths to the input/output PDF documents inside the running container.
 
 Example: 
 
 - Your input PDF is: `/home/pdfs_in/document.pdf`
 - Your output PDF is: `/home/pdfs_out/tagged.pdf`
 
-Path `/home/pdfs_in` is mapped to `/data_in` and `/home/pdfs_out` is mapped to `/data_out`
+The path `/home/pdfs_in` is mapped to `/data_in`, and `/home/pdfs_out` is mapped to `/data_out`
 
-There are 2 layout models in Paddle:
+There are two layout models in Paddle:
 - "PP-DocLayout-L" - recognises 23 classes
 - "RT-DETR-H_layout_17cls" - recognises 17 classes
 
-You can choose either of them using optional `--model` argument. By default "PP-DocLayout-L" is used.
+You can choose either of them using the optional `--model` argument. By default "PP-DocLayout-L" is used.
 
-These arguments are for an account-based PDFix License.
+These arguments are for an account-based PDFix license.
 ```bash
 --name ${LICENSE_NAME} --key ${LICENSE_KEY}
 ```
-Contact support for more infomation.
+Contact support for more information.
 
-So command will look like:
+The command will look like:
 
 ```bash
 docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -it pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY --model PP-DocLayout-L --input /data_in/document.pdf --output /data_out/tagged.pdf
 ```
 
 ### Run docker container with visual output from models
-Running debug docker is similar as running docker normaly. One additional mount is required for `/usr/paddlex/output`.
+Running the debug Docker container is similar to running the container normaly. One additional mount is required for `/usr/paddlex/output`.
 
 Example:
 
-- Your folder where images with recognised layout is : `/home/output`
+- Your folder where images with recognized layout are saved: `/home/output`
 
 ```bash
 docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -v /home/output:/usr/paddlex/output -it pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY --input /data_in/document.pdf --output /data_out/tagged.pdf
 ```
 
 ### Run docker container for formula description in latex
-JSON file needs to be prepared with encoded base64 data of formula image.
+A JSON file needs to be prepared with base64-encoded data of the formula image.
 
 Example:
 
@@ -84,8 +84,8 @@ docker run -v $(pwd):/data -w /data --rm pdfix/pdf-accessibility-paddle:latest c
 - PDFix SDK - https://pdfix.net/terms
 - PaddleX - https://paddlepaddle.github.io/PaddleX
 
-Trial version of the PDFix SDK may apply a watermark on the page and redact random parts of the PDF.
+The trial version of the PDFix SDK may apply a watermark on the page and redact random parts of the PDF.
 
 ## Help & Support
-To obtain a PDFix SDK license or report an issue please contact us at support@pdfix.net.
+To obtain a PDFix SDK license or report an issue, please contact us at support@pdfix.net.
 For more information visit https://pdfix.net
