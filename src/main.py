@@ -32,12 +32,15 @@ def add_tagging_arguments(tagging_subparser: argparse.ArgumentParser) -> None:
     Args:
         tagging_subparser (ArgumentParser): subparser to add arguments
     """
-    tagging_subparser.add_argument("-i", "--input", type=str, help="The input PDF file")
+    tagging_subparser.add_argument("--name", type=str, default="", help="Pdfix license name")
+    tagging_subparser.add_argument("--key", type=str, default="", help="Pdfix license key")
+    tagging_subparser.add_argument("-i", "--input", type=str, help="The input PDF file", required=True)
     tagging_subparser.add_argument(
         "-o",
         "--output",
         type=str,
         help="The output PDF file",
+        required=True,
     )
     tagging_subparser.add_argument(
         "--model",
@@ -55,13 +58,8 @@ def add_formula_arguments(formula_subparser: argparse.ArgumentParser) -> None:
     Args:
         formula_subparser (ArgumentParser): subparser to add arguments
     """
-    formula_subparser.add_argument("-i", "--input", type=str, help="The input JSON file")
-    formula_subparser.add_argument(
-        "-o",
-        "--output",
-        type=str,
-        help="The output JSON file",
-    )
+    formula_subparser.add_argument("-i", "--input", type=str, help="The input JSON file", required=True)
+    formula_subparser.add_argument("-o", "--output", type=str, help="The output JSON file", required=True)
 
 
 def get_pdfix_config(path: str) -> None:
@@ -128,12 +126,8 @@ def describing_formula(input_path: str, output_path: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Process a PDF file using Paddle layout recognition",
+        description="Autotag PDF document Paddle Engine and PDFix SDK",
     )
-
-    # Authorization for PDFix-SDK
-    parser.add_argument("--name", type=str, default="", help="Pdfix license name")
-    parser.add_argument("--key", type=str, default="", help="Pdfix license key")
 
     subparsers = parser.add_subparsers(dest="subparser")
 
@@ -147,14 +141,14 @@ def main() -> None:
     # Tagging subparser
     tagging_subparser = subparsers.add_parser(
         "tag",
-        help="Run autotag",
+        help="Run autotag PDF document",
     )
     add_tagging_arguments(tagging_subparser)
 
     # Formula subparser
     formula_subparser = subparsers.add_parser(
         "generate_alt_text_formula",
-        help="Automatically generates alternate description for formula using Paddle",
+        help="Generates alternate description for formula using Paddle Engine",
     )
     add_formula_arguments(formula_subparser)
 
@@ -171,27 +165,12 @@ def main() -> None:
     # Check which arguments program was called with
     match args.subparser:
         case "config":
-            # Config found, process config and exit with 0
             get_pdfix_config(args.output)
-            sys.exit(0)  # TODO really needed?
 
         case "tag":
-            # Tagging found, process arguments and autotag PDF
-            if not args.input or not args.output:
-                parser.error(
-                    "The following arguments are required: -i/--input, -o/--output",
-                )
-                sys.exit(1)
-
             autotagging_pdf(args.name, args.key, args.input, args.output, args.model)
 
         case "generate_alt_text_formula":
-            if not args.input or not args.output:
-                parser.error(
-                    "The following arguments are required: -i/--input, -o/--output",
-                )
-                sys.exit(1)
-
             describing_formula(args.input, args.output)
 
 

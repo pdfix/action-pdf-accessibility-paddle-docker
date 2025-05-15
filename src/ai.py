@@ -165,7 +165,8 @@ class PaddleXEngine:
                             # Update progress after 1 processed formula
                             progress_bar.update(one_step)
 
-                progress_bar.update(last_step)
+                if last_step > 0:
+                    progress_bar.update(last_step)
 
                 return res
 
