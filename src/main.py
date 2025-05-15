@@ -73,12 +73,20 @@ def get_pdfix_config(path: str) -> None:
     config_path = os.path.join(Path(__file__).parent.absolute(), "../config.json")
 
     if path is None:
-        # Print content to output
-        with open(config_path, "r", encoding="utf-8") as f:
-            print(f.read())
+        try:
+            # Print content to output
+            with open(config_path, "r", encoding="utf-8") as f:
+                print(f.read())
+        except Exception as e:
+            print(f'Problem with reading file "{config_path}": {e}', file=sys.stderr)
+            sys.exit(1)
     else:
-        # Copy to provided path
-        shutil.copyfile(config_path, path)
+        try:
+            # Copy to provided path
+            shutil.copyfile(config_path, path)
+        except Exception as e:
+            print(f'Problem with copying to path "{path}": {e}', file=sys.stderr)
+            sys.exit(1)
 
 
 def autotagging_pdf(license_name: str, license_key: str, input_path: str, output_path: str, model: str) -> None:
@@ -91,23 +99,16 @@ def autotagging_pdf(license_name: str, license_key: str, input_path: str, output
         output_path (string): Path to pdf of folder
         model (string): Paddle layout model
     """
-    autotag = AutotagUsingPaddleXRecognition(license_name, license_key, input_path, output_path, model)
-
-    # Start autotagging PDF
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
         try:
+            autotag = AutotagUsingPaddleXRecognition(license_name, license_key, input_path, output_path, model)
             autotag.process_file()
         except Exception as e:
-            print(traceback.format_exc())
-            sys.exit("Failed to run tagging by Paddle: {}".format(e))
-    elif Path(input_path).is_dir():  # TODO discuss and change everywhere
-        try:
-            autotag.process_folder()
-        except Exception as e:
-            print(traceback.format_exc())
-            sys.exit("Failed to run tagging by Paddle: {}".format(e))
+            print(traceback.format_exc(), file=sys.stderr)
+            print(f"Failed to run autotagging PDF document: {e}", file=sys.stderr)
+            sys.exit(1)
     else:
-        print("Input and output file must be PDF")
+        print("Input and output file must be PDF", file=sys.stderr)
         sys.exit(1)
 
 
@@ -120,8 +121,17 @@ def describing_formula(input_path: str, output_path: str) -> None:
         input_path (string): Path to json
         output_path (string): Path to json
     """
-    ai = FormulaDescriptionUsingPaddle(input_path, output_path)
-    ai.describe_formula()
+    if input_path.lower().endswith(".json") and output_path.lower().endswith(".json"):
+        try:
+            ai = FormulaDescriptionUsingPaddle(input_path, output_path)
+            ai.describe_formula()
+        except Exception as e:
+            print(traceback.format_exc(), file=sys.stderr)
+            print(f"Failed to run formula description using Paddle: {e}", file=sys.stderr)
+            sys.exit(1)
+    else:
+        print("Input and output file must be JSON files (.json)", file=sys.stderr)
+        sys.exit(1)
 
 
 def main() -> None:
@@ -159,7 +169,7 @@ def main() -> None:
         if e.code == 0:
             # This happens when --help is used, exit gracefully
             sys.exit(0)
-        print("Failed to parse arguments. Please check the usage and try again.")
+        print("Failed to parse arguments. Please check the usage and try again.", file=sys.stderr)
         sys.exit(1)
 
     # Check which arguments program was called with

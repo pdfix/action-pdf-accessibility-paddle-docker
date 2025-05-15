@@ -16,11 +16,9 @@ from tqdm import tqdm
 
 from ai import PaddleXEngine
 from exceptions import (
-    InvalidDirectoryException,
     PdfixAuthorizationException,
     PdfixAuthorizationFailedException,
     PdfixException,
-    SameDirectoryException,
 )
 from page_renderer import create_image_from_pdf_page
 from template_json import TemplateJsonCreator
@@ -49,27 +47,6 @@ class AutotagUsingPaddleXRecognition:
         self.input_path_str = input_path
         self.output_path_str = output_path
         self.model = model
-
-    def process_folder(self) -> None:
-        """
-        Automatically goes through PDF documents in folder and tags them.
-        """
-        input_path = Path(self.input_path_str)
-        output_path = Path(self.output_path_str)
-
-        if self.input_path_str == self.output_path_str:
-            raise SameDirectoryException()
-
-        if not input_path.is_dir():
-            raise InvalidDirectoryException(self.input_path_str)
-
-        output_path.mkdir(parents=True, exist_ok=True)
-
-        for pdf_file in input_path.glob("*.pdf"):
-            output_file = Path.joinpath(output_path, pdf_file.name)
-            self.input_path_str = str(pdf_file)
-            self.output_path_str = str(output_file)
-            self.process_file()
 
     def process_file(self) -> None:
         """
