@@ -44,7 +44,7 @@ class FormulaDescriptionUsingPaddle:
         2. Extracts the base64-encoded image.
         3. Converts the image data
         3. Passes the image to paddle engine (that uses formula model)
-        4. Saves the response as a dictionary {"text": response} in the output JSON file.
+        4. Saves the response as a dictionary {"content": response} in the output JSON file.
         """
         with open(self.input_path_str, "r", encoding="utf-8") as input_file:
             data = json.load(input_file)
@@ -56,7 +56,7 @@ class FormulaDescriptionUsingPaddle:
 
         ai = PaddleXEngine()
         formula_rec = ai.process_formula_image_with_ai(image)
-        content: dict = {"text": formula_rec}
+        content: dict = {"content": formula_rec}
 
         with open(self.output_path_str, "w", encoding="utf-8") as output_file:
             json.dump(content, output_file)
