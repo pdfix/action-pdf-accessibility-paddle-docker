@@ -28,7 +28,7 @@
           "value": ""
         },
         {
-          "title": "Paddle Model",
+          "title": "Paddle Layout Model",
           "name": "model",
           "desc": "Layout prediction model that Paddle should use",
           "type": "string",
