@@ -1,6 +1,5 @@
 import argparse
 import os
-import shutil
 import sys
 import traceback
 from pathlib import Path
@@ -44,21 +43,12 @@ def get_pdfix_config(path: str) -> None:
     """
     config_path = os.path.join(Path(__file__).parent.absolute(), "../config.json")
 
-    if path is None:
-        try:
-            # Print content to output
-            with open(config_path, "r", encoding="utf-8") as f:
-                print(f.read())
-        except Exception as e:
-            print(f'Problem with reading file "{config_path}": {e}', file=sys.stderr)
-            sys.exit(1)
-    else:
-        try:
-            # Copy to provided path
-            shutil.copyfile(config_path, path)
-        except Exception as e:
-            print(f'Problem with copying to path "{path}": {e}', file=sys.stderr)
-            sys.exit(1)
+    with open(config_path, "r", encoding="utf-8") as file:
+        if path is None:
+            print(file.read())
+        else:
+            with open(path, "w") as out:
+                out.write(file.read())
 
 
 def autotagging_pdf(license_name: str, license_key: str, input_path: str, output_path: str, model: str) -> None:
@@ -72,16 +62,10 @@ def autotagging_pdf(license_name: str, license_key: str, input_path: str, output
         model (string): Paddle layout model
     """
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
-        try:
-            autotag = AutotagUsingPaddleXRecognition(license_name, license_key, input_path, output_path, model)
-            autotag.process_file()
-        except Exception as e:
-            print(traceback.format_exc(), file=sys.stderr)
-            print(f"Failed to run autotagging PDF document: {e}", file=sys.stderr)
-            sys.exit(1)
+        autotag = AutotagUsingPaddleXRecognition(license_name, license_key, input_path, output_path, model)
+        autotag.process_file()
     else:
-        print("Input and output file must be PDF", file=sys.stderr)
-        sys.exit(1)
+        raise Exception("Input and output file must be PDF")
 
 
 def describing_formula(input_path: str, output_path: str) -> None:
@@ -94,16 +78,10 @@ def describing_formula(input_path: str, output_path: str) -> None:
         output_path (string): Path to json
     """
     if input_path.lower().endswith(".json") and output_path.lower().endswith(".json"):
-        try:
-            ai = FormulaDescriptionUsingPaddle(input_path, output_path)
-            ai.describe_formula()
-        except Exception as e:
-            print(traceback.format_exc(), file=sys.stderr)
-            print(f"Failed to run formula description using Paddle: {e}", file=sys.stderr)
-            sys.exit(1)
+        ai = FormulaDescriptionUsingPaddle(input_path, output_path)
+        ai.describe_formula()
     else:
-        print("Input and output file must be JSON files (.json)", file=sys.stderr)
-        sys.exit(1)
+        raise Exception("Input and output file must be JSON files")
 
 
 def main() -> None:
@@ -145,15 +123,20 @@ def main() -> None:
         sys.exit(1)
 
     # Check which arguments program was called with
-    match args.subparser:
-        case "config":
-            get_pdfix_config(args.output)
+    try:
+        match args.subparser:
+            case "config":
+                get_pdfix_config(args.output)
 
-        case "tag":
-            autotagging_pdf(args.name, args.key, args.input, args.output, args.model)
+            case "tag":
+                autotagging_pdf(args.name, args.key, args.input, args.output, args.model)
 
-        case "generate_alt_text_formula":
-            describing_formula(args.input, args.output)
+            case "generate_alt_text_formula":
+                describing_formula(args.input, args.output)
+    except Exception as e:
+        print(traceback.format_exc(), file=sys.stderr)
+        print(f"Failed to run the program: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
