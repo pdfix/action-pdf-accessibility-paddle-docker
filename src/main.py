@@ -37,6 +37,10 @@ def set_arguments(
                 )
 
 
+def run_config_subcommand(args) -> None:
+    get_pdfix_config(args.output)
+
+
 def get_pdfix_config(path: str) -> None:
     """
         If Path is not provided, output content of config.
@@ -53,6 +57,10 @@ def get_pdfix_config(path: str) -> None:
         else:
             with open(path, "w") as out:
                 out.write(file.read())
+
+
+def run_autotag_subcommand(args) -> None:
+    autotagging_pdf(args.name, args.key, args.input, args.output, args.model, args.zoom)
 
 
 def autotagging_pdf(
@@ -75,6 +83,10 @@ def autotagging_pdf(
         autotag.process_file()
     else:
         raise Exception("Input and output file must be PDF")
+
+
+def run_formula_subcommand(args) -> None:
+    describing_formula(args.input, args.output)
 
 
 def describing_formula(input_path: str, output_path: str) -> None:
@@ -106,13 +118,15 @@ def main() -> None:
         help="Extract config file for integration",
     )
     set_arguments(config_subparser, ["output"], False, "JSON")
+    config_subparser.set_defaults(func=run_config_subcommand)
 
     # Tagging subparser
-    tagging_subparser = subparsers.add_parser(
+    autotag_subparser = subparsers.add_parser(
         "tag",
         help="Run autotag PDF document",
     )
-    set_arguments(tagging_subparser, ["name", "key", "input", "output", "model", "zoom"], True, "PDF")
+    set_arguments(autotag_subparser, ["name", "key", "input", "output", "model", "zoom"], True, "PDF")
+    autotag_subparser.set_defaults(func=run_autotag_subcommand)
 
     # Formula subparser
     formula_subparser = subparsers.add_parser(
@@ -120,6 +134,7 @@ def main() -> None:
         help="Generates alternate description for formula using Paddle Engine",
     )
     set_arguments(formula_subparser, ["input", "output"], True, "JSON")
+    formula_subparser.set_defaults(func=run_formula_subcommand)
 
     # Parse arguments
     try:
@@ -133,15 +148,7 @@ def main() -> None:
 
     # Check which arguments program was called with
     try:
-        match args.subparser:
-            case "config":
-                get_pdfix_config(args.output)
-
-            case "tag":
-                autotagging_pdf(args.name, args.key, args.input, args.output, args.model, args.zoom)
-
-            case "generate_alt_text_formula":
-                describing_formula(args.input, args.output)
+        args.func(args)
     except Exception as e:
         print(traceback.format_exc(), file=sys.stderr)
         print(f"Failed to run the program: {e}", file=sys.stderr)

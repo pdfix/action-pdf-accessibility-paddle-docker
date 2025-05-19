@@ -38,6 +38,9 @@ There are two layout models in Paddle:
 
 You can choose either of them using the optional `--model` argument. By default "PP-DocLayout-L" is used.
 
+Rendering of page into image for Paddle engine is controlled by argument `--zoom` which takes number.
+Most sence take numbers between 1.0 and 4.0.
+
 These arguments are for an account-based PDFix license.
 ```bash
 --name ${LICENSE_NAME} --key ${LICENSE_KEY}
@@ -47,7 +50,7 @@ Contact support for more information.
 The command will look like:
 
 ```bash
-docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -it pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY --model PP-DocLayout-L --input /data_in/document.pdf --output /data_out/tagged.pdf
+docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -it pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY --model PP-DocLayout-L --zoom 2.0 --input /data_in/document.pdf --output /data_out/tagged.pdf
 ```
 
 ### Run docker container with visual output from models
