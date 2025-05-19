@@ -41,34 +41,41 @@ def create_image_from_pdf_page(pdf_page: PdfPage, page_view: PdfPageView) -> cv2
     if page_image is None:
         raise PdfixException("Unable to create the image")
 
-    # Set up rendering parameters
-    render_params = PdfPageRenderParams()
-    render_params.image = page_image
-    render_params.matrix = page_view.GetDeviceMatrix()
+    try:
+        # Set up rendering parameters
+        render_params = PdfPageRenderParams()
+        render_params.image = page_image
+        render_params.matrix = page_view.GetDeviceMatrix()
 
-    # Render the page content onto the image
-    if not pdf_page.DrawContent(render_params):
-        raise PdfixException("Unable to draw the content")
+        # Render the page content onto the image
+        if not pdf_page.DrawContent(render_params):
+            raise PdfixException("Unable to draw the content")
 
-    # Save the rendered image to a temporary file in JPG format
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        file_stream = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
+        # Save the rendered image to a temporary file in JPG format
+        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+            file_stream = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
 
-        # Set image parameters (format and quality)
-        image_params = PdfImageParams()
-        image_params.format = kImageFormatJpg
-        image_params.quality = 100
+            try:
+                # Set image parameters (format and quality)
+                image_params = PdfImageParams()
+                image_params.format = kImageFormatJpg
+                image_params.quality = 100
 
-        # Save the image to the file stream
-        if not page_image.SaveToStream(file_stream, image_params):
-            raise PdfixException("Unable to save the image to the stream")
+                # Save the image to the file stream
+                if not page_image.SaveToStream(file_stream, image_params):
+                    raise PdfixException("Unable to save the image to the stream")
+            except Exception:
+                raise
+            finally:
+                # Clean up resources
+                file_stream.Destroy()
 
-        # Clean up resources
-        file_stream.Destroy()
+            # Return the saved image as a NumPy array using OpenCV
+            return cv2.imread(temp_file.name)
+    except Exception:
+        raise
+    finally:
         page_image.Destroy()
-
-        # Return the saved image as a NumPy array using OpenCV
-        return cv2.imread(temp_file.name)
 
 
 def create_image_from_part_of_page(image: cv2.typing.MatLike, box: list, offset: int) -> cv2.typing.MatLike:

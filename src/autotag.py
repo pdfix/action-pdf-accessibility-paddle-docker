@@ -82,13 +82,16 @@ class AutotagUsingPaddleXRecognition:
             if page is None:
                 raise PdfixException("Unable to acquire the page")
 
-            # Process the page
-            self._process_pdf_file_page(
-                id, page, page_index, template_json_creator, progress_bar, max_formulas_and_tables_per_page
-            )
-
-            # Clean-up
-            page.Release()
+            try:
+                # Process the page
+                self._process_pdf_file_page(
+                    id, page, page_index, template_json_creator, progress_bar, max_formulas_and_tables_per_page
+                )
+            except Exception:
+                raise
+            finally:
+                # Clean-up
+                page.Release()
 
         # Create template json for whole document
         template_json_dict: dict = template_json_creator.create_json_dict_for_document(self.model)
@@ -104,15 +107,18 @@ class AutotagUsingPaddleXRecognition:
 
         # Convert template json to memory stream
         memory_stream = GetPdfix().CreateMemStream()
-        raw_data, raw_data_size = self._json_to_raw_data(template_json_dict)
-        if not memory_stream.Write(0, raw_data, raw_data_size):
-            raise Exception(GetPdfix().GetError())
+        try:
+            raw_data, raw_data_size = self._json_to_raw_data(template_json_dict)
+            if not memory_stream.Write(0, raw_data, raw_data_size):
+                raise Exception(GetPdfix().GetError())
 
-        doc_template = doc.GetTemplate()
-        if not doc_template.LoadFromStream(memory_stream, kDataFormatJson):
-            raise Exception(f"Unable to open pdf : {pdfix.GetError()}")
-
-        memory_stream.Destroy()
+            doc_template = doc.GetTemplate()
+            if not doc_template.LoadFromStream(memory_stream, kDataFormatJson):
+                raise Exception(f"Unable to open pdf : {pdfix.GetError()}")
+        except Exception as e:
+            raise PdfixException(f"Unable to load template json for tagging: {e}")
+        finally:
+            memory_stream.Destroy()
 
         # Autotag document
         tagsParams = PdfTagsParams()
@@ -186,17 +192,20 @@ class AutotagUsingPaddleXRecognition:
         rotate = kRotate0
         page_view = page.AcquirePageView(self.zoom, rotate)
 
-        # Render the page as an image
-        image = create_image_from_pdf_page(page, page_view)
+        try:
+            # Render the page as an image
+            image = create_image_from_pdf_page(page, page_view)
 
-        # Run layout model analysis and formula and table model analysis using the PaddleX engine
-        paddlex = PaddleXEngine(self.model)
-        results = paddlex.process_pdf_page_image_with_ai(
-            image, id, page_number, progress_bar, max_formulas_and_tables_per_page
-        )
+            # Run layout model analysis and formula and table model analysis using the PaddleX engine
+            paddlex = PaddleXEngine(self.model)
+            results = paddlex.process_pdf_page_image_with_ai(
+                image, id, page_number, progress_bar, max_formulas_and_tables_per_page
+            )
 
-        # Create template json from PaddleX results for this page
-        templateJsonCreator.process_page(results, page_number, page_view, self.zoom)
-
-        # Release resources
-        page_view.Release()
+            # Create template json from PaddleX results for this page
+            templateJsonCreator.process_page(results, page_number, page_view, self.zoom)
+        except Exception:
+            raise
+        finally:
+            # Release resources
+            page_view.Release()
