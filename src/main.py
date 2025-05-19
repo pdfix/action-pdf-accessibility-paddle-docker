@@ -9,57 +9,29 @@ from autotag import AutotagUsingPaddleXRecognition
 from formula import FormulaDescriptionUsingPaddle
 
 
-def add_config_arguments(config_subparser: argparse.ArgumentParser) -> None:
-    """
-        Add arguments when providing PDFix SDK config json
-
-    Args:
-        config_subparser (ArgumentParser): subparser to add arguments
-    """
-    config_subparser.add_argument(
-        "-o",
-        "--output",
-        type=str,
-        help="Output to save the config JSON file. Application output\
-              is used if not provided",
-    )
-
-
-def add_tagging_arguments(tagging_subparser: argparse.ArgumentParser) -> None:
-    """
-        Add arguments when autotagging PDF
-
-    Args:
-        tagging_subparser (ArgumentParser): subparser to add arguments
-    """
-    tagging_subparser.add_argument("--name", type=str, default="", help="Pdfix license name")
-    tagging_subparser.add_argument("--key", type=str, default="", help="Pdfix license key")
-    tagging_subparser.add_argument("-i", "--input", type=str, help="The input PDF file", required=True)
-    tagging_subparser.add_argument(
-        "-o",
-        "--output",
-        type=str,
-        help="The output PDF file",
-        required=True,
-    )
-    tagging_subparser.add_argument(
-        "--model",
-        type=str,
-        choices=["PP-DocLayout-L", "RT-DETR-H_layout_17cls"],
-        default="PP-DocLayout-L",
-        help="Choose which paddle model to use: PP-DocLayout-L or RT-DETR-H_layout_17cls",
-    )
-
-
-def add_formula_arguments(formula_subparser: argparse.ArgumentParser) -> None:
-    """
-        Add arguments when using Paddle formula description
-
-    Args:
-        formula_subparser (ArgumentParser): subparser to add arguments
-    """
-    formula_subparser.add_argument("-i", "--input", type=str, help="The input JSON file", required=True)
-    formula_subparser.add_argument("-o", "--output", type=str, help="The output JSON file", required=True)
+def set_arguments(
+    parser: argparse.ArgumentParser, names: list, required_output: bool = True, file_type: str = "PDF"
+) -> None:
+    for name in names:
+        match name:
+            case "input":
+                parser.add_argument("--input", "-i", type=str, required=True, help=f"The input {file_type} file")
+            case "key":
+                parser.add_argument("--key", type=str, help="PDFix license key")
+            case "model":
+                parser.add_argument(
+                    "--model",
+                    type=str,
+                    choices=["PP-DocLayout-L", "RT-DETR-H_layout_17cls"],
+                    default="PP-DocLayout-L",
+                    help="Choose which paddle model to use: PP-DocLayout-L or RT-DETR-H_layout_17cls",
+                )
+            case "name":
+                parser.add_argument("--name", type=str, help="PDFix license name")
+            case "output":
+                parser.add_argument(
+                    "--output", "-o", type=str, required=required_output, help=f"The output {file_type} file"
+                )
 
 
 def get_pdfix_config(path: str) -> None:
@@ -146,21 +118,21 @@ def main() -> None:
         "config",
         help="Extract config file for integration",
     )
-    add_config_arguments(config_subparser)
+    set_arguments(config_subparser, ["output"], False, "JSON")
 
     # Tagging subparser
     tagging_subparser = subparsers.add_parser(
         "tag",
         help="Run autotag PDF document",
     )
-    add_tagging_arguments(tagging_subparser)
+    set_arguments(tagging_subparser, ["name", "key", "input", "output", "model"], True, "PDF")
 
     # Formula subparser
     formula_subparser = subparsers.add_parser(
         "generate_alt_text_formula",
         help="Generates alternate description for formula using Paddle Engine",
     )
-    add_formula_arguments(formula_subparser)
+    set_arguments(formula_subparser, ["input", "output"], True, "JSON")
 
     # Parse arguments
     try:
