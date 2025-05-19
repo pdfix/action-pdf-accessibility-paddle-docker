@@ -19,9 +19,9 @@ class PaddleXEngine:
         Initializes Paddle Engine
 
         Args:
-            model (str): One of supported Paddle Layout Models
-                Currently supported are: "PP-DocLayout-L"
-                and "RT-DETR-H_layout_17cls"
+            model (str): One of supported Paddle Layout Models:
+                - "PP-DocLayout-L"
+                - "RT-DETR-H_layout_17cls"
         """
         self.model_name = model
         model_path = os.path.join(Path(__file__).parent.absolute(), f"../models/{model}")
