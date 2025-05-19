@@ -9,7 +9,7 @@
       "version": "v0.0.0",
       "icon": "add_photo_alternate",
       "category": "Paddle",
-      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest tag --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\"",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest tag --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\" --zoom \"${zoom}\"",
       "args": [
         {
           "name": "input_pdf",
@@ -41,6 +41,13 @@
               "value": "RT-DETR-H_layout_17cls"
             }
           ]
+        },
+        {
+          "title": "Rendering Zoom Level",
+          "name": "zoom",
+          "desc": "Pages are provided as images that are rendered using this zoom level",
+          "type": "float",
+          "value": "2.0"
         }
       ]
     },

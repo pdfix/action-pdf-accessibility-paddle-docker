@@ -31,6 +31,10 @@ def set_arguments(
                 parser.add_argument(
                     "--output", "-o", type=str, required=required_output, help=f"The output {file_type} file"
                 )
+            case "zoom":
+                parser.add_argument(
+                    "--zoom", type=float, default=1.0, help="Zoom level for the PDF page rendering (default: 1.0)"
+                )
 
 
 def get_pdfix_config(path: str) -> None:
@@ -51,7 +55,9 @@ def get_pdfix_config(path: str) -> None:
                 out.write(file.read())
 
 
-def autotagging_pdf(license_name: str, license_key: str, input_path: str, output_path: str, model: str) -> None:
+def autotagging_pdf(
+    license_name: str, license_key: str, input_path: str, output_path: str, model: str, zoom: float
+) -> None:
     """
         Autotaggin PDF with provided arguments
     Args:
@@ -61,8 +67,11 @@ def autotagging_pdf(license_name: str, license_key: str, input_path: str, output
         output_path (string): Path to pdf of folder
         model (string): Paddle layout model
     """
+    if zoom < 0.1:
+        raise Exception("Zoom level must be greater than 0.1")
+
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
-        autotag = AutotagUsingPaddleXRecognition(license_name, license_key, input_path, output_path, model)
+        autotag = AutotagUsingPaddleXRecognition(license_name, license_key, input_path, output_path, model, zoom)
         autotag.process_file()
     else:
         raise Exception("Input and output file must be PDF")
@@ -103,7 +112,7 @@ def main() -> None:
         "tag",
         help="Run autotag PDF document",
     )
-    set_arguments(tagging_subparser, ["name", "key", "input", "output", "model"], True, "PDF")
+    set_arguments(tagging_subparser, ["name", "key", "input", "output", "model", "zoom"], True, "PDF")
 
     # Formula subparser
     formula_subparser = subparsers.add_parser(
@@ -129,7 +138,7 @@ def main() -> None:
                 get_pdfix_config(args.output)
 
             case "tag":
-                autotagging_pdf(args.name, args.key, args.input, args.output, args.model)
+                autotagging_pdf(args.name, args.key, args.input, args.output, args.model, args.zoom)
 
             case "generate_alt_text_formula":
                 describing_formula(args.input, args.output)

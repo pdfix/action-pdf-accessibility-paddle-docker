@@ -29,7 +29,9 @@ class AutotagUsingPaddleXRecognition:
     Class that takes care of Autotagging provided PDF document using Paddle Engine.
     """
 
-    def __init__(self, license_name: str, license_key: str, input_path: str, output_path: str, model: str) -> None:
+    def __init__(
+        self, license_name: str, license_key: str, input_path: str, output_path: str, model: str, zoom: float
+    ) -> None:
         """
         Initialize class for tagging pdf(s).
 
@@ -41,12 +43,14 @@ class AutotagUsingPaddleXRecognition:
                 written, if input is 1 pdf output should be also 1 pdf,
                 if input is folder output should also be folder
             model (string): Paddle model for layout recognition
+            zoom (float): Zoom level for rendering the page
         """
         self.license_name = license_name
         self.license_key = license_key
         self.input_path_str = input_path
         self.output_path_str = output_path
         self.model = model
+        self.zoom = zoom
 
     def process_file(self) -> None:
         """
@@ -178,10 +182,9 @@ class AutotagUsingPaddleXRecognition:
         """
         page_number = page_index + 1
 
-        # Define zoom level and rotation for rendering the page
-        zoom = 1.0
+        # Define rotation for rendering the page
         rotate = kRotate0
-        page_view = page.AcquirePageView(zoom, rotate)
+        page_view = page.AcquirePageView(self.zoom, rotate)
 
         # Render the page as an image
         image = create_image_from_pdf_page(page, page_view)
@@ -193,7 +196,7 @@ class AutotagUsingPaddleXRecognition:
         )
 
         # Create template json from PaddleX results for this page
-        templateJsonCreator.process_page(results, page_number, page_view)
+        templateJsonCreator.process_page(results, page_number, page_view, self.zoom)
 
         # Release resources
         page_view.Release()

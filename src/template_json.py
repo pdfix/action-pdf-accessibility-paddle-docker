@@ -46,7 +46,7 @@ class TemplateJsonCreator:
 
         return document
 
-    def process_page(self, results: dict, page_number: int, page_view: PdfPageView) -> None:
+    def process_page(self, results: dict, page_number: int, page_view: PdfPageView, zoom: float) -> None:
         """
         Prepare json template for PDFix SDK for one page and save it internally to use later in
         create_json_dict_for_document.
@@ -57,11 +57,12 @@ class TemplateJsonCreator:
             page_number (int): PDF file page number.
             page_view (PdfPageView): The view of the PDF page used
                 for coordinate conversion.
+            zoom (float): Zoom level that page was rendered with.
         """
-        json_for_page = self._create_json_dict_for_page(results, page_number, page_view)
+        json_for_page = self._create_json_dict_for_page(results, page_number, page_view, zoom)
         self.template_json_pages.append(json_for_page)
 
-    def _create_json_dict_for_page(self, results: dict, page_number: int, page_view: PdfPageView) -> dict:
+    def _create_json_dict_for_page(self, results: dict, page_number: int, page_view: PdfPageView, zoom: float) -> dict:
         """
         Prepare json template for PDFix SDK for one page.
 
@@ -71,13 +72,14 @@ class TemplateJsonCreator:
             page_number (int): PDF file page number.
             page_view (PdfPageView): The view of the PDF page used
                 for coordinate conversion.
+            zoom (float): Zoom level that page was rendered with.
 
         Returns:
             Template json for one page
         """
         element_create_for_page: dict = {}
         element_create_for_page["comment"] = f"Tag PDF page {page_number}"  # TODO unique ID + some info about PaddleX
-        element_create_for_page["elements"] = self._create_json_for_elements(results, page_view)
+        element_create_for_page["elements"] = self._create_json_for_elements(results, page_view, zoom)
         one_query: dict = {}
         first_member: dict = {}
         first_member["$page_num"] = page_number
@@ -87,7 +89,7 @@ class TemplateJsonCreator:
         element_create_for_page["statement"] = "$if"
         return element_create_for_page
 
-    def _create_json_for_elements(self, results: dict, page_view: PdfPageView) -> list:
+    def _create_json_for_elements(self, results: dict, page_view: PdfPageView, zoom: float) -> list:
         """
         Prepare initial structural elements for the template based on
         detected regions.
@@ -97,6 +99,7 @@ class TemplateJsonCreator:
                 list of detected elements, ...
             page_view (PdfPageView): The view of the PDF page used
                 for coordinate conversion.
+            zoom (float): Zoom level that page was rendered with.
 
         Returns:
             List of elements with parameters.
@@ -112,10 +115,10 @@ class TemplateJsonCreator:
             element: dict[str, Any] = {}
 
             rect = PdfDevRect()
-            rect.left = math.floor(result["coordinate"][0])  # min_x
-            rect.top = math.floor(result["coordinate"][1])  # min_y
-            rect.right = math.ceil(result["coordinate"][2])  # max_x
-            rect.bottom = math.ceil(result["coordinate"][3])  # max_y
+            rect.left = math.floor(result["coordinate"][0] / zoom)  # min_x
+            rect.top = math.floor(result["coordinate"][1] / zoom)  # min_y
+            rect.right = math.ceil(result["coordinate"][2] / zoom)  # max_x
+            rect.bottom = math.ceil(result["coordinate"][3] / zoom)  # max_y
             bbox = page_view.RectToPage(rect)
             element["bbox"] = [str(bbox.left), str(bbox.bottom), str(bbox.right), str(bbox.top)]
 
