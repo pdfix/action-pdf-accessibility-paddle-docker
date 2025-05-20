@@ -156,7 +156,7 @@ def main() -> None:
         print("Failed to parse arguments. Please check the usage and try again.", file=sys.stderr)
         sys.exit(1)
 
-    # Check which arguments program was called with
+    # Run subcommand
     try:
         args.func(args)
     except Exception as e:
