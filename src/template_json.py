@@ -123,7 +123,6 @@ class TemplateJsonCreator:
             element["bbox"] = [str(bbox.left), str(bbox.bottom), str(bbox.right), str(bbox.top)]
 
             # Determine element type
-            # TODO test on thesis - abstract, algorithm, ...
             label = result["label"].lower()
             match label:
                 case "abstract":
@@ -242,10 +241,6 @@ class TemplateJsonCreator:
                 case "text":
                     element["type"] = "pde_text"
 
-                # case "list":
-                #     elem["type"] = "pde_list"
-                #     # TODO label + lbody
-
                 case _:
                     element["comment"] = f"Unknown type: {label}"
                     element["type"] = "pde_text"
@@ -274,10 +269,6 @@ class TemplateJsonCreator:
 
         for cell in result["cells"]:
             rect = PdfDevRect()
-            # rect.left = math.floor(cell["bbox"][0])  # min_x
-            # rect.top = math.floor(cell["bbox"][1])  # min_y
-            # rect.right = math.ceil(cell["bbox"][2])  # max_x
-            # rect.bottom = math.ceil(cell["bbox"][3])  # max_y
             rect.left = math.ceil(cell["bbox"][0])  # min_x
             rect.top = math.ceil(cell["bbox"][1])  # min_y
             rect.right = math.floor(cell["bbox"][2])  # max_x

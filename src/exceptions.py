@@ -12,5 +12,6 @@ class PdfixAuthorizationException(Exception):
         self.add_note(message)
 
 
-class PdfixAuthorizationFailedException(Exception):
-    pass
+class PdfixActivationException(Exception):
+    def __init__(self, message: str) -> None:
+        self.add_note(message)

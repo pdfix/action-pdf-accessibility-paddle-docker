@@ -11,6 +11,15 @@ from formula import FormulaDescriptionUsingPaddle
 def set_arguments(
     parser: argparse.ArgumentParser, names: list, required_output: bool = True, file_type: str = "PDF"
 ) -> None:
+    """
+    Set arguments for the parser based on the provided names and options.
+
+    Args:
+        parser (argparse.ArgumentParser): The argument parser to set arguments for.
+        names (list): List of argument names to set.
+        required_output (bool): Whether the output argument is required. Defaults to True.
+        file_type (str): The type of file being processed. Defaults to "PDF".
+    """
     for name in names:
         match name:
             case "input":
@@ -43,8 +52,8 @@ def run_config_subcommand(args) -> None:
 
 def get_pdfix_config(path: str) -> None:
     """
-        If Path is not provided, output content of config.
-        If Path is provided, copy config to destination path.
+    If Path is not provided, output content of config.
+    If Path is provided, copy config to destination path.
 
     Args:
         path (string): Destination path for config.json file
@@ -67,7 +76,8 @@ def autotagging_pdf(
     license_name: str, license_key: str, input_path: str, output_path: str, model: str, zoom: float
 ) -> None:
     """
-        Autotaggin PDF with provided arguments
+    Autotaggin PDF with provided arguments
+
     Args:
         license_name (string): Name used in authorization in PDFix-SDK
         license_key (string): Key used in authorization in PDFix-SDK

@@ -11,12 +11,12 @@ class PaddleXPostProcessingTable:
     def create_custom_result_from_paddlex_cell_result(self, cell_results: dict, coordinate: list) -> dict:
         """
         From results of table cell recognition create data for each cell:
-            - row number
-            - row span
-            - column number
-            - column span
-            - box - bbox in table coordinates
-            - bbox - bbox in page coordinates
+        - row number
+        - row span
+        - column number
+        - column span
+        - box - bbox in table coordinates
+        - bbox - bbox in page coordinates
 
         Args:
             cell_results (dict): Result from table cell recognition
@@ -49,10 +49,6 @@ class PaddleXPostProcessingTable:
             max_x: float = box["coordinate"][2]
             max_y: float = box["coordinate"][3]
 
-            # TODO decide what bbox output is preferred
-            # row_number, row_span = self._calculate_position_and_span(int(min_y), int(max_y), row_lines)
-            # column_number, column_span = self._calculate_position_and_span(int(min_x), int(max_x), column_lines)
-
             row_min_index, row_max_index, row_number, row_span = self._calculate_indexes_position_span(
                 int(min_y), int(max_y), row_lines
             )
@@ -60,7 +56,6 @@ class PaddleXPostProcessingTable:
                 int(min_x), int(max_x), column_lines
             )
 
-            # bbox = [min_x, min_y, max_x, max_y]
             bbox = [
                 column_lines[column_min_index],
                 row_lines[row_min_index],

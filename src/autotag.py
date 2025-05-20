@@ -16,8 +16,8 @@ from tqdm import tqdm
 
 from ai import PaddleXEngine
 from exceptions import (
+    PdfixActivationException,
     PdfixAuthorizationException,
-    PdfixAuthorizationFailedException,
     PdfixException,
 )
 from page_renderer import create_image_from_pdf_page
@@ -149,21 +149,21 @@ class AutotagUsingPaddleXRecognition:
 
     def _authorize(self, pdfix: Pdfix) -> None:
         """
-        Tries to authorize license information in pdfix sdk.
+        Tries to authorize or activate Pdfix license.
 
         Args:
             pdfix (Pdfix): Pdfix sdk instance.
         """
-        if self.license_name is None and self.license_key:
-            raise PdfixAuthorizationException("License key was not provided")
-
-        if self.license_name and self.license_key is None:
-            raise PdfixAuthorizationException("License name was not provided")
 
         if self.license_name and self.license_key:
             authorization = pdfix.GetAccountAuthorization()
             if not authorization.Authorize(self.license_name, self.license_key):
-                raise PdfixAuthorizationFailedException()
+                raise PdfixAuthorizationException(str(pdfix.GetError()))
+        elif self.license_key:
+            if not pdfix.GetStandarsAuthorization().Activate(self.license_key):
+                raise PdfixActivationException(str(pdfix.GetError()))
+        else:
+            print("No license name or key provided. Using PDFix SDK trial")
 
     def _process_pdf_file_page(
         self,
