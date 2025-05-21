@@ -246,8 +246,10 @@ class TemplateJsonCreator:
                     element["type"] = "pde_text"
 
             if element["type"] == "pde_text":
-                # 10% increase of bbox #TODO for small Y it should be more (p in one line etc.)
-                element["bbox"] = self._increase_bbox(bbox, 1.1)
+                # 10% increase of bbox
+                # element["bbox"] = self._increase_bbox(bbox, 1.1)
+                # increase bbox according to size (small size +100% ... big size + 10%)
+                element["bbox"] = self._increase_bbox_adaptively(bbox)
 
             elements.append(element)
 
@@ -319,6 +321,17 @@ class TemplateJsonCreator:
         return "footer" if bbox.top < half_height else "header"
 
     def _increase_bbox(self, bbox: PdfRect, multiplier: float) -> list:
+        """
+        Increase bounding box by a given multiplier.
+
+        Args:
+            bbox (PdfRect): Bounding box in PDF coordinates.
+            multiplier (float): Multiplier to increase the bounding box.
+
+        Returns:
+            List of strings representing the new bounding box coordinates.
+        """
+
         def get_offset(min: int, max: int, multiplier: float) -> int:
             size = max - min
             new_size = math.ceil(size * multiplier)
@@ -326,6 +339,52 @@ class TemplateJsonCreator:
 
         offset_x = get_offset(bbox.left, bbox.right, multiplier)
         offset_y = get_offset(bbox.bottom, bbox.top, multiplier)
+
+        return [
+            str(bbox.left - offset_x),
+            str(bbox.bottom - offset_y),
+            str(bbox.right + offset_x),
+            str(bbox.top + offset_y),
+        ]
+
+    def _increase_bbox_adaptively(self, bbox: PdfRect) -> list:
+        """
+        Increase bounding box according to bounding box size. For small size big multiplier 2.0 is used,
+        for small size multiplier 1.1 is used.
+
+        Args:
+            bbox (PdfRect): Bounding box in PDF coordinates.
+            multiplier (float): Multiplier to increase the bounding box.
+
+        Returns:
+            List of strings representing the new bounding box coordinates.
+        """
+
+        def get_offset(min_side: int, max_side: int) -> int:
+            # Cap for both sides the real size
+            real_size = max_side - min_side
+            min_size = 20
+            max_size = 100
+            progress_size = max(min_size, min(max_size, real_size)) - min_size
+
+            # Calculate progress where at max_size it is 0 and at min_size it is 1
+            max_progress_size = max_size - min_size
+            inverted_progress_size = max_progress_size - progress_size
+            progress = inverted_progress_size / max_progress_size
+
+            # Calculate the multiplier based on the progress
+            min_multiplier = 1.1
+            max_multiplier = 2.0
+            multiplier = min_multiplier + progress * (max_multiplier - min_multiplier)
+
+            # Calculate new size
+            new_size = math.ceil(real_size * multiplier)
+
+            # Calculate offset at one side
+            return math.ceil((new_size - real_size) / 2.0)
+
+        offset_x = get_offset(bbox.left, bbox.right)
+        offset_y = get_offset(bbox.bottom, bbox.top)
 
         return [
             str(bbox.left - offset_x),
