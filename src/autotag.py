@@ -189,8 +189,7 @@ class AutotagUsingPaddleXRecognition:
         page_number = page_index + 1
 
         # Define rotation for rendering the page
-        rotate = kRotate0
-        page_view = page.AcquirePageView(self.zoom, rotate)
+        page_view = page.AcquirePageView(self.zoom, kRotate0)
 
         try:
             # Render the page as an image
