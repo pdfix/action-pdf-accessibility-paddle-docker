@@ -81,7 +81,7 @@
     },
     {
       "title": "Create template json",
-      "name": "autotag_paddle",
+      "name": "create_template_json_paddle",
       "desc": "Automatically create template json using Paddle",
       "version": "v0.0.0",
       "subtype": "template",

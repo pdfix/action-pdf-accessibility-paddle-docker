@@ -27,8 +27,8 @@ To run the Docker container, you should map directories containing PDF documents
 
 Example: 
 
-- Your input PDF is: `/home/pdfs_in/document.pdf`
-- Your output PDF is: `/home/pdfs_out/tagged.pdf`
+- Your input PDF document is: `/home/pdfs_in/document.pdf`
+- Your output PDF document is: `/home/pdfs_out/tagged.pdf`
 
 The path `/home/pdfs_in` is mapped to `/data_in`, and `/home/pdfs_out` is mapped to `/data_out`
 
@@ -54,7 +54,15 @@ docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out pdfix/pdf-
 ```
 
 ### Run docker container for template json creation
-This is similar to running tagging. Difference is output file. Here it is JSON.
+This is similar to running tagging. Difference is output file that is JSON file with content looking like:
+
+```
+{
+    "content": template_json_content
+}
+```
+
+If you want to use it in PDFix Desktop you need to take template_json_content into new JSON file.
 
 Example:
 
@@ -67,10 +75,26 @@ docker run --rm -v /home/pdfs_in:/data_in -v /home/out:/data_out pdfix/pdf-acces
 ### Run docker container for formula description in latex
 A JSON file needs to be prepared with base64-encoded data of the formula image.
 
+Input JSON file expected content:
+
+```
+{
+    "image": "<header>,<base64_encoded_image>"
+}
+```
+
+Output JSON file expected content:
+
+```
+{
+    "content": "Latex description of formula"
+}
+```
+
 Example:
 
-- Your input JSON is: `/home/data/input.json`
-- Your output JSON is: `/home/data/output.json`
+- Your input JSON file is: `/home/data/input.json`
+- Your output JSON file is: `/home/data/output.json`
 
 ```bash
 docker run --rm -v /home/data:/data -it pdfix/pdf-accessibility-paddle:latest generate_alt_text_formula -i /data/input.json -o /data/output.json
