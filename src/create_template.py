@@ -72,10 +72,11 @@ class CreateTemplateJsonUsingPaddleXRecognition:
 
         # Create template json for whole document
         template_json_dict: dict = template_json_creator.create_json_dict_for_document(self.model, self.zoom)
+        output_data: dict = {"content": template_json_dict}
 
         # Save template json
         with open(self.output_path_str, "w") as file:
-            file.write(json.dumps(template_json_dict, indent=2))
+            file.write(json.dumps(output_data, indent=2))
 
     def _process_pdf_file_page(
         self,
