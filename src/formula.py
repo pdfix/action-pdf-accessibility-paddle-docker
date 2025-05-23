@@ -9,8 +9,8 @@ from page_renderer import convert_base64_image_to_matlike_image
 
 class FormulaDescriptionUsingPaddle:
     """
-    Class that takes care of receiving base64 encoded image in json file and processing it through Paddle Engine
-    and writing result into output json file.
+    Class that takes care of receiving base64 encoded image in JSON file and processing it through Paddle Engine
+    and writing result into output JSON file.
     """
 
     def __init__(self, input_path: str, output_path: str) -> None:

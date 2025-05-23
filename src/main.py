@@ -82,13 +82,13 @@ def autotagging_pdf(
     license_name: str, license_key: str, input_path: str, output_path: str, model: str, zoom: float
 ) -> None:
     """
-    Autotaggin PDF with provided arguments
+    Autotagging PDF document with provided arguments
 
     Args:
         license_name (string): Name used in authorization in PDFix-SDK
         license_key (string): Key used in authorization in PDFix-SDK
-        input_path (string): Path to pdf of folder
-        output_path (string): Path to pdf of folder
+        input_path (string): Path to PDF document
+        output_path (string): Path to PDF document
         model (string): Paddle layout model
         zoom (float): Zoom level for rendering the page
     """
@@ -99,7 +99,7 @@ def autotagging_pdf(
         autotag = AutotagUsingPaddleXRecognition(license_name, license_key, input_path, output_path, model, zoom)
         autotag.process_file()
     else:
-        raise Exception("Input and output file must be PDF")
+        raise Exception("Input and output file must be PDF documents")
 
 
 def run_formula_subcommand(args) -> None:
@@ -112,8 +112,8 @@ def describing_formula(input_path: str, output_path: str) -> None:
     that uses Paddle Engine to describe what it sees.
 
     Args:
-        input_path (string): Path to json
-        output_path (string): Path to json
+        input_path (string): Path to JSON file
+        output_path (string): Path to JSON file
     """
     if input_path.lower().endswith(".json") and output_path.lower().endswith(".json"):
         ai = FormulaDescriptionUsingPaddle(input_path, output_path)
@@ -128,11 +128,11 @@ def run_template_subcommand(args) -> None:
 
 def create_template_json(input_path: str, output_path: str, model: str, zoom: float) -> None:
     """
-    Autotaggin PDF with provided arguments
+    Creating template json for PDF document using provided arguments
 
     Args:
-        input_path (string): Path to pdf of folder
-        output_path (string): Path to pdf of folder
+        input_path (string): Path to PDF document
+        output_path (string): Path to JSON file
         model (string): Paddle layout model
         zoom (float): Zoom level for rendering the page
     """

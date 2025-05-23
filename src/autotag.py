@@ -38,10 +38,8 @@ class AutotagUsingPaddleXRecognition:
         Args:
             license_name (string): Pdfix sdk license name (e-mail)
             license_key (string): Pdfix sdk license key
-            input_path (string): Path to one pdf or folder
-            output_path (string): Path where proccessed pdf(s) should be
-                written, if input is 1 pdf output should be also 1 pdf,
-                if input is folder output should also be folder
+            input_path (string): Path to PDF document
+            output_path (string): Path where tagged PDF should be saved
             model (string): Paddle model for layout recognition
             zoom (float): Zoom level for rendering the page
         """

@@ -20,10 +20,8 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         Initialize class for tagging pdf(s).
 
         Args:
-            input_path (string): Path to one pdf or folder
-            output_path (string): Path where proccessed pdf(s) should be
-                written, if input is 1 pdf output should be also 1 pdf,
-                if input is folder output should also be folder
+            input_path (string): Path to PDF document
+            output_path (string): Path where template JSON inside {"content": template_json} should be saved
             model (string): Paddle model for layout recognition
             zoom (float): Zoom level for rendering the page
         """
