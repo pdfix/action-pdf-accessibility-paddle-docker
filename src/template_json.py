@@ -139,10 +139,10 @@ class TemplateJsonCreator:
             element: dict[str, Any] = {}
 
             rect = PdfDevRect()
-            rect.left = math.floor(result["coordinate"][0] / zoom)  # min_x
-            rect.top = math.floor(result["coordinate"][1] / zoom)  # min_y
-            rect.right = math.ceil(result["coordinate"][2] / zoom)  # max_x
-            rect.bottom = math.ceil(result["coordinate"][3] / zoom)  # max_y
+            rect.left = math.floor(result["coordinate"][0])  # min_x
+            rect.top = math.floor(result["coordinate"][1])  # min_y
+            rect.right = math.ceil(result["coordinate"][2])  # max_x
+            rect.bottom = math.ceil(result["coordinate"][3])  # max_y
             bbox = page_view.RectToPage(rect)
             element["bbox"] = [str(bbox.left), str(bbox.bottom), str(bbox.right), str(bbox.top)]
 
