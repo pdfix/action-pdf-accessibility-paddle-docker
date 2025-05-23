@@ -275,6 +275,8 @@ class TemplateJsonCreator:
 
             elements.append(element)
 
+        elements = sorted(elements, key=lambda x: (float(x["bbox"][3]), 1000.0 - float(x["bbox"][0])), reverse=True)
+
         return elements
 
     def _create_table_cells(self, result: dict, page_view: PdfPageView) -> list:
