@@ -5,11 +5,16 @@ import traceback
 from pathlib import Path
 
 from autotag import AutotagUsingPaddleXRecognition
+from create_template import CreateTemplateJsonUsingPaddleXRecognition
 from formula import FormulaDescriptionUsingPaddle
 
 
 def set_arguments(
-    parser: argparse.ArgumentParser, names: list, required_output: bool = True, file_type: str = "PDF"
+    parser: argparse.ArgumentParser,
+    names: list,
+    required_output: bool = True,
+    input_file_type: str = "PDF",
+    output_file_type: str = "PDF",
 ) -> None:
     """
     Set arguments for the parser based on the provided names and options.
@@ -18,12 +23,13 @@ def set_arguments(
         parser (argparse.ArgumentParser): The argument parser to set arguments for.
         names (list): List of argument names to set.
         required_output (bool): Whether the output argument is required. Defaults to True.
-        file_type (str): The type of file being processed. Defaults to "PDF".
+        input_file_type (str): The type of input file being processed. Defaults to "PDF".
+        output_file_type (str): The type of output file being created. Defaults to "PDF".
     """
     for name in names:
         match name:
             case "input":
-                parser.add_argument("--input", "-i", type=str, required=True, help=f"The input {file_type} file")
+                parser.add_argument("--input", "-i", type=str, required=True, help=f"The input {input_file_type} file")
             case "key":
                 parser.add_argument("--key", type=str, help="PDFix license key")
             case "model":
@@ -38,11 +44,11 @@ def set_arguments(
                 parser.add_argument("--name", type=str, help="PDFix license name")
             case "output":
                 parser.add_argument(
-                    "--output", "-o", type=str, required=required_output, help=f"The output {file_type} file"
+                    "--output", "-o", type=str, required=required_output, help=f"The output {output_file_type} file"
                 )
             case "zoom":
                 parser.add_argument(
-                    "--zoom", type=float, default=1.0, help="Zoom level for the PDF page rendering (default: 1.0)"
+                    "--zoom", type=float, default=1.0, help="Zoom level for the PDF page rendering (default: 2.0)"
                 )
 
 
@@ -84,9 +90,10 @@ def autotagging_pdf(
         input_path (string): Path to pdf of folder
         output_path (string): Path to pdf of folder
         model (string): Paddle layout model
+        zoom (float): Zoom level for rendering the page
     """
-    if zoom < 0.1:
-        raise Exception("Zoom level must be greater than 0.1")
+    if zoom < 1.0 or zoom > 10.0:
+        raise Exception("Zoom level must between 1.0 and 10.0")
 
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
         autotag = AutotagUsingPaddleXRecognition(license_name, license_key, input_path, output_path, model, zoom)
@@ -115,6 +122,30 @@ def describing_formula(input_path: str, output_path: str) -> None:
         raise Exception("Input and output file must be JSON files")
 
 
+def run_template_subcommand(args) -> None:
+    create_template_json(args.input, args.output, args.model, args.zoom)
+
+
+def create_template_json(input_path: str, output_path: str, model: str, zoom: float) -> None:
+    """
+    Autotaggin PDF with provided arguments
+
+    Args:
+        input_path (string): Path to pdf of folder
+        output_path (string): Path to pdf of folder
+        model (string): Paddle layout model
+        zoom (float): Zoom level for rendering the page
+    """
+    if zoom < 1.0 or zoom > 10.0:
+        raise Exception("Zoom level must between 1.0 and 10.0")
+
+    if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".json"):
+        template_creator = CreateTemplateJsonUsingPaddleXRecognition(input_path, output_path, model, zoom)
+        template_creator.process_file()
+    else:
+        raise Exception("Input file must be PDF and output file must be JSON")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Autotag PDF document Paddle Engine and PDFix SDK",
@@ -127,7 +158,7 @@ def main() -> None:
         "config",
         help="Extract config file for integration",
     )
-    set_arguments(config_subparser, ["output"], False, "JSON")
+    set_arguments(config_subparser, ["output"], False, "JSON", "JSON")
     config_subparser.set_defaults(func=run_config_subcommand)
 
     # Tagging subparser
@@ -135,7 +166,7 @@ def main() -> None:
         "tag",
         help="Run autotag PDF document",
     )
-    set_arguments(autotag_subparser, ["name", "key", "input", "output", "model", "zoom"], True, "PDF")
+    set_arguments(autotag_subparser, ["name", "key", "input", "output", "model", "zoom"], True, "PDF", "PDF")
     autotag_subparser.set_defaults(func=run_autotag_subcommand)
 
     # Formula subparser
@@ -143,8 +174,16 @@ def main() -> None:
         "generate_alt_text_formula",
         help="Generates alternate description for formula using Paddle Engine",
     )
-    set_arguments(formula_subparser, ["input", "output"], True, "JSON")
+    set_arguments(formula_subparser, ["input", "output"], True, "JSON", "JSON")
     formula_subparser.set_defaults(func=run_formula_subcommand)
+
+    # Template subparser
+    template_subparser = subparsers.add_parser(
+        "template",
+        help="Generates template JSON for autotagging",
+    )
+    set_arguments(template_subparser, ["input", "output", "model", "zoom"], True, "PDF", "JSON")
+    template_subparser.set_defaults(func=run_template_subcommand)
 
     # Parse arguments
     try:

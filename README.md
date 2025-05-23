@@ -9,7 +9,7 @@ Docker image-based autotagging of PDF documents with PaddleX and PDFix SDK
   - [Getting Started](#getting-started)
   - [Run a Docker image ](#run-docker-image)
     - [Run docker container for autotagging](#run-docker-container-autotagging)
-    - [Run docker container with visual output from models](#run-docker-container-visual-debug)
+    - [Run docker container for template json creation](#run-docker-container-template)
     - [Run docker container for formula description in latex](#run-docker-container-formula)
     - [Exporting PDFix Configuration for Integration](#export-config-json-integration)
   - [License \& libraries used](#license)
@@ -50,18 +50,18 @@ Contact support for more information.
 The command will look like:
 
 ```bash
-docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -it pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY --model PP-DocLayout-L --zoom 2.0 --input /data_in/document.pdf --output /data_out/tagged.pdf
+docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY --input /data_in/document.pdf --output /data_out/tagged.pdf --model PP-DocLayout-L --zoom 2.0
 ```
 
-### Run docker container with visual output from models
-Running the debug Docker container is similar to running the container normaly. One additional mount is required for `/usr/paddlex/output`.
+### Run docker container for template json creation
+This is similar to running tagging. Difference is output file. Here it is JSON.
 
 Example:
 
-- Your folder where images with recognized layout are saved: `/home/output`
+- Your output PDF is: `/home/out/template.json`
 
 ```bash
-docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out -v /home/output:/usr/paddlex/output -it pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY --input /data_in/document.pdf --output /data_out/tagged.pdf
+docker run --rm -v /home/pdfs_in:/data_in -v /home/out:/data_out pdfix/pdf-accessibility-paddle:latest template --input /data_in/document.pdf --output /data_out/template.json --model PP-DocLayout-L --zoom 2.0
 ```
 
 ### Run docker container for formula description in latex

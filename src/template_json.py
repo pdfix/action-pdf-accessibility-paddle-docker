@@ -1,5 +1,9 @@
+import json
 import math
+import os
+import sys
 from datetime import date
+from pathlib import Path
 from typing import Any
 
 from pdfixsdk import PdfDevRect, PdfPageView, PdfRect, __version__
@@ -10,30 +14,33 @@ class TemplateJsonCreator:
     Class that prepares each page and in the end creates whole template json file for PDFix-SDK
     """
 
+    # Constants
+    CONFIG_FILE = "config.json"
+
     def __init__(self) -> None:
         """
         Initializes pdfix sdk template json creation by preparing list for each page.
         """
         self.template_json_pages: list = []
 
-    def create_json_dict_for_document(self, model: str) -> dict:
+    def create_json_dict_for_document(self, model: str, zoom: float) -> dict:
         """
         Prepare PDFix SDK json template for whole document.
 
         Args:
             model (list): Paddle layout model name.
+            zoom (float): Zoom level that page was rendered with.
 
         Returns:
             Template json for whole document
         """
         document: dict = {}
-        external_action_version = "v0.0.0"
         created_date = date.today().strftime("%Y-%m-%d")
         metadata: dict = {
-            "author": f"Autotag Paddle {external_action_version}",  # TODO test
+            "author": f"Autotag Paddle {self._get_current_version()}",
             "created": created_date,
             "modified": created_date,
-            "notes": f"Created using PaddleX layout model: {model}",
+            "notes": f"Created using PaddleX layout model: {model} and PDFix zoom: {zoom}",
             "sdk_version": __version__,
             # we are creating first one always so it is always "1"
             "version": "1",
@@ -62,9 +69,27 @@ class TemplateJsonCreator:
         json_for_page = self._create_json_dict_for_page(results, page_number, page_view, zoom)
         self.template_json_pages.append(json_for_page)
 
+    def _get_current_version(self) -> str:
+        """
+        Read the current version from config.json.
+
+        Returns:
+            The current version of the Docker image.
+        """
+        config_path = os.path.join(Path(__file__).parent.absolute(), f"../{self.CONFIG_FILE}")
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                config = json.load(f)
+                return config.get("version", "unknown")
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"Error reading {self.CONFIG_FILE}: {e}", file=sys.stderr)
+            return "unknown"
+
     def _create_json_dict_for_page(self, results: dict, page_number: int, page_view: PdfPageView, zoom: float) -> dict:
         """
-        Prepare json template for PDFix SDK for one page.
+        Function that creates json template for one page.
+        It creates json for each page and saves it to list of pages.
+        It is used in create_json_dict_for_document.
 
         Args:
             results (dict): Dictionary of results from Paddle, where are
@@ -75,7 +100,7 @@ class TemplateJsonCreator:
             zoom (float): Zoom level that page was rendered with.
 
         Returns:
-            Template json for one page
+            JSON template for one page.
         """
         element_create_for_page: dict = {}
         element_create_for_page["comment"] = f"Tag PDF page {page_number}"  # TODO unique ID + some info about PaddleX
@@ -104,7 +129,6 @@ class TemplateJsonCreator:
         Returns:
             List of elements with parameters.
         """
-        # TODO reading order?
         elements: list = []
 
         # do not process if nothing is for processing
@@ -176,9 +200,10 @@ class TemplateJsonCreator:
                     element["comment"] = "formula"
                     if "custom" in result:
                         element["alt"] = result["custom"]
-                        # TODO associate file
+                        # TODO associate file -> not possible in template json
                     element["tag"] = "Formula"
                     element["type"] = "pde_image"
+                    element["id"] = ""  # for associate file - PDFIX SDK generate id pdfutils simplehash
                     pass
 
                 case "formula_number":
@@ -232,6 +257,9 @@ class TemplateJsonCreator:
                         element_template: dict = {}
                         element_template["template"] = template
                         element["element_template"] = element_template
+                        element["row_num"] = result["custom"]["rows"]
+                        element["col_num"] = result["custom"]["columns"]
+                        element["flag"] = "fixed"
                     element["type"] = "pde_table"
 
                 case "table_title":
@@ -244,12 +272,6 @@ class TemplateJsonCreator:
                 case _:
                     element["comment"] = f"Unknown type: {label}"
                     element["type"] = "pde_text"
-
-            if element["type"] == "pde_text":
-                # 10% increase of bbox
-                # element["bbox"] = self._increase_bbox(bbox, 1.1)
-                # increase bbox according to size (small size +100% ... big size + 10%)
-                element["bbox"] = self._increase_bbox_adaptively(bbox)
 
             elements.append(element)
 
@@ -282,11 +304,11 @@ class TemplateJsonCreator:
                 "cell_column": str(cell["column"]),
                 "cell_column_span": str(cell["column_span"]),
                 # we are not using "structure model" so we do not have this information
-                "cell_header": self._convert_bool_to_str(False),
+                # "cell_header": self._convert_bool_to_str(False),
                 "cell_row": str(cell["row"]),
                 "cell_row_span": str(cell["row_span"]),
                 # we are not using "structure model" so we do not have this information
-                "cell_scope": "0",
+                # "cell_scope": "0",
                 "type": "pde_cell",
             }
             cells.append(create_cell)
@@ -319,76 +341,3 @@ class TemplateJsonCreator:
         page_height = page_view.GetDeviceHeight()
         half_height = page_height / 2
         return "footer" if bbox.top < half_height else "header"
-
-    def _increase_bbox(self, bbox: PdfRect, multiplier: float) -> list:
-        """
-        Increase bounding box by a given multiplier.
-
-        Args:
-            bbox (PdfRect): Bounding box in PDF coordinates.
-            multiplier (float): Multiplier to increase the bounding box.
-
-        Returns:
-            List of strings representing the new bounding box coordinates.
-        """
-
-        def get_offset(min: int, max: int, multiplier: float) -> int:
-            size = max - min
-            new_size = math.ceil(size * multiplier)
-            return math.ceil((new_size - size) / 2.0)
-
-        offset_x = get_offset(bbox.left, bbox.right, multiplier)
-        offset_y = get_offset(bbox.bottom, bbox.top, multiplier)
-
-        return [
-            str(bbox.left - offset_x),
-            str(bbox.bottom - offset_y),
-            str(bbox.right + offset_x),
-            str(bbox.top + offset_y),
-        ]
-
-    def _increase_bbox_adaptively(self, bbox: PdfRect) -> list:
-        """
-        Increase bounding box according to bounding box size. For small size big multiplier 2.0 is used,
-        for small size multiplier 1.1 is used.
-
-        Args:
-            bbox (PdfRect): Bounding box in PDF coordinates.
-            multiplier (float): Multiplier to increase the bounding box.
-
-        Returns:
-            List of strings representing the new bounding box coordinates.
-        """
-
-        def get_offset(min_side: int, max_side: int) -> int:
-            # Cap for both sides the real size
-            real_size = max_side - min_side
-            min_size = 20
-            max_size = 100
-            progress_size = max(min_size, min(max_size, real_size)) - min_size
-
-            # Calculate progress where at max_size it is 0 and at min_size it is 1
-            max_progress_size = max_size - min_size
-            inverted_progress_size = max_progress_size - progress_size
-            progress = inverted_progress_size / max_progress_size
-
-            # Calculate the multiplier based on the progress
-            min_multiplier = 1.1
-            max_multiplier = 2.0
-            multiplier = min_multiplier + progress * (max_multiplier - min_multiplier)
-
-            # Calculate new size
-            new_size = math.ceil(real_size * multiplier)
-
-            # Calculate offset at one side
-            return math.ceil((new_size - real_size) / 2.0)
-
-        offset_x = get_offset(bbox.left, bbox.right)
-        offset_y = get_offset(bbox.bottom, bbox.top)
-
-        return [
-            str(bbox.left - offset_x),
-            str(bbox.bottom - offset_y),
-            str(bbox.right + offset_x),
-            str(bbox.top + offset_y),
-        ]

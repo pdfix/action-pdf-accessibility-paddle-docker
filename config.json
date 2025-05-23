@@ -7,7 +7,7 @@
       "name": "autotag_paddle",
       "desc": "A Docker image that automatically tags PDF using Paddle and PDFix SDK",
       "version": "v0.0.0",
-      "icon": "add_photo_alternate",
+      "icon": "paddle_autotag",
       "category": "Paddle",
       "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest tag --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\" --zoom \"${zoom}\"",
       "args": [
@@ -55,9 +55,9 @@
       "title": "Generate Alternate Text for Formula",
       "name": "generate_alt_text_formula",
       "desc": "Automatically generates alternate description for formula using Paddle",
-      "icon": "add_photo_alternate",
+      "icon": "paddle_formula",
       "version": "v0.0.0",
-      "subtype": "set_alt",
+      "subtype": "set_formula",
       "category": "Paddle",
       "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest generate_alt_text_formula -i \"/data/${input_json}\" -o \"/data/${output_json}\"",
       "args": [
@@ -76,6 +76,56 @@
           "type": "file_path",
           "ext": "json",
           "value": ""
+        }
+      ]
+    },
+    {
+      "title": "Create template json",
+      "name": "autotag_paddle",
+      "desc": "Automatically create template json using Paddle",
+      "version": "v0.0.0",
+      "subtype": "template",
+      "icon": "paddle_autotag",
+      "category": "Paddle",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest template -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\" --zoom \"${zoom}\"",
+      "args": [
+        {
+          "name": "input_pdf",
+          "desc": "Input PDF file",
+          "flags": 2,
+          "type": "file_path",
+          "ext": "pdf",
+          "value": ""
+        },
+        {
+          "name": "output_json",
+          "desc": "Output JSON file containing alternate description for formula",
+          "flags": 4,
+          "type": "file_path",
+          "ext": "json",
+          "value": ""
+        },
+        {
+          "title": "Paddle Layout Model",
+          "name": "model",
+          "desc": "Layout prediction model that Paddle should use",
+          "type": "string",
+          "value": "PP-DocLayout-L",
+          "set": [
+            {
+              "value": "PP-DocLayout-L"
+            },
+            {
+              "value": "RT-DETR-H_layout_17cls"
+            }
+          ]
+        },
+        {
+          "title": "Rendering Zoom Level",
+          "name": "zoom",
+          "desc": "Pages are provided as images that are rendered using this zoom level",
+          "type": "float",
+          "value": "2.0"
         }
       ]
     }

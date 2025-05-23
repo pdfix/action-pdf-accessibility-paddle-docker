@@ -24,7 +24,7 @@ class FormulaDescriptionUsingPaddle:
 
         The output JSON file will look like:
         {
-            "text": "Latex description of formula"
+            "content": "Latex description of formula"
         }
 
         Args:
