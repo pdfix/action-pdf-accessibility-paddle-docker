@@ -87,7 +87,7 @@
       "subtype": "template",
       "icon": "paddle_autotag",
       "category": "Paddle",
-      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest template -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\" --zoom \"${zoom}\"",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest template -i \"/data/${input_pdf}\" -o \"/data/${output_json}\" --model \"${model}\" --zoom \"${zoom}\"",
       "args": [
         {
           "name": "input_pdf",
@@ -99,7 +99,7 @@
         },
         {
           "name": "output_json",
-          "desc": "Output JSON file containing alternate description for formula",
+          "desc": "Output JSON file that is template json",
           "flags": 4,
           "type": "file_path",
           "ext": "json",
