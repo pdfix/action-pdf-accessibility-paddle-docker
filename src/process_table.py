@@ -73,14 +73,53 @@ class PaddleXPostProcessingTable:
             }
             cells_with_data.append(cell_result)
 
-        # sort cells by ascending coordinates: Y (row) and X (column)
-        cells_with_data = sorted(cells_with_data, key=lambda x: (x["row"], x["column"]))
+        # fill empty cells and sort cells by ascending coordinates: Y (row) and X (column)
+        self._fill_missing_cells_and_sort(cells_with_data, number_rows, number_columns)
 
         return {
             "rows": number_rows,
             "columns": number_columns,
             "cells": cells_with_data,
         }
+
+    def _fill_missing_cells_and_sort(self, cells: list, number_rows: int, number_columns: int) -> list:
+        """
+        Fill missing cells in table and sort them by row and column
+
+        Args:
+            cells (list): List of cells with data
+            number_rows (int): Rows count in table
+            number_columns (int): Columns count in table
+
+        Returns:
+            List of cells with data sorted by row and column
+        """
+        if not cells:
+            return []
+
+        # Create grid with empty spans
+        output_cells: list = []
+
+        for row in range(1, number_rows + 1):
+            row_cells: list = []
+            for column in range(1, number_columns + 1):
+                row_cell: dict = {
+                    "row": row,
+                    "column": column,
+                    "row_span": 0,
+                    "column_span": 0,
+                }
+                row_cells.append(row_cell)
+            output_cells.append(row_cells)
+
+        # Fill the grid with existing cells
+        for cell in cells:
+            row_index = cell["row"] - 1
+            column_index = cell["column"] - 1
+            output_cells[row_index][column_index] = cell
+
+        # Convert grid to flat list with all cells (this will already be sorted by row and column)
+        return [cell for row in output_cells for cell in row]
 
     def _create_table_row_and_column_lines(self, result: dict) -> tuple[list, list]:
         """
