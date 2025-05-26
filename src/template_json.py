@@ -145,42 +145,36 @@ class TemplateJsonCreator:
             rect.bottom = math.ceil(result["coordinate"][3])  # max_y
             bbox = page_view.RectToPage(rect)
             element["bbox"] = [str(bbox.left), str(bbox.bottom), str(bbox.right), str(bbox.top)]
+            label = result["label"].lower()
+            element["comment"] = f"{label} {round(result['score'] * 100)}%"
 
             # Determine element type
-            label = result["label"].lower()
             match label:
                 case "abstract":
-                    element["comment"] = "abstract"
                     element["type"] = "pde_text"
 
                 case "algorithm":
-                    element["comment"] = "algorithm"
                     element["type"] = "pde_text"
 
                 case "aside_text":
-                    element["comment"] = "aside_text|artifact"
+                    element["flag"] = "artifact"
                     element["type"] = "pde_text"
 
                 case "chart":
-                    element["comment"] = "chart"
                     element["type"] = "pde_image"
 
                 case "chart_title":
-                    element["comment"] = "chart_title"
                     element["tag"] = "Caption"
                     element["type"] = "pde_text"
 
                 case "content":
-                    element["comment"] = "content"
                     element["type"] = "pde_text"
 
                 case "doc_title":
-                    element["comment"] = "doc_title"
                     element["tag"] = "Title"
                     element["type"] = "pde_text"
 
                 case "figure_title":
-                    element["comment"] = "figure_title"
                     element["tag"] = "Caption"
                     element["type"] = "pde_text"
 
@@ -193,21 +187,18 @@ class TemplateJsonCreator:
                     element["type"] = "pde_image"
 
                 case "footnote":
-                    element["comment"] = "footnote"
                     element["type"] = "pde_text"
 
                 case "formula":
-                    element["comment"] = "formula"
                     if "custom" in result:
                         element["alt"] = result["custom"]
-                        # TODO associate file -> not possible in template json
+                        # TODO PVQ-3842 associate file -> not possible in template json
                     element["tag"] = "Formula"
                     element["type"] = "pde_image"
-                    element["id"] = ""  # for associate file - PDFIX SDK generate id pdfutils simplehash
+                    # TODO PVQ-3842 element["id"] = ""  # for associate file - PDFIX SDK generate id pdfutils simplehash
                     pass
 
                 case "formula_number":
-                    element["comment"] = "formula_number"
                     element["type"] = "pde_text"
                     pass
 
@@ -223,23 +214,19 @@ class TemplateJsonCreator:
                     element["type"] = "pde_image"
 
                 case "number":
-                    element["comment"] = "number"
                     number_flag = self._is_footer_or_header(page_view, bbox)
                     element["flag"] = f"{number_flag}|artifact"
                     element["type"] = "pde_text"
 
                 case "paragraph_title":
-                    element["comment"] = "paragraph_title"
                     element["heading"] = "h1"
                     element["type"] = "pde_text"
 
                 case "reference":
-                    element["comment"] = "reference"
                     element["tag"] = "Reference"
                     element["type"] = "pde_text"
 
                 case "seal":
-                    element["comment"] = "seal"
                     element["flag"] = "artifact"
                     element["type"] = "pde_image"
 
@@ -263,14 +250,12 @@ class TemplateJsonCreator:
                     element["type"] = "pde_table"
 
                 case "table_title":
-                    element["comment"] = "table_title"
                     element["type"] = "pde_text"
 
                 case "text":
                     element["type"] = "pde_text"
 
                 case _:
-                    element["comment"] = f"Unknown type: {label}"
                     element["type"] = "pde_text"
 
             elements.append(element)
@@ -301,6 +286,9 @@ class TemplateJsonCreator:
             rect.bottom = math.floor(cell["bbox"][3])  # max_y
             bbox = page_view.RectToPage(rect)
 
+            cell_position: str = f"[{cell['row']}, {cell['column']}]"
+            cell_span: str = f"[{cell['row_span']}, {cell['column_span']}]"
+
             create_cell: dict = {
                 "bbox": [str(bbox.left), str(bbox.bottom), str(bbox.right), str(bbox.top)],
                 "cell_column": str(cell["column"]),
@@ -311,6 +299,7 @@ class TemplateJsonCreator:
                 "cell_row_span": str(cell["row_span"]),
                 # we are not using "structure model" so we do not have this information
                 # "cell_scope": "0",
+                "comment": f"Cell Pos: {cell_position} Span: {cell_span}",
                 "type": "pde_cell",
             }
             cells.append(create_cell)
