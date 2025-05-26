@@ -97,8 +97,6 @@ class PaddleXEngine:
                     # use user provided threshold
                     self.threshold[key] = value
 
-        print(f"Final: {self.threshold}")
-
     def process_pdf_page_image_with_ai(
         self,
         image: cv2.typing.MatLike,

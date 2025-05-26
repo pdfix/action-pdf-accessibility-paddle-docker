@@ -74,7 +74,7 @@ class PaddleXPostProcessingTable:
             cells_with_data.append(cell_result)
 
         # fill empty cells and sort cells by ascending coordinates: Y (row) and X (column)
-        self._fill_missing_cells_and_sort(cells_with_data, number_rows, number_columns)
+        cells_with_data = self._fill_missing_cells_and_sort(cells_with_data, number_rows, number_columns)
 
         return {
             "rows": number_rows,
@@ -118,7 +118,7 @@ class PaddleXPostProcessingTable:
             column_index = cell["column"] - 1
             output_cells[row_index][column_index] = cell
 
-        # Convert grid to flat list with all cells (this will already be sorted by row and column)
+        # Convert grid to flat list (with bonus already being sorted)
         return [cell for row in output_cells for cell in row]
 
     def _create_table_row_and_column_lines(self, result: dict) -> tuple[list, list]:

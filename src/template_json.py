@@ -287,29 +287,31 @@ class TemplateJsonCreator:
         cells: list = []
 
         for cell in result["cells"]:
-            rect = PdfDevRect()
-            rect.left = math.ceil(cell["bbox"][0])  # min_x
-            rect.top = math.ceil(cell["bbox"][1])  # min_y
-            rect.right = math.floor(cell["bbox"][2])  # max_x
-            rect.bottom = math.floor(cell["bbox"][3])  # max_y
-            bbox = page_view.RectToPage(rect)
-
             cell_position: str = f"[{cell['row']}, {cell['column']}]"
             cell_span: str = f"[{cell['row_span']}, {cell['column_span']}]"
 
             create_cell: dict = {
-                "bbox": [str(bbox.left), str(bbox.bottom), str(bbox.right), str(bbox.top)],
                 "cell_column": str(cell["column"]),
                 "cell_column_span": str(cell["column_span"]),
-                # we are not using "structure model" so we do not have this information
-                # "cell_header": self._convert_bool_to_str(False),
                 "cell_row": str(cell["row"]),
                 "cell_row_span": str(cell["row_span"]),
-                # we are not using "structure model" so we do not have this information
-                # "cell_scope": "0",
                 "comment": f"Cell Pos: {cell_position} Span: {cell_span}",
                 "type": "pde_cell",
             }
+
+            # # we are not using "structure model" so we do not have this information
+            # create_cell["cell_header"] = self._convert_bool_to_str(False),
+            # create_cell["cell_scope"] = "0"
+
+            if "bbox" in cell:
+                rect = PdfDevRect()
+                rect.left = math.ceil(cell["bbox"][0])  # min_x
+                rect.top = math.ceil(cell["bbox"][1])  # min_y
+                rect.right = math.floor(cell["bbox"][2])  # max_x
+                rect.bottom = math.floor(cell["bbox"][3])  # max_y
+                bbox = page_view.RectToPage(rect)
+                create_cell["bbox"] = [str(bbox.left), str(bbox.bottom), str(bbox.right), str(bbox.top)]
+
             cells.append(create_cell)
 
         return cells
