@@ -9,7 +9,7 @@
       "version": "v0.0.0",
       "icon": "paddle_autotag",
       "category": "Paddle",
-      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest tag --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\" --zoom \"${zoom}\"",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest tag --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\" --zoom \"${zoom}\" --process_formula \"${process_formula}\"  --process_table \"${process_table}\" --threshold_paragraph_title \"${threshold_paragraph_title}\" --threshold_image \"${threshold_image}\" --threshold_text \"${threshold_text}\" --threshold_number \"${threshold_number}\" --threshold_abstract \"${threshold_abstract}\" --threshold_content \"${threshold_content}\" --threshold_figure_title \"${threshold_figure_title}\" --threshold_formula \"${threshold_formula}\" --threshold_table \"${threshold_table}\" --threshold_table_title \"${threshold_table_title}\" --threshold_reference \"${threshold_reference}\" --threshold_doc_title \"${threshold_doc_title}\" --threshold_footnote \"${threshold_footnote}\" --threshold_header \"${threshold_header}\" --threshold_algorithm \"${threshold_algorithm}\" --threshold_footer \"${threshold_footer}\" --threshold_seal \"${threshold_seal}\" --threshold_chart_title \"${threshold_chart_title}\" --threshold_chart \"${threshold_chart}\" --threshold_formula_number \"${threshold_formula_number}\" --threshold_header_image \"${threshold_header_image}\" --threshold_footer_image \"${threshold_footer_image}\" --threshold_aside_text \"${threshold_aside_text}\"",
       "args": [
         {
           "name": "input_pdf",
@@ -48,6 +48,181 @@
           "desc": "Pages are provided as images that are rendered using this zoom level",
           "type": "float",
           "value": "2.0"
+        },
+        {
+          "title": "Process Formulas",
+          "name": "process_formula",
+          "desc": "Use Paddle Formula model to process formulas in the document",
+          "type": "bool",
+          "value": "True"
+        },
+        {
+          "title": "Process Tables",
+          "name": "process_table",
+          "desc": "Use Paddle Table models to process tables in the document",
+          "type": "bool",
+          "value": "True"
+        },
+        {
+          "title": "Threshold Paragraph Title",
+          "name": "threshold_paragraph_title",
+          "desc": "Paddle layout model threshold for paragraph title detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Image",
+          "name": "threshold_image",
+          "desc": "Paddle layout model threshold for image detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Text",
+          "name": "threshold_text",
+          "desc": "Paddle layout model threshold for text detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Number",
+          "name": "threshold_number",
+          "desc": "Paddle layout model threshold for number detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Abstract",
+          "name": "threshold_abstract",
+          "desc": "Paddle layout model threshold for abstract detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Content",
+          "name": "threshold_content",
+          "desc": "Paddle layout model threshold for content detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Figure Title",
+          "name": "threshold_figure_title",
+          "desc": "Paddle layout model threshold for figure title detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Formula",
+          "name": "threshold_formula",
+          "desc": "Paddle layout model threshold for formula detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Table",
+          "name": "threshold_table",
+          "desc": "Paddle layout model threshold for table detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Table Title",
+          "name": "threshold_table_title",
+          "desc": "Paddle layout model threshold for table title detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Reference",
+          "name": "threshold_reference",
+          "desc": "Paddle layout model threshold for reference detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Document Title",
+          "name": "threshold_doc_title",
+          "desc": "Paddle layout model threshold for document title detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Footnote",
+          "name": "threshold_footnote",
+          "desc": "Paddle layout model threshold for footnote detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Header",
+          "name": "threshold_header",
+          "desc": "Paddle layout model threshold for header detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Algorithm",
+          "name": "threshold_algorithm",
+          "desc": "Paddle layout model threshold for algorithm detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Footer",
+          "name": "threshold_footer",
+          "desc": "Paddle layout model threshold for footer detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Seal",
+          "name": "threshold_seal",
+          "desc": "Paddle layout model threshold for seal detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Chart Title",
+          "name": "threshold_chart_title",
+          "desc": "Paddle layout model threshold for chart title detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Chart",
+          "name": "threshold_chart",
+          "desc": "Paddle layout model threshold for chart detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Formula Number",
+          "name": "threshold_formula_number",
+          "desc": "Paddle layout model threshold for formula number detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Header Image",
+          "name": "threshold_header_image",
+          "desc": "Paddle layout model threshold for header image detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Footer Image",
+          "name": "threshold_footer_image",
+          "desc": "Paddle layout model threshold for footer image detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Aside Text",
+          "name": "threshold_aside_text",
+          "desc": "Paddle layout model threshold for aside text detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
         }
       ]
     },
@@ -59,7 +234,7 @@
       "version": "v0.0.0",
       "subtype": "set_formula",
       "category": "Paddle",
-      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest formula -i \"/data/${input_json}\" -o \"/data/${output_json}\"",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest template --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_json}\" --model \"${model}\" --zoom \"${zoom}\" --process_formula \"${process_formula}\"  --process_table \"${process_table}\" --threshold_paragraph_title \"${threshold_paragraph_title}\" --threshold_image \"${threshold_image}\" --threshold_text \"${threshold_text}\" --threshold_number \"${threshold_number}\" --threshold_abstract \"${threshold_abstract}\" --threshold_content \"${threshold_content}\" --threshold_figure_title \"${threshold_figure_title}\" --threshold_formula \"${threshold_formula}\" --threshold_table \"${threshold_table}\" --threshold_table_title \"${threshold_table_title}\" --threshold_reference \"${threshold_reference}\" --threshold_doc_title \"${threshold_doc_title}\" --threshold_footnote \"${threshold_footnote}\" --threshold_header \"${threshold_header}\" --threshold_algorithm \"${threshold_algorithm}\" --threshold_footer \"${threshold_footer}\" --threshold_seal \"${threshold_seal}\" --threshold_chart_title \"${threshold_chart_title}\" --threshold_chart \"${threshold_chart}\" --threshold_formula_number \"${threshold_formula_number}\" --threshold_header_image \"${threshold_header_image}\" --threshold_footer_image \"${threshold_footer_image}\" --threshold_aside_text \"${threshold_aside_text}\"",
       "args": [
         {
           "name": "input_json",
@@ -126,6 +301,181 @@
           "desc": "Pages are provided as images that are rendered using this zoom level",
           "type": "float",
           "value": "2.0"
+        },
+        {
+          "title": "Process Formulas",
+          "name": "process_formula",
+          "desc": "Use Paddle Formula model to process formulas in the document",
+          "type": "bool",
+          "value": "True"
+        },
+        {
+          "title": "Process Tables",
+          "name": "process_table",
+          "desc": "Use Paddle Table models to process tables in the document",
+          "type": "bool",
+          "value": "True"
+        },
+        {
+          "title": "Threshold Paragraph Title",
+          "name": "threshold_paragraph_title",
+          "desc": "Paddle layout model threshold for paragraph title detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Image",
+          "name": "threshold_image",
+          "desc": "Paddle layout model threshold for image detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Text",
+          "name": "threshold_text",
+          "desc": "Paddle layout model threshold for text detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Number",
+          "name": "threshold_number",
+          "desc": "Paddle layout model threshold for number detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Abstract",
+          "name": "threshold_abstract",
+          "desc": "Paddle layout model threshold for abstract detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Content",
+          "name": "threshold_content",
+          "desc": "Paddle layout model threshold for content detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Figure Title",
+          "name": "threshold_figure_title",
+          "desc": "Paddle layout model threshold for figure title detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Formula",
+          "name": "threshold_formula",
+          "desc": "Paddle layout model threshold for formula detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Table",
+          "name": "threshold_table",
+          "desc": "Paddle layout model threshold for table detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Table Title",
+          "name": "threshold_table_title",
+          "desc": "Paddle layout model threshold for table title detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Reference",
+          "name": "threshold_reference",
+          "desc": "Paddle layout model threshold for reference detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Document Title",
+          "name": "threshold_doc_title",
+          "desc": "Paddle layout model threshold for document title detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Footnote",
+          "name": "threshold_footnote",
+          "desc": "Paddle layout model threshold for footnote detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Header",
+          "name": "threshold_header",
+          "desc": "Paddle layout model threshold for header detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Algorithm",
+          "name": "threshold_algorithm",
+          "desc": "Paddle layout model threshold for algorithm detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Footer",
+          "name": "threshold_footer",
+          "desc": "Paddle layout model threshold for footer detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Seal",
+          "name": "threshold_seal",
+          "desc": "Paddle layout model threshold for seal detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Chart Title",
+          "name": "threshold_chart_title",
+          "desc": "Paddle layout model threshold for chart title detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Chart",
+          "name": "threshold_chart",
+          "desc": "Paddle layout model threshold for chart detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Formula Number",
+          "name": "threshold_formula_number",
+          "desc": "Paddle layout model threshold for formula number detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Header Image",
+          "name": "threshold_header_image",
+          "desc": "Paddle layout model threshold for header image detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Footer Image",
+          "name": "threshold_footer_image",
+          "desc": "Paddle layout model threshold for footer image detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
+        },
+        {
+          "title": "Threshold Aside Text",
+          "name": "threshold_aside_text",
+          "desc": "Paddle layout model threshold for aside text detection. Number between 0.0 and 1.0. -1.0 means model default value is used.",
+          "type": "float",
+          "value": "-1.0"
         }
       ]
     }

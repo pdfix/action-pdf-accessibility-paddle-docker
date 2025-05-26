@@ -23,23 +23,92 @@ To use this Docker application, you'll need to have Docker installed on your sys
 ## Run a Docker image
 
 ### Run docker container for autotagging
+All available arguments for autotagging:
+
+```bash
+options:
+  --name NAME           PDFix license name
+  --key KEY             PDFix license key
+  --input INPUT, -i INPUT
+                        The input PDF file
+  --output OUTPUT, -o OUTPUT
+                        The output PDF file
+  --model {PP-DocLayout-L,RT-DETR-H_layout_17cls}
+                        Choose which paddle model to use: PP-DocLayout-L or RT-DETR-H_layout_17cls
+  --zoom ZOOM           Zoom level for the PDF page rendering (default: 2.0)
+  --process_formula PROCESS_FORMULA
+                        Process formulas in the PDF document using formula model. Default is True.
+  --process_table PROCESS_TABLE
+                        Process tables in the PDF document using table models. Default is True.
+  --threshold_paragraph_title THRESHOLD_PARAGRAPH_TITLE
+                        Threshold for paragraph title. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_image THRESHOLD_IMAGE
+                        Threshold for image. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_text THRESHOLD_TEXT
+                        Threshold for text. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_number THRESHOLD_NUMBER
+                        Threshold for number. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_abstract THRESHOLD_ABSTRACT
+                        Threshold for abstract. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_content THRESHOLD_CONTENT
+                        Threshold for content. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_figure_title THRESHOLD_FIGURE_TITLE
+                        Threshold for figure title. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_formula THRESHOLD_FORMULA
+                        Threshold for formula. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_table THRESHOLD_TABLE
+                        Threshold for table. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_table_title THRESHOLD_TABLE_TITLE
+                        Threshold for table title. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_reference THRESHOLD_REFERENCE
+                        Threshold for reference. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_doc_title THRESHOLD_DOC_TITLE
+                        Threshold for doc title. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_footnote THRESHOLD_FOOTNOTE
+                        Threshold for footnote. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_header THRESHOLD_HEADER
+                        Threshold for header. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_algorithm THRESHOLD_ALGORITHM
+                        Threshold for algorithm. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_footer THRESHOLD_FOOTER
+                        Threshold for footer. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_seal THRESHOLD_SEAL
+                        Threshold for seal. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_chart_title THRESHOLD_CHART_TITLE
+                        Threshold for chart title. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_chart THRESHOLD_CHART
+                        Threshold for chart. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_formula_number THRESHOLD_FORMULA_NUMBER
+                        Threshold for formula number. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_header_image THRESHOLD_HEADER_IMAGE
+                        Threshold for header image. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_footer_image THRESHOLD_FOOTER_IMAGE
+                        Threshold for footer image. Value between 0.0 - 1.0. For -1.0 use model default.
+  --threshold_aside_text THRESHOLD_ASIDE_TEXT
+                        Threshold for aside text. Value between 0.0 - 1.0. For -1.0 use model default.
+```
+
+For example we want to autotag file `/home/pdfs_in/document.pdf` and output should go to `/home/pdfs_out/tagged.pdf` using zoom `3.0`.
+
 To run the Docker container, you should map directories containing PDF documents to the container (using the `-v` parameter) and pass the paths to the input/output PDF documents inside the running container.
 
-Example: 
+Example:
 
 - Your input PDF document is: `/home/pdfs_in/document.pdf`
 - Your output PDF document is: `/home/pdfs_out/tagged.pdf`
+- Your zoom level is: `3.0`
+- You want to skip formula processing
+- Threshold for text should be 60%
 
-The path `/home/pdfs_in` is mapped to `/data_in`, and `/home/pdfs_out` is mapped to `/data_out`
+The command will look like:
 
-There are two layout models in Paddle:
-- "PP-DocLayout-L" - recognises 23 classes
-- "RT-DETR-H_layout_17cls" - recognises 17 classes
+```bash
+docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY -i /data_in/document.pdf -o /data_out/tagged.pdf --zoom 3.0 --process_formula False --threshold_text 0.6
+```
 
-You can choose either of them using the optional `--model` argument. By default "PP-DocLayout-L" is used.
-
-Rendering of page into image for Paddle engine is controlled by argument `--zoom` which takes number.
-Most sence take numbers between 1.0 and 4.0.
+Explanations:
+- you need to map directories into the container like `-v /home/pdfs_in:/data_in`
+- you will use these if you have PDFix license: `--name ${LICENSE_NAME} --key ${LICENSE_KEY}`
 
 These arguments are for an account-based PDFix license.
 ```bash
@@ -47,14 +116,8 @@ These arguments are for an account-based PDFix license.
 ```
 Contact support for more information.
 
-The command will look like:
-
-```bash
-docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY -i /data_in/document.pdf -o /data_out/tagged.pdf --model PP-DocLayout-L --zoom 2.0
-```
-
 ### Run docker container for template json creation
-This is similar to running tagging. Difference is output file that is JSON file with content looking like:
+This has arguments as tagging only difference is output. Instead of PDF it is JSON with content looking like:
 
 ```
 {
@@ -62,14 +125,16 @@ This is similar to running tagging. Difference is output file that is JSON file 
 }
 ```
 
-If you want to use it in PDFix Desktop you need to take template_json_content into new JSON file.
+If you want to use it in PDFix Desktop you need to extract template_json_content into new JSON file.
 
-Example:
+So for example we will change:
 
 - Your output PDF is: `/home/out/template.json`
 
+And the command will look like:
+
 ```bash
-docker run --rm -v /home/pdfs_in:/data_in -v /home/out:/data_out pdfix/pdf-accessibility-paddle:latest template -i /data_in/document.pdf -o /data_out/template.json --model PP-DocLayout-L --zoom 2.0
+docker run --rm -v /home/pdfs_in:/data_in -v /home/out:/data_out pdfix/pdf-accessibility-paddle:latest template -i /data_in/document.pdf -o /data_out/template.json --zoom 3.0 --process_formula False --threshold_text 0.6
 ```
 
 ### Run docker container for formula description in latex

@@ -15,7 +15,16 @@ from template_json import TemplateJsonCreator
 
 
 class CreateTemplateJsonUsingPaddleXRecognition:
-    def __init__(self, input_path: str, output_path: str, model: str, zoom: float) -> None:
+    def __init__(
+        self,
+        input_path: str,
+        output_path: str,
+        model: str,
+        zoom: float,
+        process_formula: bool,
+        process_table: bool,
+        thresholds: dict,
+    ) -> None:
         """
         Initialize class for tagging pdf(s).
 
@@ -24,11 +33,17 @@ class CreateTemplateJsonUsingPaddleXRecognition:
             output_path (string): Path where template JSON inside {"content": template_json} should be saved
             model (string): Paddle model for layout recognition
             zoom (float): Zoom level for rendering the page
+            process_formula (bool): Whether to process formulas
+            process_table (bool): Whether to process tables
+            thresholds (dict): Thresholds for layout detection
         """
         self.input_path_str = input_path
         self.output_path_str = output_path
         self.model = model
         self.zoom = zoom
+        self.process_formula = process_formula
+        self.process_table = process_table
+        self.thresholds = thresholds
 
     def process_file(self) -> None:
         """
@@ -47,6 +62,7 @@ class CreateTemplateJsonUsingPaddleXRecognition:
 
         # Process images of each page
         num_pages = doc.GetNumPages()
+        paddlex = PaddleXEngine(self.model, self.process_formula, self.process_table, self.thresholds)
         template_json_creator = TemplateJsonCreator()
         max_formulas_and_tables_per_page = 1000
         progress_bar = tqdm(total=num_pages * max_formulas_and_tables_per_page, desc="Processing pages")
@@ -60,7 +76,7 @@ class CreateTemplateJsonUsingPaddleXRecognition:
             try:
                 # Process the page
                 self._process_pdf_file_page(
-                    id, page, page_index, template_json_creator, progress_bar, max_formulas_and_tables_per_page
+                    id, page, page_index, paddlex, template_json_creator, progress_bar, max_formulas_and_tables_per_page
                 )
             except Exception:
                 raise
@@ -81,6 +97,7 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         id: str,
         page: PdfPage,
         page_index: int,
+        paddlex: PaddleXEngine,
         templateJsonCreator: TemplateJsonCreator,
         progress_bar: tqdm,
         max_formulas_and_tables_per_page: int,
@@ -92,6 +109,8 @@ class CreateTemplateJsonUsingPaddleXRecognition:
             id (string): PDF document name.
             page (PdfPage): The PDF document page to process.
             page_index (int): PDF file page index.
+            paddlex (PaddleXEngine): PaddleX engine instance for processing.
+            templateJsonCreator (TemplateJsonCreator): Template JSON creator.
             progress_bar (tqdm): Progress bar that we update for each model
                 call.
             max_formulas_and_tables_per_page (int): Our estimation how many
@@ -107,7 +126,6 @@ class CreateTemplateJsonUsingPaddleXRecognition:
             image = create_image_from_pdf_page(page, page_view)
 
             # Run layout model analysis and formula and table model analysis using the PaddleX engine
-            paddlex = PaddleXEngine(self.model)
             results = paddlex.process_pdf_page_image_with_ai(
                 image, id, page_number, progress_bar, max_formulas_and_tables_per_page
             )

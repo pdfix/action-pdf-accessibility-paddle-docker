@@ -3,10 +3,31 @@ import os
 import sys
 import traceback
 from pathlib import Path
+from typing import Any
 
 from autotag import AutotagUsingPaddleXRecognition
 from create_template import CreateTemplateJsonUsingPaddleXRecognition
 from formula import FormulaDescriptionUsingPaddle
+
+
+def str2bool(value: Any) -> bool:
+    """
+    Helper function to convert argument to boolean.
+
+    Args:
+        value (Any): The value to convert to boolean.
+
+    Returns:
+        Parsed argument as boolean.
+    """
+    if isinstance(value, bool):
+        return value
+    if value.lower() in ("yes", "true", "t", "1"):
+        return True
+    elif value.lower() in ("no", "false", "f", "0"):
+        return False
+    else:
+        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 def set_arguments(
@@ -46,6 +67,181 @@ def set_arguments(
                 parser.add_argument(
                     "--output", "-o", type=str, required=required_output, help=f"The output {output_file_type} file"
                 )
+            case "process_formula":
+                parser.add_argument(
+                    "--process_formula",
+                    type=str2bool,
+                    default=True,
+                    help="Process formulas in the PDF document using formula model. Default is True.",
+                )
+            case "process_table":
+                parser.add_argument(
+                    "--process_table",
+                    type=str2bool,
+                    default=True,
+                    help="Process tables in the PDF document using table models. Default is True.",
+                )
+            case "threshold_paragraph_title":  # "0"
+                parser.add_argument(
+                    "--threshold_paragraph_title",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for paragraph title. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_image":  # "1"
+                parser.add_argument(
+                    "--threshold_image",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for image. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_text":  # "2"
+                parser.add_argument(
+                    "--threshold_text",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for text. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_number":  # "3"
+                parser.add_argument(
+                    "--threshold_number",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for number. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_abstract":  # "4"
+                parser.add_argument(
+                    "--threshold_abstract",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for abstract. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_content":  # "5"
+                parser.add_argument(
+                    "--threshold_content",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for content. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_figure_title":  # "6"
+                parser.add_argument(
+                    "--threshold_figure_title",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for figure title. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_formula":  # "7"
+                parser.add_argument(
+                    "--threshold_formula",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for formula. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_table":  # "8"
+                parser.add_argument(
+                    "--threshold_table",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for table. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_table_title":  # "9"
+                parser.add_argument(
+                    "--threshold_table_title",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for table title. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_reference":  # "10"
+                parser.add_argument(
+                    "--threshold_reference",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for reference. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_doc_title":  # "11"
+                parser.add_argument(
+                    "--threshold_doc_title",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for doc title. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_footnote":  # "12"
+                parser.add_argument(
+                    "--threshold_footnote",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for footnote. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_header":  # "13"
+                parser.add_argument(
+                    "--threshold_header",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for header. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_algorithm":  # "14"
+                parser.add_argument(
+                    "--threshold_algorithm",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for algorithm. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_footer":  # "15"
+                parser.add_argument(
+                    "--threshold_footer",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for footer. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_seal":  # "16"
+                parser.add_argument(
+                    "--threshold_seal",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for seal. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_chart_title":  # "17"
+                parser.add_argument(
+                    "--threshold_chart_title",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for chart title. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_chart":  # "18"
+                parser.add_argument(
+                    "--threshold_chart",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for chart. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_formula_number":  # "19"
+                parser.add_argument(
+                    "--threshold_formula_number",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for formula number. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_header_image":  # "20"
+                parser.add_argument(
+                    "--threshold_header_image",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for header image. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_footer_image":  # "21"
+                parser.add_argument(
+                    "--threshold_footer_image",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for footer image. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
+            case "threshold_aside_text":  # "22"
+                parser.add_argument(
+                    "--threshold_aside_text",
+                    type=float,
+                    default=-1.0,
+                    help="Threshold for aside text. Value between 0.0 - 1.0. For -1.0 use model default.",
+                )
             case "zoom":
                 parser.add_argument(
                     "--zoom", type=float, default=2.0, help="Zoom level for the PDF page rendering (default: 2.0)"
@@ -75,11 +271,30 @@ def get_pdfix_config(path: str) -> None:
 
 
 def run_autotag_subcommand(args) -> None:
-    autotagging_pdf(args.name, args.key, args.input, args.output, args.model, args.zoom)
+    thresholds = create_threshold_dictionary(args)
+    autotagging_pdf(
+        args.name,
+        args.key,
+        args.input,
+        args.output,
+        args.model,
+        args.zoom,
+        args.process_formula,
+        args.process_table,
+        thresholds,
+    )
 
 
 def autotagging_pdf(
-    license_name: str, license_key: str, input_path: str, output_path: str, model: str, zoom: float
+    license_name: str,
+    license_key: str,
+    input_path: str,
+    output_path: str,
+    model: str,
+    zoom: float,
+    process_formula: bool,
+    process_table: bool,
+    thresholds: dict,
 ) -> None:
     """
     Autotagging PDF document with provided arguments
@@ -91,12 +306,17 @@ def autotagging_pdf(
         output_path (string): Path to PDF document
         model (string): Paddle layout model
         zoom (float): Zoom level for rendering the page
+        process_formula (bool): Whether to process formulas
+        process_table (bool): Whether to process tables
+        thresholds (dict): Thresholds for layout detection
     """
     if zoom < 1.0 or zoom > 10.0:
         raise Exception("Zoom level must between 1.0 and 10.0")
 
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
-        autotag = AutotagUsingPaddleXRecognition(license_name, license_key, input_path, output_path, model, zoom)
+        autotag = AutotagUsingPaddleXRecognition(
+            license_name, license_key, input_path, output_path, model, zoom, process_formula, process_table, thresholds
+        )
         autotag.process_file()
     else:
         raise Exception("Input and output file must be PDF documents")
@@ -123,10 +343,21 @@ def describing_formula(input_path: str, output_path: str) -> None:
 
 
 def run_template_subcommand(args) -> None:
-    create_template_json(args.input, args.output, args.model, args.zoom)
+    thresholds = create_threshold_dictionary(args)
+    create_template_json(
+        args.input, args.output, args.model, args.zoom, args.process_formula, args.process_table, thresholds
+    )
 
 
-def create_template_json(input_path: str, output_path: str, model: str, zoom: float) -> None:
+def create_template_json(
+    input_path: str,
+    output_path: str,
+    model: str,
+    zoom: float,
+    process_formula: bool,
+    process_table: bool,
+    thresholds: dict,
+) -> None:
     """
     Creating template json for PDF document using provided arguments
 
@@ -135,15 +366,57 @@ def create_template_json(input_path: str, output_path: str, model: str, zoom: fl
         output_path (string): Path to JSON file
         model (string): Paddle layout model
         zoom (float): Zoom level for rendering the page
+        process_formula (bool): Whether to process formulas
+        process_table (bool): Whether to process tables
+        thresholds (dict): Thresholds for layout detection
     """
     if zoom < 1.0 or zoom > 10.0:
         raise Exception("Zoom level must between 1.0 and 10.0")
 
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".json"):
-        template_creator = CreateTemplateJsonUsingPaddleXRecognition(input_path, output_path, model, zoom)
+        template_creator = CreateTemplateJsonUsingPaddleXRecognition(
+            input_path, output_path, model, zoom, process_formula, process_table, thresholds
+        )
         template_creator.process_file()
     else:
         raise Exception("Input file must be PDF and output file must be JSON")
+
+
+def create_threshold_dictionary(args) -> dict:
+    """
+    Create a dictionary of threshold values from the provided arguments.
+
+    Args:
+        args (argparse.Namespace): Parsed command line arguments.
+
+    Returns:
+        dict: Dictionary containing threshold values.
+    """
+    return {
+        0: args.threshold_paragraph_title,
+        1: args.threshold_image,
+        2: args.threshold_text,
+        3: args.threshold_number,
+        4: args.threshold_abstract,
+        5: args.threshold_content,
+        6: args.threshold_figure_title,
+        7: args.threshold_formula,
+        8: args.threshold_table,
+        9: args.threshold_table_title,
+        10: args.threshold_reference,
+        11: args.threshold_doc_title,
+        12: args.threshold_footnote,
+        13: args.threshold_header,
+        14: args.threshold_algorithm,
+        15: args.threshold_footer,
+        16: args.threshold_seal,
+        17: args.threshold_chart_title,
+        18: args.threshold_chart,
+        19: args.threshold_formula_number,
+        20: args.threshold_header_image,
+        21: args.threshold_footer_image,
+        22: args.threshold_aside_text,
+    }
 
 
 def main() -> None:
@@ -152,6 +425,32 @@ def main() -> None:
     )
 
     subparsers = parser.add_subparsers(dest="subparser")
+
+    threshold_arguments = [
+        "threshold_paragraph_title",
+        "threshold_image",
+        "threshold_text",
+        "threshold_number",
+        "threshold_abstract",
+        "threshold_content",
+        "threshold_figure_title",
+        "threshold_formula",
+        "threshold_table",
+        "threshold_table_title",
+        "threshold_reference",
+        "threshold_doc_title",
+        "threshold_footnote",
+        "threshold_header",
+        "threshold_algorithm",
+        "threshold_footer",
+        "threshold_seal",
+        "threshold_chart_title",
+        "threshold_chart",
+        "threshold_formula_number",
+        "threshold_header_image",
+        "threshold_footer_image",
+        "threshold_aside_text",
+    ]
 
     # Config subparser
     config_subparser = subparsers.add_parser(
@@ -166,7 +465,8 @@ def main() -> None:
         "tag",
         help="Run autotag PDF document",
     )
-    set_arguments(autotag_subparser, ["name", "key", "input", "output", "model", "zoom"], True, "PDF", "PDF")
+    tagging_arguments = ["name", "key", "input", "output", "model", "zoom", "process_formula", "process_table"]
+    set_arguments(autotag_subparser, tagging_arguments + threshold_arguments, True, "PDF", "PDF")
     autotag_subparser.set_defaults(func=run_autotag_subcommand)
 
     # Formula subparser
@@ -182,7 +482,8 @@ def main() -> None:
         "template",
         help="Generates template JSON for autotagging",
     )
-    set_arguments(template_subparser, ["input", "output", "model", "zoom"], True, "PDF", "JSON")
+    template_arguments = ["input", "output", "model", "zoom", "process_formula", "process_table"]
+    set_arguments(template_subparser, template_arguments + threshold_arguments, True, "PDF", "JSON")
     template_subparser.set_defaults(func=run_template_subcommand)
 
     # Parse arguments

@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Optional
 
 import cv2
 from paddlex import create_model
@@ -14,7 +15,13 @@ class PaddleXEngine:
     Class that encapsulates all model predictions done to rendered PDF page.
     """
 
-    def __init__(self, model: str = "PP-DocLayout-L") -> None:
+    def __init__(
+        self,
+        model: str = "PP-DocLayout-L",
+        process_formula: bool = False,
+        process_table: bool = False,
+        thresholds: Optional[dict] = None,
+    ) -> None:
         """
         Initializes Paddle Engine
 
@@ -22,10 +29,16 @@ class PaddleXEngine:
             model (str): One of supported Paddle Layout Models:
                 - "PP-DocLayout-L"
                 - "RT-DETR-H_layout_17cls"
+            process_formula (bool): Whether to process formulas
+            process_table (bool): Whether to process tables
+            thresholds (dict): Thresholds for layout detection, if not provided
+                default thresholds will be used.
         """
         self.model_name = model
         model_path = os.path.join(Path(__file__).parent.absolute(), f"../models/{model}")
         self.model_dir = model_path
+        self.process_formula = process_formula
+        self.process_table = process_table
         match model:
             case "PP-DocLayout-L":
                 self.threshold = {
@@ -74,6 +87,18 @@ class PaddleXEngine:
                     16: 0.3,  # seal
                 }
 
+        if thresholds:
+            # Override default thresholds if provided
+            for key, value in thresholds.items():
+                if key not in self.threshold:
+                    # this model does not support this key
+                    continue
+                if 0.0 <= value <= 1.0:
+                    # use user provided threshold
+                    self.threshold[key] = value
+
+        print(f"Final: {self.threshold}")
+
     def process_pdf_page_image_with_ai(
         self,
         image: cv2.typing.MatLike,
@@ -114,9 +139,13 @@ class PaddleXEngine:
             table_index = 0
 
             # How many tables and formulas we will process
-            boxes_to_process = len(
-                [box for box in res["boxes"] if box["label"] == "table" or box["label"] == "formula"]
-            )
+            number_of_tables = len([box for box in res["boxes"] if box["label"] == "table"])
+            number_of_formulas = len([box for box in res["boxes"] if box["label"] == "formula"])
+            boxes_to_process = 0
+            if self.process_table:
+                boxes_to_process += number_of_tables
+            if self.process_formula:
+                boxes_to_process += number_of_formulas
 
             # Add one box as layout recognition that already passed
             boxes_to_process += 1
@@ -133,6 +162,9 @@ class PaddleXEngine:
                 for box in res["boxes"]:
                     match box["label"]:
                         case "table":
+                            if not self.process_table:
+                                continue
+
                             # Get table image
                             coordinate = box["coordinate"]
                             table_image = create_image_from_part_of_page(image, coordinate, 1)
@@ -152,6 +184,9 @@ class PaddleXEngine:
                             progress_bar.update(one_step)
 
                         case "formula":
+                            if not self.process_formula:
+                                continue
+
                             # Get formula image
                             coordinate = box["coordinate"]
                             formula_image = create_image_from_part_of_page(image, coordinate, 1)
