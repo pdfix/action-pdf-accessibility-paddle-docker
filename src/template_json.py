@@ -34,7 +34,6 @@ class TemplateJsonCreator:
         Returns:
             Template json for whole document
         """
-        document: dict = {}
         created_date = date.today().strftime("%Y-%m-%d")
         metadata: dict = {
             "author": f"Autotag Paddle {self._get_current_version()}",
@@ -45,22 +44,23 @@ class TemplateJsonCreator:
             # we are creating first one always so it is always "1"
             "version": "1",
         }
-        document["metadata"] = metadata
-        element_create: dict = {
-            "element_create": self.template_json_pages,
-            "pagemap": [
-                {
-                    "graphic_table_detect": "0",
-                    "label_image_detect": "0",
-                    "label_word_detect": "0",
-                    "statement": "$if",
-                    "text_table_detect": "0",
-                }
-            ],
-        }
-        document["template"] = element_create
+        page_map: list = [
+            {
+                "graphic_table_detect": "0",
+                "label_image_detect": "0",
+                "label_word_detect": "0",
+                "statement": "$if",
+                "text_table_detect": "0",
+            }
+        ]
 
-        return document
+        return {
+            "metadata": metadata,
+            "template": {
+                "element_create": self.template_json_pages,
+                "pagemap": page_map,
+            },
+        }
 
     def process_page(self, results: dict, page_number: int, page_view: PdfPageView, zoom: float) -> None:
         """
@@ -111,17 +111,16 @@ class TemplateJsonCreator:
         Returns:
             JSON template for one page.
         """
-        element_create_for_page: dict = {}
-        element_create_for_page["comment"] = f"Tag PDF page {page_number}"  # TODO unique ID + some info about PaddleX
-        element_create_for_page["elements"] = self._create_json_for_elements(results, page_view, zoom)
-        one_query: dict = {}
-        first_member: dict = {}
-        first_member["$page_num"] = page_number
-        and_list: list = [first_member]
-        one_query["$and"] = and_list
-        element_create_for_page["query"] = one_query
-        element_create_for_page["statement"] = "$if"
-        return element_create_for_page
+        elements: list = self._create_json_for_elements(results, page_view, zoom)
+
+        return {
+            "comment": f"Page {page_number}",
+            "elements": elements,
+            "query": {
+                "$and": [{"$page_num": page_number}],
+            },
+            "statement": "$if",
+        }
 
     def _create_json_for_elements(self, results: dict, page_view: PdfPageView, zoom: float) -> list:
         """
