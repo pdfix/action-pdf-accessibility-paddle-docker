@@ -3,9 +3,9 @@
   "version": "v0.0.0",
   "actions": [
     {
-      "title": "Autotag PDF document",
+      "title": "Autotag Paddle",
       "name": "autotag_paddle",
-      "desc": "A Docker image that automatically tags PDF using Paddle and PDFix SDK",
+      "desc": "Automatically tags PDF using Paddle and PDFix SDK",
       "version": "v0.0.0",
       "icon": "paddle_autotag",
       "category": "Paddle",
@@ -52,9 +52,9 @@
       ]
     },
     {
-      "title": "Generate Alternate Text for Formula",
-      "name": "generate_alt_text_formula",
-      "desc": "Automatically generates alternate description for formula using Paddle",
+      "title": "Generate MathML Paddle",
+      "name": "generate_mathml_paddle",
+      "desc": "Automatically generates associate file for formula using Paddle",
       "icon": "paddle_formula",
       "version": "v0.0.0",
       "subtype": "set_formula",
@@ -80,9 +80,9 @@
       ]
     },
     {
-      "title": "Create template json",
-      "name": "create_template_json_paddle",
-      "desc": "Automatically create template json using Paddle",
+      "title": "Create Template Paddle",
+      "name": "create_template_paddle",
+      "desc": "Automatically creates template json for PDFix SDK using Paddle",
       "version": "v0.0.0",
       "subtype": "template",
       "icon": "paddle_autotag",
