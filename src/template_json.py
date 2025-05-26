@@ -158,7 +158,7 @@ class TemplateJsonCreator:
                     element["type"] = "pde_text"
 
                 case "aside_text":
-                    element["comment"] = "aside_text"  # TODO maybe add "|artifact"
+                    element["comment"] = "aside_text|artifact"
                     element["type"] = "pde_text"
 
                 case "chart":
