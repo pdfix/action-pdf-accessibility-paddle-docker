@@ -48,7 +48,7 @@ def set_arguments(
                 )
             case "zoom":
                 parser.add_argument(
-                    "--zoom", type=float, default=1.0, help="Zoom level for the PDF page rendering (default: 2.0)"
+                    "--zoom", type=float, default=2.0, help="Zoom level for the PDF page rendering (default: 2.0)"
                 )
 
 
