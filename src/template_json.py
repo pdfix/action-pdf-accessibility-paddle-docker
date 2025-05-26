@@ -48,6 +48,15 @@ class TemplateJsonCreator:
         document["metadata"] = metadata
         element_create: dict = {
             "element_create": self.template_json_pages,
+            "pagemap": [
+                {
+                    "graphic_table_detect": "0",
+                    "label_image_detect": "0",
+                    "label_word_detect": "0",
+                    "statement": "$if",
+                    "text_table_detect": "0",
+                }
+            ],
         }
         document["template"] = element_create
 
