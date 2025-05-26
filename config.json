@@ -59,7 +59,7 @@
       "version": "v0.0.0",
       "subtype": "set_formula",
       "category": "Paddle",
-      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest generate_alt_text_formula -i \"/data/${input_json}\" -o \"/data/${output_json}\"",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest formula -i \"/data/${input_json}\" -o \"/data/${output_json}\"",
       "args": [
         {
           "name": "input_json",

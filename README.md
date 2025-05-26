@@ -50,7 +50,7 @@ Contact support for more information.
 The command will look like:
 
 ```bash
-docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY --input /data_in/document.pdf --output /data_out/tagged.pdf --model PP-DocLayout-L --zoom 2.0
+docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY -i /data_in/document.pdf -o /data_out/tagged.pdf --model PP-DocLayout-L --zoom 2.0
 ```
 
 ### Run docker container for template json creation
@@ -69,7 +69,7 @@ Example:
 - Your output PDF is: `/home/out/template.json`
 
 ```bash
-docker run --rm -v /home/pdfs_in:/data_in -v /home/out:/data_out pdfix/pdf-accessibility-paddle:latest template --input /data_in/document.pdf --output /data_out/template.json --model PP-DocLayout-L --zoom 2.0
+docker run --rm -v /home/pdfs_in:/data_in -v /home/out:/data_out pdfix/pdf-accessibility-paddle:latest template -i /data_in/document.pdf -o /data_out/template.json --model PP-DocLayout-L --zoom 2.0
 ```
 
 ### Run docker container for formula description in latex
@@ -97,14 +97,14 @@ Example:
 - Your output JSON file is: `/home/data/output.json`
 
 ```bash
-docker run --rm -v /home/data:/data -it pdfix/pdf-accessibility-paddle:latest generate_alt_text_formula -i /data/input.json -o /data/output.json
+docker run --rm -v /home/data:/data pdfix/pdf-accessibility-paddle:latest formula -i /data/input.json -o /data/output.json
 ```
 
 ### Exporting PDFix Configuration for Integration
 To export the configuration JSON file, use the following command:
 
 ```bash
-docker run -v $(pwd):/data -w /data --rm pdfix/pdf-accessibility-paddle:latest config -o config.json
+docker run --rm -v $(pwd):/data -w /data pdfix/pdf-accessibility-paddle:latest config -o config.json
 ```
 
 ## License & libraries used

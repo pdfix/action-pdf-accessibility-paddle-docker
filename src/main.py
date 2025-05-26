@@ -171,8 +171,8 @@ def main() -> None:
 
     # Formula subparser
     formula_subparser = subparsers.add_parser(
-        "generate_alt_text_formula",
-        help="Generates alternate description for formula using Paddle Engine",
+        "formula",
+        help="Generates math_ml associate file for formula using Paddle Engine",
     )
     set_arguments(formula_subparser, ["input", "output"], True, "JSON", "JSON")
     formula_subparser.set_defaults(func=run_formula_subcommand)
