@@ -7,6 +7,7 @@ from paddlex import create_model
 from tqdm import tqdm
 
 from page_renderer import create_image_from_part_of_page
+from process_bboxes import PaddleXPostProcessingBBoxes
 from process_table import PaddleXPostProcessingTable
 
 
@@ -198,6 +199,9 @@ class PaddleXEngine:
                             # Update progress after 1 processed formula
                             progress_bar.update(one_step)
 
+                bbox_post_processing = PaddleXPostProcessingBBoxes(res)
+                bbox_post_processing.find_bboxes_that_overlaps()
+                res["boxes"] = bbox_post_processing.return_results_without_overlap()
                 if last_step > 0:
                     progress_bar.update(last_step)
 
