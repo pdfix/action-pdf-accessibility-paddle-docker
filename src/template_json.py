@@ -240,18 +240,18 @@ class TemplateJsonCreator:
 
                 case "table":
                     if "custom" in result:
-                        create_one: dict = {}
                         cell_elements: list = self._create_table_cells(result["custom"], page_view)
-                        create_one["elements"] = cell_elements
-                        create_one["query"] = {}
-                        create_one["statement"] = "$if"
-                        element_create: list = []
-                        element_create.append(create_one)
-                        template: dict = {}
-                        template["element_create"] = element_create
-                        element_template: dict = {}
-                        element_template["template"] = template
-                        element["element_template"] = element_template
+                        element["element_template"] = {
+                            "template": {
+                                "element_create": [
+                                    {
+                                        "elements": cell_elements,
+                                        "query": {},
+                                        "statement": "$if",
+                                    }
+                                ]
+                            }
+                        }
                         element["row_num"] = result["custom"]["rows"]
                         element["col_num"] = result["custom"]["columns"]
                         element["flag"] = "fixed"
