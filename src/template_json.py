@@ -44,15 +44,7 @@ class TemplateJsonCreator:
             # we are creating first one always so it is always "1"
             "version": "1",
         }
-        page_map: list = [
-            {
-                "graphic_table_detect": "0",
-                "label_image_detect": "0",
-                "label_word_detect": "0",
-                "statement": "$if",
-                "text_table_detect": "0",
-            }
-        ]
+        page_map: list = [{"graphic_table_detect": "0", "statement": "$if", "text_table_detect": "0"}]
 
         return {
             "metadata": metadata,
@@ -243,21 +235,16 @@ class TemplateJsonCreator:
                         cell_elements: list = self._create_table_cells(result["custom"], page_view)
                         element["element_template"] = {
                             "template": {
-                                "element_create": [
-                                    {
-                                        "elements": cell_elements,
-                                        "query": {},
-                                        "statement": "$if",
-                                    }
-                                ]
+                                "element_create": [{"elements": cell_elements, "query": {}, "statement": "$if"}]
                             }
                         }
                         element["row_num"] = result["custom"]["rows"]
                         element["col_num"] = result["custom"]["columns"]
-                        element["flag"] = "fixed"
+                        element["table_update"] = [{"cell_header": "true", "statement": "$if"}]
                     element["type"] = "pde_table"
 
                 case "table_title":
+                    element["tag"] = "Caption"
                     element["type"] = "pde_text"
 
                 case "text":
