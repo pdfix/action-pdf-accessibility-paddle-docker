@@ -21,9 +21,32 @@ class PaddleXPostProcessingBBoxes:
         number_bboxes = len(self.results["boxes"])  # Ensure there are boxes to process
 
         for index1 in range(number_bboxes):
+            box = self.results["boxes"][index1]
             for index2 in range(index1 + 1, number_bboxes):
                 if self._is_overlapping(index1, index2):
                     self.overlaps.append((index1, index2))
+
+        print("Bboxes that overlaps with others:")
+        overlapping_bboxes = []
+        for index in range(number_bboxes):
+            found = False
+            for index1, index2 in self.overlaps:
+                if index == index1 or index == index2:
+                    found = True
+                    break
+            if found:
+                overlapping_bboxes.append(self.results["boxes"][index1])
+
+        overlapping_bboxes = sorted(overlapping_bboxes, key=lambda x: x["coordinate"][0], reverse=True)
+
+        for box in overlapping_bboxes:
+            print(f"{box['label']} {round(box['score'] * 100)}%    {box['coordinate']}")
+
+        print("Overlaps:")
+        for index1, index2 in self.overlaps:
+            box1 = self.results["boxes"][index1]
+            box2 = self.results["boxes"][index2]
+            print(f"({box1['label']} {round(box1['score'] * 100)}%, {box2['label']} {round(box2['score'] * 100)}%)")
 
     def return_results_without_overlap(self) -> list:
         """
@@ -46,49 +69,17 @@ class PaddleXPostProcessingBBoxes:
 
             remove_indexes.append(remove_index)
 
+        print("Removing:")
+        for index in remove_indexes:
+            box = self.results["boxes"][index]
+            print(f"{box['label']} {round(box['score'] * 100)}%")
+
         output_boxes: list = []
         for index, box in enumerate(self.results["boxes"]):
             if index not in remove_indexes:
                 output_boxes.append(box)
 
         return output_boxes
-
-    def _choose_which_bbox_to_remove(self, index1: int, index2: int) -> int:
-        """
-        Choose which bounding box (bbox) to remove based on the overlap percentage.
-
-        Args:
-            index1 (int): Index of the first bbox.
-            index2 (int): Index of the second bbox.
-
-        Returns:
-            Index of the bbox to remove.
-        """
-        box1 = self.results["boxes"][index1]
-        box2 = self.results["boxes"][index2]
-        overlap_1, overlap_2 = self._get_overlap_percentage(index1, index2)
-
-        # Too small overlap, ignore
-        if overlap_1 < 50.0 and overlap_2 < 50.0:
-            return -1
-
-        score1 = box1["score"]
-        score2 = box2["score"]
-
-        # One bbox is inside another bigger one bbox (remove small bbox)
-        if (overlap_1 > 95.0 and overlap_2 < 75.0) or (overlap_2 > 95.0 and overlap_1 < 75.0):
-            # TODO ignore formulas inside text ...
-            return index1 if overlap_1 > overlap_2 else index2
-
-        # One bbox has much greater score from paddlex (remove smaller score bbox)
-        if abs(score1 - score2) > 0.3:  # 30% difference
-            return index1 if score1 > score2 else index2
-
-        # by default, use size to decide (remove smaller bbox)
-        size1 = self._calculate_size(box1["coordinate"])
-        size2 = self._calculate_size(box2["coordinate"])
-
-        return index1 if size1 < size2 else index2
 
     def _is_overlapping(self, index1: int, index2: int) -> bool:
         """
@@ -101,8 +92,8 @@ class PaddleXPostProcessingBBoxes:
         Returns:
             True if the bounding boxes overlap, False otherwise.
         """
-        x_min_1, y_min_1, x_max_1, y_max_1 = self.results["boxes"][index1]
-        x_min_2, y_min_2, x_max_2, y_max_2 = self.results["boxes"][index2]
+        x_min_1, y_min_1, x_max_1, y_max_1 = self.results["boxes"][index1]["coordinate"]
+        x_min_2, y_min_2, x_max_2, y_max_2 = self.results["boxes"][index2]["coordinate"]
 
         return not (
             x_max_1 < x_min_2  # box1 is left of box2
@@ -110,6 +101,73 @@ class PaddleXPostProcessingBBoxes:
             or y_max_1 < y_min_2  # box1 is above box2
             or y_min_1 > y_max_2  # box1 is below box2
         )
+
+    def _choose_which_bbox_to_remove(self, index1: int, index2: int) -> int:
+        """
+        Choose which bounding box (bbox) to remove based on the overlap percentage.
+
+        Args:
+            index1 (int): Index of the first bbox.
+            index2 (int): Index of the second bbox.
+
+        Returns:
+            Index of the bbox to remove.
+        """
+        overlap_1, overlap_2 = self._get_overlap_percentage(index1, index2)
+
+        # Too small overlap, do not remove
+        if overlap_1 < 50.0 and overlap_2 < 50.0:
+            return -1
+
+        box1 = self.results["boxes"][index1]
+        box2 = self.results["boxes"][index2]
+        score1 = box1["score"]
+        score2 = box2["score"]
+
+        # If the same type of bbox, choose greater score
+        if box1["label"] == box2["label"]:
+            return index1 if score1 < score2 else index2
+
+        # One bbox has greater score for different type of bbox
+        if abs(score1 - score2) > 0.1:  # 10% difference
+            return index1 if score1 < score2 else index2
+
+        # One bbox is inside another bigger one bbox (remove small bbox)
+        if (overlap_1 > 95.0 and overlap_2 < 75.0) or (overlap_2 > 95.0 and overlap_1 < 75.0):
+            # Is formula inside text - do not remove
+            if self._is_formula_inside_text(index1, index2):
+                return -1
+
+            return index1 if overlap_1 > overlap_2 else index2
+
+        # Otherwise use size to decide (remove smaller bbox)
+        size1 = self._calculate_size(box1["coordinate"])
+        size2 = self._calculate_size(box2["coordinate"])
+
+        return index1 if size1 < size2 else index2
+
+    def _get_overlap_percentage(self, index1: int, index2: int) -> tuple:
+        """
+        Calculate the overlap percentage between two bounding boxes.
+
+        Args:
+            index1 (int): Index of the first bounding box.
+            index2 (int): Index of the second bounding box.
+
+        Returns:
+            First value is percent (0-100) how much first bounding box has in overlaping area
+            Second value is percent (0-100) how much second bounding box has in overlaping area.
+        """
+        box1_coordinate = self.results["boxes"][index1]["coordinate"]
+        box2_coordinate = self.results["boxes"][index2]["coordinate"]
+        area_1 = self._calculate_size(box1_coordinate)
+        area_2 = self._calculate_size(box2_coordinate)
+        intersect_area = self._intersection_size(box1_coordinate, box2_coordinate)
+
+        percent1 = (intersect_area / area_1) * 100 if area_1 > 0 else 0
+        percent2 = (intersect_area / area_2) * 100 if area_2 > 0 else 0
+
+        return percent1, percent2
 
     def _calculate_size(self, coordinate: list) -> float:
         """
@@ -140,25 +198,22 @@ class PaddleXPostProcessingBBoxes:
 
         return x_overlap * y_overlap
 
-    def _get_overlap_percentage(self, index1: int, index2: int) -> tuple:
+    def _is_formula_inside_text(self, index1: int, index2: int) -> bool:
         """
-        Calculate the overlap percentage between two bounding boxes.
+        Check if one bounding box is a formula inside text.
 
         Args:
             index1 (int): Index of the first bounding box.
             index2 (int): Index of the second bounding box.
 
         Returns:
-            First value is percent (0-100) how much first bounding box has in overlaping area
-            Second value is percent (0-100) how much second bounding box has in overlaping area.
+            True if one bbox is a formula inside text, False otherwise.
         """
-        box1 = self.results["boxes"][index1]["coordinate"]
-        box2 = self.results["boxes"][index2]["coordinate"]
-        area1 = self._calculate_size(box1)
-        area2 = self._calculate_size(box2)
-        inter_area = self._intersection_size(box1, box2)
+        label1 = self.results["boxes"][index1]["label"]
+        label2 = self.results["boxes"][index2]["label"]
 
-        percent1 = (inter_area / area1) * 100 if area1 > 0 else 0
-        percent2 = (inter_area / area2) * 100 if area2 > 0 else 0
-
-        return percent1, percent2
+        if label1 == "formula" and label2 == "text":
+            return True
+        if label2 == "formula" and label1 == "text":
+            return True
+        return False
