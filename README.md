@@ -41,51 +41,51 @@ options:
   --process_table PROCESS_TABLE
                         Process tables in the PDF document using table models. Default is True.
   --threshold_paragraph_title THRESHOLD_PARAGRAPH_TITLE
-                        Threshold for paragraph title. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for paragraph title. Value between 0.0 and 1.0. Default is 0.3.
   --threshold_image THRESHOLD_IMAGE
-                        Threshold for image. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for image. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_text THRESHOLD_TEXT
-                        Threshold for text. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for text. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_number THRESHOLD_NUMBER
-                        Threshold for number. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for number. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_abstract THRESHOLD_ABSTRACT
-                        Threshold for abstract. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for abstract. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_content THRESHOLD_CONTENT
-                        Threshold for content. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for content. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_figure_title THRESHOLD_FIGURE_TITLE
-                        Threshold for figure title. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for figure title. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_formula THRESHOLD_FORMULA
-                        Threshold for formula. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for formula. Value between 0.0 and 1.0. Default is 0.3.
   --threshold_table THRESHOLD_TABLE
-                        Threshold for table. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for table. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_table_title THRESHOLD_TABLE_TITLE
-                        Threshold for table title. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for table title. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_reference THRESHOLD_REFERENCE
-                        Threshold for reference. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for reference. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_doc_title THRESHOLD_DOC_TITLE
-                        Threshold for doc title. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for doc title. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_footnote THRESHOLD_FOOTNOTE
-                        Threshold for footnote. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for footnote. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_header THRESHOLD_HEADER
-                        Threshold for header. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for header. Value between 0.0 and 1.0. Default is 0.3.
   --threshold_algorithm THRESHOLD_ALGORITHM
-                        Threshold for algorithm. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for algorithm. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_footer THRESHOLD_FOOTER
-                        Threshold for footer. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for footer. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_seal THRESHOLD_SEAL
-                        Threshold for seal. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for seal. Value between 0.0 and 1.0. Default is 0.3.
   --threshold_chart_title THRESHOLD_CHART_TITLE
-                        Threshold for chart title. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for chart title. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_chart THRESHOLD_CHART
-                        Threshold for chart. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for chart. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_formula_number THRESHOLD_FORMULA_NUMBER
-                        Threshold for formula number. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for formula number. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_header_image THRESHOLD_HEADER_IMAGE
-                        Threshold for header image. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for header image. Value between 0.0 and 1.0. Default is 0.3.
   --threshold_footer_image THRESHOLD_FOOTER_IMAGE
-                        Threshold for footer image. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for footer image. Value between 0.0 and 1.0. Default is 0.5.
   --threshold_aside_text THRESHOLD_ASIDE_TEXT
-                        Threshold for aside text. Value between 0.0 - 1.0. For -1.0 use model default.
+                        Threshold for aside text. Value between 0.0 and 1.0. Default is 0.5.
 ```
 
 For example we want to autotag file `/home/pdfs_in/document.pdf` and output should go to `/home/pdfs_out/tagged.pdf` using zoom `3.0`.

@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Optional
 
 import cv2
 from paddlex import create_model
@@ -21,7 +20,7 @@ class PaddleXEngine:
         model: str = "PP-DocLayout-L",
         process_formula: bool = False,
         process_table: bool = False,
-        thresholds: Optional[dict] = None,
+        thresholds: dict = {},
     ) -> None:
         """
         Initializes Paddle Engine
@@ -40,63 +39,12 @@ class PaddleXEngine:
         self.model_dir = model_path
         self.process_formula = process_formula
         self.process_table = process_table
-        match model:
-            case "PP-DocLayout-L":
-                self.threshold = {
-                    0: 0.3,  # paragraph_title
-                    1: 0.5,  # image
-                    2: 0.5,  # text
-                    3: 0.5,  # number
-                    4: 0.5,  # abstract
-                    5: 0.5,  # content
-                    6: 0.5,  # figure_title
-                    7: 0.3,  # formula
-                    8: 0.5,  # table
-                    9: 0.5,  # table_title
-                    10: 0.5,  # reference
-                    11: 0.5,  # doc_title
-                    12: 0.5,  # footnote
-                    13: 0.3,  # header (default 0.5)
-                    14: 0.5,  # algorithm
-                    15: 0.5,  # footer
-                    16: 0.3,  # seal
-                    17: 0.5,  # chart_title
-                    18: 0.5,  # chart
-                    19: 0.5,  # formula_number
-                    20: 0.3,  # header_image (default 0.5)
-                    21: 0.5,  # footer_image
-                    22: 0.5,  # aside_text
-                }
-            case "RT-DETR-H_layout_17cls":
-                self.threshold = {
-                    0: 0.3,  # paragraph_title
-                    1: 0.3,  # image (default 0.5)
-                    2: 0.5,  # text
-                    3: 0.5,  # number
-                    4: 0.5,  # abstract
-                    5: 0.5,  # content
-                    6: 0.5,  # figure_title
-                    7: 0.3,  # formula
-                    8: 0.5,  # table
-                    9: 0.5,  # table_title
-                    10: 0.5,  # reference
-                    11: 0.3,  # doc_title (default 0.5)
-                    12: 0.5,  # footnote
-                    13: 0.3,  # header (default 0.5)
-                    14: 0.5,  # algorithm
-                    15: 0.5,  # footer
-                    16: 0.3,  # seal
-                }
+        self.threshold = thresholds
 
-        if thresholds:
-            # Override default thresholds if provided
-            for key, value in thresholds.items():
-                if key not in self.threshold:
-                    # this model does not support this key
-                    continue
-                if 0.0 <= value <= 1.0:
-                    # use user provided threshold
-                    self.threshold[key] = value
+        # Remove thresholds for classes that are not in model
+        if model == "RT-DETR-H_layout_17cls":
+            for key in range(17, 23):
+                self.threshold.pop(key, None)
 
     def process_pdf_page_image_with_ai(
         self,

@@ -85,162 +85,162 @@ def set_arguments(
                 parser.add_argument(
                     "--threshold_paragraph_title",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for paragraph title. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.3,
+                    help="Threshold for paragraph title. Value between 0.0 and 1.0. Default is 0.3.",
                 )
             case "threshold_image":  # "1"
                 parser.add_argument(
                     "--threshold_image",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for image. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for image. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_text":  # "2"
                 parser.add_argument(
                     "--threshold_text",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for text. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for text. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_number":  # "3"
                 parser.add_argument(
                     "--threshold_number",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for number. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for number. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_abstract":  # "4"
                 parser.add_argument(
                     "--threshold_abstract",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for abstract. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for abstract. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_content":  # "5"
                 parser.add_argument(
                     "--threshold_content",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for content. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for content. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_figure_title":  # "6"
                 parser.add_argument(
                     "--threshold_figure_title",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for figure title. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for figure title. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_formula":  # "7"
                 parser.add_argument(
                     "--threshold_formula",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for formula. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.3,
+                    help="Threshold for formula. Value between 0.0 and 1.0. Default is 0.3.",
                 )
             case "threshold_table":  # "8"
                 parser.add_argument(
                     "--threshold_table",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for table. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for table. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_table_title":  # "9"
                 parser.add_argument(
                     "--threshold_table_title",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for table title. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for table title. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_reference":  # "10"
                 parser.add_argument(
                     "--threshold_reference",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for reference. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for reference. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_doc_title":  # "11"
                 parser.add_argument(
                     "--threshold_doc_title",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for doc title. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for doc title. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_footnote":  # "12"
                 parser.add_argument(
                     "--threshold_footnote",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for footnote. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for footnote. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_header":  # "13"
                 parser.add_argument(
                     "--threshold_header",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for header. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.3,
+                    help="Threshold for header. Value between 0.0 and 1.0. Default is 0.3.",
                 )
             case "threshold_algorithm":  # "14"
                 parser.add_argument(
                     "--threshold_algorithm",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for algorithm. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for algorithm. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_footer":  # "15"
                 parser.add_argument(
                     "--threshold_footer",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for footer. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for footer. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_seal":  # "16"
                 parser.add_argument(
                     "--threshold_seal",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for seal. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.3,
+                    help="Threshold for seal. Value between 0.0 and 1.0. Default is 0.3.",
                 )
             case "threshold_chart_title":  # "17"
                 parser.add_argument(
                     "--threshold_chart_title",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for chart title. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for chart title. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_chart":  # "18"
                 parser.add_argument(
                     "--threshold_chart",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for chart. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for chart. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_formula_number":  # "19"
                 parser.add_argument(
                     "--threshold_formula_number",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for formula number. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for formula number. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_header_image":  # "20"
                 parser.add_argument(
                     "--threshold_header_image",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for header image. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.3,
+                    help="Threshold for header image. Value between 0.0 and 1.0. Default is 0.3.",
                 )
             case "threshold_footer_image":  # "21"
                 parser.add_argument(
                     "--threshold_footer_image",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for footer image. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for footer image. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "threshold_aside_text":  # "22"
                 parser.add_argument(
                     "--threshold_aside_text",
                     type=float,
-                    default=-1.0,
-                    help="Threshold for aside text. Value between 0.0 - 1.0. For -1.0 use model default.",
+                    default=0.5,
+                    help="Threshold for aside text. Value between 0.0 and 1.0. Default is 0.5.",
                 )
             case "zoom":
                 parser.add_argument(
