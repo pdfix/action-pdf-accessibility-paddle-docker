@@ -200,8 +200,7 @@ class PaddleXEngine:
                             progress_bar.update(one_step)
 
                 bbox_post_processing = PaddleXPostProcessingBBoxes(res)
-                bbox_post_processing.find_bboxes_that_overlaps()
-                res["boxes"] = bbox_post_processing.return_results_without_overlap()
+                res["boxes"] = bbox_post_processing.process_bboxes()
                 if last_step > 0:
                     progress_bar.update(last_step)
 
