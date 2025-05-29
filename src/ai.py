@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import cv2
+import latex2mathml.converter
 from paddlex import create_model
 from tqdm import tqdm
 
@@ -14,6 +15,9 @@ class PaddleXEngine:
     """
     Class that encapsulates all model predictions done to rendered PDF page.
     """
+
+    # Constant
+    MATH_ML_VERSION = "mathml-3"
 
     def __init__(
         self,
@@ -139,10 +143,11 @@ class PaddleXEngine:
                             formula_image = create_image_from_part_of_page(image, coordinate, 1)
 
                             # Process formula
-                            formula_rec = self.process_formula_image_with_ai(formula_image)
+                            formula_representation = self.process_formula_image_with_ai(formula_image)
 
                             # Save as additional data to PaddleX result
-                            box["custom"] = formula_rec
+                            if formula_representation != "":
+                                box["custom"] = formula_representation
 
                             # Update progress after 1 processed formula
                             progress_bar.update(one_step)
@@ -181,9 +186,29 @@ class PaddleXEngine:
         output = formula_model.predict(input=image, batch_size=1)
 
         for res in output:
-            return res["rec_formula"]
+            latex_formula = res["rec_formula"]
+            mathml_formula = self._convert_to_mathml(latex_formula)
+            return mathml_formula
 
         # No formula output
+        return ""
+
+    def _convert_to_mathml(self, latex_formula: str) -> str:
+        """
+        From LaTeX representation of formula create MathML representation of formula.
+
+        Args:
+            latex_formula (str): LaTeX representation of formula.
+
+        Returns:
+            MathML representation of formula.
+        """
+        try:
+            # For most latex inputs creates mathml-3 representation
+            # If it cannot convert it throws exception
+            return latex2mathml.converter.convert(latex_formula)
+        except Exception:
+            pass
         return ""
 
     def _process_table_image_with_ai_v2(

@@ -10,7 +10,7 @@ Docker image-based autotagging of PDF documents with PaddleX and PDFix SDK
   - [Run a Docker image ](#run-docker-image)
     - [Run docker container for autotagging](#run-docker-container-autotagging)
     - [Run docker container for template json creation](#run-docker-container-template)
-    - [Run docker container for formula description in latex](#run-docker-container-formula)
+    - [Run docker container for formula description in MathML version 3](#run-docker-container-formula)
     - [Exporting PDFix Configuration for Integration](#export-config-json-integration)
   - [License \& libraries used](#license)
   - [Help \& Support](#help-support)
@@ -117,11 +117,12 @@ These arguments are for an account-based PDFix license.
 Contact support for more information.
 
 ### Run docker container for template json creation
+This does not process Formulas as currently template json does not support associate files.
 This has arguments as tagging only difference is output. Instead of PDF it is JSON with content looking like:
 
-```
+```json
 {
-    "content": template_json_content
+    "content": "Template json content as json dictionary"
 }
 ```
 
@@ -134,15 +135,15 @@ So for example we will change:
 And the command will look like:
 
 ```bash
-docker run --rm -v /home/pdfs_in:/data_in -v /home/out:/data_out pdfix/pdf-accessibility-paddle:latest template -i /data_in/document.pdf -o /data_out/template.json --zoom 3.0 --process_formula False --threshold_text 0.6
+docker run --rm -v /home/pdfs_in:/data_in -v /home/out:/data_out pdfix/pdf-accessibility-paddle:latest template -i /data_in/document.pdf -o /data_out/template.json --zoom 3.0 --threshold_text 0.6
 ```
 
-### Run docker container for formula description in latex
+### Run docker container for formula description in MathML version 3
 A JSON file needs to be prepared with base64-encoded data of the formula image.
 
 Input JSON file expected content:
 
-```
+```json
 {
     "image": "<header>,<base64_encoded_image>"
 }
@@ -150,9 +151,9 @@ Input JSON file expected content:
 
 Output JSON file expected content:
 
-```
+```json
 {
-    "content": "Latex description of formula"
+    "content": "MathML-3 description of formula"
 }
 ```
 

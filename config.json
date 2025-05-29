@@ -9,7 +9,7 @@
       "version": "v0.0.0",
       "icon": "paddle_autotag",
       "category": "Paddle",
-      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest tag --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\" --zoom \"${zoom}\" --process_formula \"${process_formula}\"  --process_table \"${process_table}\" --threshold_paragraph_title \"${threshold_paragraph_title}\" --threshold_image \"${threshold_image}\" --threshold_text \"${threshold_text}\" --threshold_number \"${threshold_number}\" --threshold_abstract \"${threshold_abstract}\" --threshold_content \"${threshold_content}\" --threshold_figure_title \"${threshold_figure_title}\" --threshold_formula \"${threshold_formula}\" --threshold_table \"${threshold_table}\" --threshold_table_title \"${threshold_table_title}\" --threshold_reference \"${threshold_reference}\" --threshold_doc_title \"${threshold_doc_title}\" --threshold_footnote \"${threshold_footnote}\" --threshold_header \"${threshold_header}\" --threshold_algorithm \"${threshold_algorithm}\" --threshold_footer \"${threshold_footer}\" --threshold_seal \"${threshold_seal}\" --threshold_chart_title \"${threshold_chart_title}\" --threshold_chart \"${threshold_chart}\" --threshold_formula_number \"${threshold_formula_number}\" --threshold_header_image \"${threshold_header_image}\" --threshold_footer_image \"${threshold_footer_image}\" --threshold_aside_text \"${threshold_aside_text}\"",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest tag --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --model \"${model}\" --zoom \"${zoom}\" --process_formula \"${process_formula}\" --process_table \"${process_table}\" --threshold_paragraph_title \"${threshold_paragraph_title}\" --threshold_image \"${threshold_image}\" --threshold_text \"${threshold_text}\" --threshold_number \"${threshold_number}\" --threshold_abstract \"${threshold_abstract}\" --threshold_content \"${threshold_content}\" --threshold_figure_title \"${threshold_figure_title}\" --threshold_formula \"${threshold_formula}\" --threshold_table \"${threshold_table}\" --threshold_table_title \"${threshold_table_title}\" --threshold_reference \"${threshold_reference}\" --threshold_doc_title \"${threshold_doc_title}\" --threshold_footnote \"${threshold_footnote}\" --threshold_header \"${threshold_header}\" --threshold_algorithm \"${threshold_algorithm}\" --threshold_footer \"${threshold_footer}\" --threshold_seal \"${threshold_seal}\" --threshold_chart_title \"${threshold_chart_title}\" --threshold_chart \"${threshold_chart}\" --threshold_formula_number \"${threshold_formula_number}\" --threshold_header_image \"${threshold_header_image}\" --threshold_footer_image \"${threshold_footer_image}\" --threshold_aside_text \"${threshold_aside_text}\"",
       "args": [
         {
           "name": "input_pdf",
@@ -228,8 +228,8 @@
     },
     {
       "title": "Generate MathML Paddle",
-      "name": "generate_mathml_paddle",
-      "desc": "Automatically generates associate file for formula using Paddle",
+      "name": "generate_mathml_paddle_json",
+      "desc": "Automatically generates associate file for provided formula using Paddle",
       "icon": "paddle_formula",
       "version": "v0.0.0",
       "subtype": "set_formula",
@@ -262,7 +262,7 @@
       "subtype": "template",
       "icon": "paddle_autotag",
       "category": "Paddle",
-      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest template --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_json}\" --model \"${model}\" --zoom \"${zoom}\" --process_formula \"${process_formula}\"  --process_table \"${process_table}\" --threshold_paragraph_title \"${threshold_paragraph_title}\" --threshold_image \"${threshold_image}\" --threshold_text \"${threshold_text}\" --threshold_number \"${threshold_number}\" --threshold_abstract \"${threshold_abstract}\" --threshold_content \"${threshold_content}\" --threshold_figure_title \"${threshold_figure_title}\" --threshold_formula \"${threshold_formula}\" --threshold_table \"${threshold_table}\" --threshold_table_title \"${threshold_table_title}\" --threshold_reference \"${threshold_reference}\" --threshold_doc_title \"${threshold_doc_title}\" --threshold_footnote \"${threshold_footnote}\" --threshold_header \"${threshold_header}\" --threshold_algorithm \"${threshold_algorithm}\" --threshold_footer \"${threshold_footer}\" --threshold_seal \"${threshold_seal}\" --threshold_chart_title \"${threshold_chart_title}\" --threshold_chart \"${threshold_chart}\" --threshold_formula_number \"${threshold_formula_number}\" --threshold_header_image \"${threshold_header_image}\" --threshold_footer_image \"${threshold_footer_image}\" --threshold_aside_text \"${threshold_aside_text}\"",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest template --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_json}\" --model \"${model}\" --zoom \"${zoom}\" --process_table \"${process_table}\" --threshold_paragraph_title \"${threshold_paragraph_title}\" --threshold_image \"${threshold_image}\" --threshold_text \"${threshold_text}\" --threshold_number \"${threshold_number}\" --threshold_abstract \"${threshold_abstract}\" --threshold_content \"${threshold_content}\" --threshold_figure_title \"${threshold_figure_title}\" --threshold_formula \"${threshold_formula}\" --threshold_table \"${threshold_table}\" --threshold_table_title \"${threshold_table_title}\" --threshold_reference \"${threshold_reference}\" --threshold_doc_title \"${threshold_doc_title}\" --threshold_footnote \"${threshold_footnote}\" --threshold_header \"${threshold_header}\" --threshold_algorithm \"${threshold_algorithm}\" --threshold_footer \"${threshold_footer}\" --threshold_seal \"${threshold_seal}\" --threshold_chart_title \"${threshold_chart_title}\" --threshold_chart \"${threshold_chart}\" --threshold_formula_number \"${threshold_formula_number}\" --threshold_header_image \"${threshold_header_image}\" --threshold_footer_image \"${threshold_footer_image}\" --threshold_aside_text \"${threshold_aside_text}\"",
   
       "args": [
         {
@@ -302,13 +302,6 @@
           "desc": "Pages are provided as images that are rendered using this zoom level",
           "type": "float",
           "value": "2.0"
-        },
-        {
-          "title": "Process Formulas",
-          "name": "process_formula",
-          "desc": "Use Paddle Formula model to process formulas in the document",
-          "type": "bool",
-          "value": "True"
         },
         {
           "title": "Process Tables",

@@ -21,7 +21,6 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         output_path: str,
         model: str,
         zoom: float,
-        process_formula: bool,
         process_table: bool,
         thresholds: dict,
     ) -> None:
@@ -33,7 +32,6 @@ class CreateTemplateJsonUsingPaddleXRecognition:
             output_path (string): Path where template JSON inside {"content": template_json} should be saved
             model (string): Paddle model for layout recognition
             zoom (float): Zoom level for rendering the page
-            process_formula (bool): Whether to process formulas
             process_table (bool): Whether to process tables
             thresholds (dict): Thresholds for layout detection
         """
@@ -41,7 +39,6 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         self.output_path_str = output_path
         self.model = model
         self.zoom = zoom
-        self.process_formula = process_formula
         self.process_table = process_table
         self.thresholds = thresholds
 
@@ -62,7 +59,7 @@ class CreateTemplateJsonUsingPaddleXRecognition:
 
         # Process images of each page
         num_pages = doc.GetNumPages()
-        paddlex = PaddleXEngine(self.model, self.process_formula, self.process_table, self.thresholds)
+        paddlex = PaddleXEngine(self.model, False, self.process_table, self.thresholds)
         template_json_creator = TemplateJsonCreator()
         max_formulas_and_tables_per_page = 1000
         progress_bar = tqdm(total=num_pages * max_formulas_and_tables_per_page, desc="Processing pages")

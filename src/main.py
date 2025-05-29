@@ -372,9 +372,7 @@ def describing_formula(input_path: str, output_path: str) -> None:
 
 def run_template_subcommand(args) -> None:
     thresholds = create_threshold_dictionary(args)
-    create_template_json(
-        args.input, args.output, args.model, args.zoom, args.process_formula, args.process_table, thresholds
-    )
+    create_template_json(args.input, args.output, args.model, args.zoom, args.process_table, thresholds)
 
 
 def create_template_json(
@@ -382,7 +380,6 @@ def create_template_json(
     output_path: str,
     model: str,
     zoom: float,
-    process_formula: bool,
     process_table: bool,
     thresholds: dict,
 ) -> None:
@@ -394,7 +391,6 @@ def create_template_json(
         output_path (string): Path to JSON file
         model (string): Paddle layout model
         zoom (float): Zoom level for rendering the page
-        process_formula (bool): Whether to process formulas
         process_table (bool): Whether to process tables
         thresholds (dict): Thresholds for layout detection
     """
@@ -403,7 +399,7 @@ def create_template_json(
 
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".json"):
         template_creator = CreateTemplateJsonUsingPaddleXRecognition(
-            input_path, output_path, model, zoom, process_formula, process_table, thresholds
+            input_path, output_path, model, zoom, process_table, thresholds
         )
         template_creator.process_file()
     else:
@@ -510,7 +506,7 @@ def main() -> None:
         "template",
         help="Generates template JSON for autotagging",
     )
-    template_arguments = ["input", "output", "model", "zoom", "process_formula", "process_table"]
+    template_arguments = ["input", "output", "model", "zoom", "process_table"]
     set_arguments(template_subparser, template_arguments + threshold_arguments, True, "PDF", "JSON")
     template_subparser.set_defaults(func=run_template_subcommand)
 

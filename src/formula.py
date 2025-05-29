@@ -24,7 +24,7 @@ class FormulaDescriptionUsingPaddle:
 
         The output JSON file will look like:
         {
-            "content": "Latex description of formula"
+            "content": "MathML ver. 3 description of formula"
         }
 
         Args:
@@ -55,8 +55,8 @@ class FormulaDescriptionUsingPaddle:
         # cv2.imwrite(image_path, image)
 
         ai = PaddleXEngine()
-        formula_rec = ai.process_formula_image_with_ai(image)
-        content: dict = {"content": formula_rec}
+        mathml_formula = ai.process_formula_image_with_ai(image)
+        content: dict = {"content": mathml_formula}
 
         with open(self.output_path_str, "w", encoding="utf-8") as output_file:
             json.dump(content, output_file)

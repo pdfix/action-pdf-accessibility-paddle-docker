@@ -6,7 +6,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from pdfixsdk import PdfDevRect, PdfPageView, PdfRect, __version__
+from pdfixsdk import PdfDevRect, PdfPageView, PdfRect, __version__, kPdeText
 
 
 class TemplateJsonCreator:
@@ -22,6 +22,16 @@ class TemplateJsonCreator:
         Initializes pdfix sdk template json creation by preparing list for each page.
         """
         self.template_json_pages: list = []
+        self.formulas: list = []
+
+    def get_formulas(self) -> list:
+        """
+        Return list of all formula ids with latex text that were gathered during processing pages.
+
+        Returns:
+            List of all formulas
+        """
+        return self.formulas
 
     def create_json_dict_for_document(self, model: str, zoom: float) -> dict:
         """
@@ -103,7 +113,7 @@ class TemplateJsonCreator:
         Returns:
             JSON template for one page.
         """
-        elements: list = self._create_json_for_elements(results, page_view, zoom)
+        elements: list = self._create_json_for_elements(results, page_view, page_number)
 
         return {
             "comment": f"Page {page_number}",
@@ -114,7 +124,37 @@ class TemplateJsonCreator:
             "statement": "$if",
         }
 
-    def _create_json_for_elements(self, results: dict, page_view: PdfPageView, zoom: float) -> list:
+    def _generate_unique_id(self, page_number: int, type: int, coordinate: list) -> int:
+        """
+        Helper function inspired by PDFix SDK functions to generate unique id.
+
+        Args:
+            page_number (int): PDF file page number.
+            type (int): Type of bounding box.
+            coordinate (list): The bounding box coordinates.
+
+        Returns:
+            32-bit integer number.
+        """
+        # Create string that we will hash
+        string_to_hash = f"{page_number}{type}"
+        for index in range(4):
+            string_to_hash += str(int(coordinate[index]))
+
+        # Hash that string
+        # Ensure we never return 0
+        hash_value = 0x811C9DC5
+        prime_number = 0x1000193
+        for character in string_to_hash:
+            # Gets the ASCII value of character
+            power_giver = ord(character)
+            hash_value ^= power_giver
+            hash_value *= prime_number
+            # Make sure it never overflows 32bit integer
+            hash_value &= 0xFFFFFFFF
+        return hash_value
+
+    def _create_json_for_elements(self, results: dict, page_view: PdfPageView, page_number: int) -> list:
         """
         Prepare initial structural elements for the template based on
         detected regions.
@@ -124,7 +164,7 @@ class TemplateJsonCreator:
                 list of detected elements, ...
             page_view (PdfPageView): The view of the PDF page used
                 for coordinate conversion.
-            zoom (float): Zoom level that page was rendered with.
+            page_number (int): PDF file page number.
 
         Returns:
             List of elements with parameters.
@@ -191,16 +231,14 @@ class TemplateJsonCreator:
 
                 case "formula":
                     if "custom" in result:
-                        element["alt"] = result["custom"]
-                        # TODO PVQ-3842 associate file -> not possible in template json
+                        formula_id = self._generate_unique_id(page_number, kPdeText, result["coordinate"])
+                        self.formulas.append((formula_id, result["custom"]))
+                        element["id"] = str(formula_id)
                     element["tag"] = "Formula"
                     element["type"] = "pde_image"
-                    # TODO PVQ-3842 element["id"] = ""  # for associate file - PDFIX SDK generate id pdfutils simplehash
-                    pass
 
                 case "formula_number":
                     element["type"] = "pde_text"
-                    pass
 
                 case "header":
                     element["flag"] = "header|artifact"
