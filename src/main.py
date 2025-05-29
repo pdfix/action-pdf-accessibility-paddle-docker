@@ -30,6 +30,34 @@ def str2bool(value: Any) -> bool:
         raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
+def clamp(value: float, min_value: float, max_value: float) -> float:
+    """
+    Helper function to clamp float value.
+
+    Args:
+        value (float): Value to be clamped
+        min_value (float): Value will be at least this value
+        max_value (float): Values will be at max this value
+
+    Returns:
+        Clamped value.
+    """
+    return max(min_value, min(max_value, value))
+
+
+def clamp01(value: float) -> float:
+    """
+    Helper function to clamp float value between 0.0 and 1.0.
+
+    Args:
+        value (float): Value to be clamped
+
+    Returns:
+        Clamped value.
+    """
+    return clamp(value, 0.0, 1.0)
+
+
 def set_arguments(
     parser: argparse.ArgumentParser,
     names: list,
@@ -393,29 +421,29 @@ def create_threshold_dictionary(args) -> dict:
         dict: Dictionary containing threshold values.
     """
     return {
-        0: args.threshold_paragraph_title,
-        1: args.threshold_image,
-        2: args.threshold_text,
-        3: args.threshold_number,
-        4: args.threshold_abstract,
-        5: args.threshold_content,
-        6: args.threshold_figure_title,
-        7: args.threshold_formula,
-        8: args.threshold_table,
-        9: args.threshold_table_title,
-        10: args.threshold_reference,
-        11: args.threshold_doc_title,
-        12: args.threshold_footnote,
-        13: args.threshold_header,
-        14: args.threshold_algorithm,
-        15: args.threshold_footer,
-        16: args.threshold_seal,
-        17: args.threshold_chart_title,
-        18: args.threshold_chart,
-        19: args.threshold_formula_number,
-        20: args.threshold_header_image,
-        21: args.threshold_footer_image,
-        22: args.threshold_aside_text,
+        0: clamp01(float(args.threshold_paragraph_title)),
+        1: clamp01(float(args.threshold_image)),
+        2: clamp01(float(args.threshold_text)),
+        3: clamp01(float(args.threshold_number)),
+        4: clamp01(float(args.threshold_abstract)),
+        5: clamp01(float(args.threshold_content)),
+        6: clamp01(float(args.threshold_figure_title)),
+        7: clamp01(float(args.threshold_formula)),
+        8: clamp01(float(args.threshold_table)),
+        9: clamp01(float(args.threshold_table_title)),
+        10: clamp01(float(args.threshold_reference)),
+        11: clamp01(float(args.threshold_doc_title)),
+        12: clamp01(float(args.threshold_footnote)),
+        13: clamp01(float(args.threshold_header)),
+        14: clamp01(float(args.threshold_algorithm)),
+        15: clamp01(float(args.threshold_footer)),
+        16: clamp01(float(args.threshold_seal)),
+        17: clamp01(float(args.threshold_chart_title)),
+        18: clamp01(float(args.threshold_chart)),
+        19: clamp01(float(args.threshold_formula_number)),
+        20: clamp01(float(args.threshold_header_image)),
+        21: clamp01(float(args.threshold_footer_image)),
+        22: clamp01(float(args.threshold_aside_text)),
     }
 
 
