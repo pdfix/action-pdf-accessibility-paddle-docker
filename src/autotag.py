@@ -320,14 +320,17 @@ class AutotagUsingPaddleXRecognition:
             key = "O"
             print(f"Attribute Text: {attribute_dictionary.GetText(key)}")
             print(f"Attribute Id: {attribute_dictionary.GetId()}")
-            lenght = attribute_dictionary.GetString(key, None, 0)
-            buffer = create_unicode_buffer(lenght)
-            string = attribute_dictionary.GetString(key, buffer, lenght)
-            print(f"Attribute str: {string}")
-            if attribute_dictionary.GetText(key) == "Formula":
-                id: int = attribute_dictionary.GetString("id")
-                if id:
-                    return str(id)
+            try:
+                lenght = attribute_dictionary.GetString(key, None, 0)
+                buffer = create_unicode_buffer(lenght)
+                string = attribute_dictionary.GetString(key, buffer, lenght)
+                print(f"Attribute str: {string}")
+                if attribute_dictionary.GetText(key) == "Formula":
+                    id: int = attribute_dictionary.GetString("id")
+                    if id:
+                        return str(id)
+            except Exception:
+                pass
 
         return ""
 
