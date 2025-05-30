@@ -6,7 +6,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from pdfixsdk import PdfDevRect, PdfPageView, PdfRect, __version__, kPdeText
+from pdfixsdk import PdfDevRect, PdfPageView, PdfRect, __version__, kPdeImage
 
 
 class TemplateJsonCreator:
@@ -231,7 +231,7 @@ class TemplateJsonCreator:
 
                 case "formula":
                     if "custom" in result:
-                        formula_id = self._generate_unique_id(page_number, kPdeText, result["coordinate"])
+                        formula_id = self._generate_unique_id(page_number, kPdeImage, result["coordinate"])
                         self.formulas.append((formula_id, result["custom"]))
                         element["id"] = str(formula_id)
                     element["tag"] = "Formula"

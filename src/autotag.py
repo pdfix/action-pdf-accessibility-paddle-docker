@@ -320,6 +320,7 @@ class AutotagUsingPaddleXRecognition:
             key = "O"
             print(f"Attribute Text: {attribute_dictionary.GetText(key)}")
             print(f"Attribute Id: {attribute_dictionary.GetId()}")
+            # TODO get id saved by autotaging using template
             try:
                 lenght = attribute_dictionary.GetString(key, None, 0)
                 buffer = create_unicode_buffer(lenght)

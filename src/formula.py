@@ -43,8 +43,9 @@ class FormulaDescriptionUsingPaddle:
         1. Reads the input JSON file.
         2. Extracts the base64-encoded image.
         3. Converts the image data
-        3. Passes the image to paddle engine (that uses formula model)
-        4. Saves the response as a dictionary {"content": response} in the output JSON file.
+        4. Passes the image to paddle engine (that uses formula model)
+        5. Converts response to MathML ver. 3
+        6. Saves the MathMl representation as a dictionary {"content": representation} in the output JSON file.
         """
         with open(self.input_path_str, "r", encoding="utf-8") as input_file:
             data = json.load(input_file)
