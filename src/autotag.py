@@ -1,7 +1,5 @@
-import ctypes
 import json
 import os
-import re
 from pathlib import Path
 
 from pdfixsdk import (
@@ -10,23 +8,17 @@ from pdfixsdk import (
     Pdfix,
     PdfPage,
     PdfTagsParams,
-    PdsDictionary,
-    PdsStructElement,
     kDataFormatJson,
-    kPdsStructChildElement,
     kRotate0,
     kSaveFull,
 )
 from tqdm import tqdm
 
 from ai import PaddleXEngine
-from exceptions import (
-    PdfixActivationException,
-    PdfixAuthorizationException,
-    PdfixException,
-)
+from exceptions import PdfixException
 from page_renderer import create_image_from_pdf_page
 from template_json import TemplateJsonCreator
+from utils_sdk import authorize_sdk, browse_tags_recursive, json_to_raw_data, set_associated_file_math_ml
 
 
 class AutotagUsingPaddleXRecognition:
@@ -80,8 +72,8 @@ class AutotagUsingPaddleXRecognition:
         if pdfix is None:
             raise Exception("Pdfix Initialization failed")
 
-        # Try to authorize so results don't contain watermarks
-        self._authorize(pdfix)
+        # Try to authorize PDFix SDK
+        authorize_sdk(pdfix, self.license_name, self.license_key)
 
         # Open the document
         doc = pdfix.OpenDoc(self.input_path_str, "")
@@ -112,82 +104,25 @@ class AutotagUsingPaddleXRecognition:
                 # Clean-up
                 page.Release()
 
-        # Create template json for whole document
+        # Create template for whole document
         template_json_dict: dict = template_json_creator.create_json_dict_for_document(self.model, self.zoom)
 
-        # Save template json to fileoutput_name = f"{id}-page{page_number}.png"
+        # Save template to file
         template_path = os.path.join(Path(__file__).parent.absolute(), f"../output/{id}-template_json.json")
         with open(template_path, "w") as file:
             file.write(json.dumps(template_json_dict, indent=2))
 
-        # Remove old structure and prepare an empty structure tree
-        doc.RemoveTags()
-        doc.RemoveStructTree()
-
-        # Convert template json to memory stream
-        memory_stream = GetPdfix().CreateMemStream()
-        try:
-            raw_data, raw_data_size = self._json_to_raw_data(template_json_dict)
-            if not memory_stream.Write(0, raw_data, raw_data_size):
-                raise Exception(GetPdfix().GetError())
-
-            doc_template = doc.GetTemplate()
-            if not doc_template.LoadFromStream(memory_stream, kDataFormatJson):
-                raise Exception(f"Unable to open pdf : {pdfix.GetError()}")
-        except Exception as e:
-            raise PdfixException(f"Unable to load template json for tagging: {e}")
-        finally:
-            memory_stream.Destroy()
-
         # Autotag document
-        tagsParams = PdfTagsParams()
-        if not doc.AddTags(tagsParams):
-            raise Exception(pdfix.GetError())
+        self._autotag_using_template(doc, template_json_dict, pdfix)
 
-        # Add AF to document
+        # Add Associate File (AF) for formulas to document
         if self.process_formula:
             formulas: list = template_json_creator.get_formulas()
-            self._process_formulas(pdfix, doc, paddlex, formulas)
+            self._add_afs_for_formulas(pdfix, doc, paddlex, formulas)
 
-        # Save the processed document
+        # Save document
         if not doc.Save(self.output_path_str, kSaveFull):
             raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
-
-    def _json_to_raw_data(self, json_dict: dict) -> tuple[ctypes.Array[ctypes.c_ubyte], int]:
-        """
-        Converts a JSON dictionary into a raw byte array (c_ubyte array) that can be used for low-level data operations.
-
-        Parameters:
-            json_dict (dict): A Python dictionary to be converted into JSON format and then into raw bytes.
-
-        Returns:
-            tuple: A tuple containing:
-                - json_data_raw (ctypes.c_ubyte array): The raw byte array representation of the JSON data.
-                - json_data_size (int): The size of the JSON data in bytes.
-        """
-        json_str: str = json.dumps(json_dict)
-        json_data: bytearray = bytearray(json_str.encode("utf-8"))
-        json_data_size: int = len(json_str)
-        json_data_raw: ctypes.Array[ctypes.c_ubyte] = (ctypes.c_ubyte * json_data_size).from_buffer(json_data)
-        return json_data_raw, json_data_size
-
-    def _authorize(self, pdfix: Pdfix) -> None:
-        """
-        Tries to authorize or activate Pdfix license.
-
-        Args:
-            pdfix (Pdfix): Pdfix sdk instance.
-        """
-
-        if self.license_name and self.license_key:
-            authorization = pdfix.GetAccountAuthorization()
-            if not authorization.Authorize(self.license_name, self.license_key):
-                raise PdfixAuthorizationException(str(pdfix.GetError()))
-        elif self.license_key:
-            if not pdfix.GetStandarsAuthorization().Activate(self.license_key):
-                raise PdfixActivationException(str(pdfix.GetError()))
-        else:
-            print("No license name or key provided. Using PDFix SDK trial")
 
     def _process_pdf_file_page(
         self,
@@ -235,9 +170,42 @@ class AutotagUsingPaddleXRecognition:
             # Release resources
             page_view.Release()
 
-    def _process_formulas(self, pdfix: Pdfix, doc: PdfDoc, paddlex: PaddleXEngine, formulas: list) -> None:
+    def _autotag_using_template(self, doc: PdfDoc, template_json_dict: dict, pdfix: Pdfix) -> None:
         """
-        For each formula add associate file to PDF.
+        Autotag opened document using template and remove previous tags and structures.
+
+        Args:
+            doc (PdfDoc): Opened document to tag.
+            template_json_dict (dict): Template for tagging.
+            pdfix (Pdfix): Pdfix SDK.
+        """
+        # Remove old structure and prepare an empty structure tree
+        doc.RemoveTags()
+        doc.RemoveStructTree()
+
+        # Convert template json to memory stream
+        memory_stream = pdfix.CreateMemStream()
+        try:
+            raw_data, raw_data_size = json_to_raw_data(template_json_dict)
+            if not memory_stream.Write(0, raw_data, raw_data_size):
+                raise Exception(pdfix.GetError())
+
+            doc_template = doc.GetTemplate()
+            if not doc_template.LoadFromStream(memory_stream, kDataFormatJson):
+                raise Exception(f"Unable to open pdf : {pdfix.GetError()}")
+        except Exception as e:
+            raise PdfixException(f"Unable to load template json for tagging: {e}")
+        finally:
+            memory_stream.Destroy()
+
+        # Autotag document
+        tagsParams = PdfTagsParams()
+        if not doc.AddTags(tagsParams):
+            raise Exception(pdfix.GetError())
+
+    def _add_afs_for_formulas(self, pdfix: Pdfix, doc: PdfDoc, paddlex: PaddleXEngine, formulas: list) -> None:
+        """
+        For each formula add associate file to document.
 
         Args:
             pdfix (Pdfix): PDFix SDK.
@@ -250,7 +218,7 @@ class AutotagUsingPaddleXRecognition:
             raise Exception(f"PDF has no structure tree : {str(pdfix.GetError())} [{pdfix.GetErrorType()}]")
 
         child_element = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
-        items = self._browse_tags_recursive(child_element, "Formula")
+        items = browse_tags_recursive(child_element, "Formula")
         for formula_element in items:
             element_id: str = formula_element.GetId()
             if element_id == "":
@@ -262,96 +230,4 @@ class AutotagUsingPaddleXRecognition:
                 # We don't have data for this formula "id"
                 continue
             formula = formulas.pop(index)
-            self._set_associated_file_math_ml(formula_element, formula[1], paddlex.MATH_ML_VERSION)
-
-    def _browse_tags_recursive(self, element: PdsStructElement, regex_tag: str) -> list[PdsStructElement]:
-        """
-        Recursively browses through the structure elements of a PDF document and processes
-        elements that match the specified tags.
-
-        Description:
-        This function recursively browses through the structure elements of a PDF document
-        starting from the specified parent element. It checks each child element to see if it
-        matches the specified tags using a regular expression. If a match is found, the element
-        is processed using the `process_struct_elem` function. If no match is found, the function
-        calls itself recursively on the child element.
-
-        Args:
-            element (PdsStructElement): The parent structure element to start browsing from.
-            regex_tag (str): The regular expression to match tags.
-        """
-        result = []
-        count = element.GetNumChildren()
-        structure_tree = element.GetStructTree()
-        for i in range(0, count):
-            if element.GetChildType(i) != kPdsStructChildElement:
-                continue
-            child_element: PdsStructElement = structure_tree.GetStructElementFromObject(element.GetChildObject(i))
-            if re.match(regex_tag, child_element.GetType(True)) or re.match(regex_tag, child_element.GetType(False)):
-                # process element
-                result.append(child_element)
-            else:
-                result.extend(self._browse_tags_recursive(child_element, regex_tag))
-        return result
-
-    def _bytearray_to_data(self, byte_array: bytearray) -> ctypes.Array[ctypes.c_ubyte]:
-        """
-        Utility function to convert a bytearray to a ctypes array.
-
-        Args:
-            byte_array (bytearray): The bytearray to convert.
-
-        Returns:
-            The converted ctypes array.
-        """
-        size = len(byte_array)
-        return (ctypes.c_ubyte * size).from_buffer(byte_array)
-
-    def _set_associated_file_math_ml(self, element: PdsStructElement, math_ml: str, math_ml_version: str) -> None:
-        """
-        Set the MathML associated file for a structure element.
-
-        Args:
-            element (PdsStructElement): The structure element to set the MathML for.
-            math_ml (str): The MathML content to set.
-            math_ml_version (str): The MathML version to set.
-        """
-        # create mathML object
-        document = element.GetStructTree().GetDoc()
-        associated_file_data = document.CreateDictObject(True)
-        associated_file_data.PutName("Type", "Filespec")
-        associated_file_data.PutName("AFRelationshhip", "Supplement")
-        associated_file_data.PutString("F", math_ml_version)
-        associated_file_data.PutString("UF", math_ml_version)
-        associated_file_data.PutString("Desc", math_ml_version)
-
-        raw_data = self._bytearray_to_data(bytearray(math_ml.encode("utf-8")))
-        file_dictionary = document.CreateDictObject(False)
-        file_stream = document.CreateStreamObject(True, file_dictionary, raw_data, len(math_ml))
-
-        ef_dict = associated_file_data.PutDict("EF")
-        ef_dict.Put("F", file_stream)
-        ef_dict.Put("UF", file_stream)
-
-        self._add_associated_file(element, associated_file_data)
-
-    def _add_associated_file(self, element: PdsStructElement, associated_file_data: PdsDictionary) -> None:
-        """
-        Add an associated file to a structure element.
-
-        Args:
-            element (PdsStructElement): The structure element to add the associated file to.
-            associated_file_data (PdsDictionary): The associated file data to add.
-        """
-        element_object = PdsDictionary(element.GetObject().obj)
-        associated_file_dictionary = element_object.GetDictionary("AF")
-        if associated_file_dictionary:
-            # convert dict to an array
-            associated_file_array = GetPdfix().CreateArrayObject(False)
-            associated_file_array.Put(0, associated_file_dictionary.Clone(False))
-            element_object.Put("AF", associated_file_array)
-
-        associated_file_array = element_object.GetArray("AF")
-        if not associated_file_array:
-            associated_file_array = element_object.PutArray("AF")
-        associated_file_array.Put(associated_file_array.GetNumObjects(), associated_file_data)
+            set_associated_file_math_ml(pdfix, formula_element, formula[1], paddlex.MATH_ML_VERSION)

@@ -7,7 +7,7 @@ from ai import PaddleXEngine
 from page_renderer import convert_base64_image_to_matlike_image
 
 
-class FormulaDescriptionUsingPaddle:
+class GenerateMathmlFromImage:
     """
     Class that takes care of receiving base64 encoded image in JSON file and processing it through Paddle Engine
     and writing result into output JSON file.
@@ -34,7 +34,7 @@ class FormulaDescriptionUsingPaddle:
         self.input_path_str = input_path
         self.output_path_str = output_path
 
-    def describe_formula(self) -> None:
+    def process_image(self) -> None:
         """
         Processes a JSON file by extracting a base64-encoded image,
         generating a response using Paddle, and saving the result to an output file.

@@ -7,7 +7,7 @@ from typing import Any
 
 from autotag import AutotagUsingPaddleXRecognition
 from create_template import CreateTemplateJsonUsingPaddleXRecognition
-from formula import FormulaDescriptionUsingPaddle
+from generate_mathml import GenerateMathmlFromImage
 
 
 def str2bool(value: Any) -> bool:
@@ -364,8 +364,8 @@ def describing_formula(input_path: str, output_path: str) -> None:
         output_path (string): Path to JSON file
     """
     if input_path.lower().endswith(".json") and output_path.lower().endswith(".json"):
-        ai = FormulaDescriptionUsingPaddle(input_path, output_path)
-        ai.describe_formula()
+        ai = GenerateMathmlFromImage(input_path, output_path)
+        ai.process_image()
     else:
         raise Exception("Input and output file must be JSON files")
 

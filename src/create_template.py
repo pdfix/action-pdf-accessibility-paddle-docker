@@ -3,20 +3,16 @@ from pathlib import Path
 
 from pdfixsdk import (
     GetPdfix,
-    Pdfix,
     PdfPage,
     kRotate0,
 )
 from tqdm import tqdm
 
 from ai import PaddleXEngine
-from exceptions import (
-    PdfixActivationException,
-    PdfixAuthorizationException,
-    PdfixException,
-)
+from exceptions import PdfixException
 from page_renderer import create_image_from_pdf_page
 from template_json import TemplateJsonCreator
+from utils_sdk import authorize_sdk
 
 
 class CreateTemplateJsonUsingPaddleXRecognition:
@@ -63,8 +59,8 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         if pdfix is None:
             raise Exception("Pdfix Initialization failed")
 
-        # Try to authorize so results don't contain watermarks
-        self._authorize(pdfix)
+        # Try to authorize PDFix SDK
+        authorize_sdk(pdfix, self.license_name, self.license_key)
 
         # Open the document
         doc = pdfix.OpenDoc(self.input_path_str, "")
@@ -102,24 +98,6 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         # Save template json
         with open(self.output_path_str, "w") as file:
             file.write(json.dumps(output_data, indent=2))
-
-    def _authorize(self, pdfix: Pdfix) -> None:
-        """
-        Tries to authorize or activate Pdfix license.
-
-        Args:
-            pdfix (Pdfix): Pdfix sdk instance.
-        """
-
-        if self.license_name and self.license_key:
-            authorization = pdfix.GetAccountAuthorization()
-            if not authorization.Authorize(self.license_name, self.license_key):
-                raise PdfixAuthorizationException(str(pdfix.GetError()))
-        elif self.license_key:
-            if not pdfix.GetStandarsAuthorization().Activate(self.license_key):
-                raise PdfixActivationException(str(pdfix.GetError()))
-        else:
-            print("No license name or key provided. Using PDFix SDK trial")
 
     def _process_pdf_file_page(
         self,
