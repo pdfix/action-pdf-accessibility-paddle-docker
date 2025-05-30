@@ -372,10 +372,14 @@ def describing_formula(input_path: str, output_path: str) -> None:
 
 def run_template_subcommand(args) -> None:
     thresholds = create_threshold_dictionary(args)
-    create_template_json(args.input, args.output, args.model, args.zoom, args.process_table, thresholds)
+    create_template_json(
+        args.name, args.key, args.input, args.output, args.model, args.zoom, args.process_table, thresholds
+    )
 
 
 def create_template_json(
+    license_name: str,
+    license_key: str,
     input_path: str,
     output_path: str,
     model: str,
@@ -387,6 +391,8 @@ def create_template_json(
     Creating template json for PDF document using provided arguments
 
     Args:
+        license_name (string): Name used in authorization in PDFix-SDK
+        license_key (string): Key used in authorization in PDFix-SDK
         input_path (string): Path to PDF document
         output_path (string): Path to JSON file
         model (string): Paddle layout model
@@ -399,7 +405,7 @@ def create_template_json(
 
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".json"):
         template_creator = CreateTemplateJsonUsingPaddleXRecognition(
-            input_path, output_path, model, zoom, process_table, thresholds
+            license_name, license_key, input_path, output_path, model, zoom, process_table, thresholds
         )
         template_creator.process_file()
     else:
@@ -506,7 +512,7 @@ def main() -> None:
         "template",
         help="Generates template JSON for autotagging",
     )
-    template_arguments = ["input", "output", "model", "zoom", "process_table"]
+    template_arguments = ["name", "key", "input", "output", "model", "zoom", "process_table"]
     set_arguments(template_subparser, template_arguments + threshold_arguments, True, "PDF", "JSON")
     template_subparser.set_defaults(func=run_template_subcommand)
 
