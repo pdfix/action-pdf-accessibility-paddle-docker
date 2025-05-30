@@ -12,7 +12,6 @@ from pdfixsdk import (
     PdfTagsParams,
     PdsDictionary,
     PdsStructElement,
-    create_unicode_buffer,
     kDataFormatJson,
     kPdsStructChildElement,
     kRotate0,
@@ -148,8 +147,6 @@ class AutotagUsingPaddleXRecognition:
         # Add AF to document
         if self.process_formula:
             formulas: list = template_json_creator.get_formulas()
-            for formula in formulas:
-                print(f"ID: {formula[0]}")
             self._process_formulas(pdfix, doc, paddlex, formulas)
 
         # Save the processed document
@@ -248,7 +245,6 @@ class AutotagUsingPaddleXRecognition:
             paddlex (PaddleXEngine): PaddleX engine instance for processing.
             formulas (list): List of formulas to process.
         """
-        print("XXXXXX START HERE XXXXX")
         struct_tree = doc.GetStructTree()
         if struct_tree is None:
             raise Exception(f"PDF has no structure tree : {str(pdfix.GetError())} [{pdfix.GetErrorType()}]")
@@ -256,20 +252,16 @@ class AutotagUsingPaddleXRecognition:
         child_element = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
         items = self._browse_tags_recursive(child_element, "Formula")
         for formula_element in items:
-            element_id = self._get_id_from_formula_element(formula_element)
+            element_id: str = formula_element.GetId()
             if element_id == "":
-                print('This formula element does not have "id"')
                 # This formula element does not have "id"
                 continue
-            print(f"We have element with id: {element_id}")
 
-            index = next((i for i, data in enumerate(formulas) if data[0] == element_id), -1)
+            index = next((i for i, data in enumerate(formulas) if str(data[0]) == element_id), -1)
             if index < 0:
                 # We don't have data for this formula "id"
-                print('We don\'t have data for this formula "id"')
                 continue
             formula = formulas.pop(index)
-            print(f"Setting AF for: ({formula[0]}: {formula[1]})")
             self._set_associated_file_math_ml(formula_element, formula[1], paddlex.MATH_ML_VERSION)
 
     def _browse_tags_recursive(self, element: PdsStructElement, regex_tag: str) -> list[PdsStructElement]:
@@ -301,39 +293,6 @@ class AutotagUsingPaddleXRecognition:
             else:
                 result.extend(self._browse_tags_recursive(child_element, regex_tag))
         return result
-
-    def _get_id_from_formula_element(self, element: PdsStructElement) -> str:
-        """
-        Get id from formula element.
-
-        Args:
-            element (PdsStructElement): The formula structure element.
-
-        Returns:
-            Id if found, empty string otherwise.
-        """
-        for index in reversed(range(element.GetNumAttrObjects())):
-            attribute_object = element.GetAttrObject(index)
-            if not attribute_object:
-                continue
-            attribute_dictionary = PdsDictionary(attribute_object.obj)
-            key = "O"
-            print(f"Attribute Text: {attribute_dictionary.GetText(key)}")
-            print(f"Attribute Id: {attribute_dictionary.GetId()}")
-            # TODO get id saved by autotaging using template
-            try:
-                lenght = attribute_dictionary.GetString(key, None, 0)
-                buffer = create_unicode_buffer(lenght)
-                string = attribute_dictionary.GetString(key, buffer, lenght)
-                print(f"Attribute str: {string}")
-                if attribute_dictionary.GetText(key) == "Formula":
-                    id: int = attribute_dictionary.GetString("id")
-                    if id:
-                        return str(id)
-            except Exception:
-                pass
-
-        return ""
 
     def _bytearray_to_data(self, byte_array: bytearray) -> ctypes.Array[ctypes.c_ubyte]:
         """
