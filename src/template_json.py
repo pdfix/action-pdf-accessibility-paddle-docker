@@ -272,13 +272,13 @@ class TemplateJsonCreator:
                     if "custom" in result:
                         cell_elements: list = self._create_table_cells(result["custom"], page_view)
                         element["element_template"] = {
+                            "table_update": [{"cell_header": "true", "statement": "$if"}],
                             "template": {
                                 "element_create": [{"elements": cell_elements, "query": {}, "statement": "$if"}]
-                            }
+                            },
                         }
                         element["row_num"] = result["custom"]["rows"]
                         element["col_num"] = result["custom"]["columns"]
-                        element["table_update"] = [{"cell_header": "true", "statement": "$if"}]
                     element["type"] = "pde_table"
 
                 case "table_title":
