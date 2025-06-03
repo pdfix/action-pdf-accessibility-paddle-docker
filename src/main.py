@@ -35,9 +35,9 @@ def clamp(value: float, min_value: float, max_value: float) -> float:
     Helper function to clamp float value.
 
     Args:
-        value (float): Value to be clamped
-        min_value (float): Value will be at least this value
-        max_value (float): Values will be at max this value
+        value (float): Value to be clamped.
+        min_value (float): Value will be at least this value.
+        max_value (float): Values will be at max this value.
 
     Returns:
         Clamped value.
@@ -286,7 +286,7 @@ def get_pdfix_config(path: str) -> None:
     If Path is provided, copy config to destination path.
 
     Args:
-        path (string): Destination path for config.json file
+        path (str): Destination path for config.json file
     """
     config_path = os.path.join(Path(__file__).parent.absolute(), "../config.json")
 
@@ -328,15 +328,15 @@ def autotagging_pdf(
     Autotagging PDF document with provided arguments
 
     Args:
-        license_name (string): Name used in authorization in PDFix-SDK
-        license_key (string): Key used in authorization in PDFix-SDK
-        input_path (string): Path to PDF document
-        output_path (string): Path to PDF document
-        model (string): Paddle layout model
-        zoom (float): Zoom level for rendering the page
-        process_formula (bool): Whether to process formulas
-        process_table (bool): Whether to process tables
-        thresholds (dict): Thresholds for layout detection
+        license_name (str): Name used in authorization in PDFix-SDK.
+        license_key (str): Key used in authorization in PDFix-SDK.
+        input_path (str): Path to PDF document.
+        output_path (str): Path to PDF document.
+        model (str): Paddle layout model.
+        zoom (float): Zoom level for rendering the page.
+        process_formula (bool): Whether to process formulas.
+        process_table (bool): Whether to process tables.
+        thresholds (dict): Thresholds for layout detection.
     """
     if zoom < 1.0 or zoom > 10.0:
         raise Exception("Zoom level must between 1.0 and 10.0")
@@ -360,8 +360,8 @@ def describing_formula(input_path: str, output_path: str) -> None:
     that uses Paddle Engine to describe what it sees.
 
     Args:
-        input_path (string): Path to JSON file
-        output_path (string): Path to JSON file
+        input_path (str): Path to JSON file.
+        output_path (str): Path to JSON file.
     """
     if input_path.lower().endswith(".json") and output_path.lower().endswith(".json"):
         ai = GenerateMathmlFromImage(input_path, output_path)
@@ -391,14 +391,14 @@ def create_template_json(
     Creating template json for PDF document using provided arguments
 
     Args:
-        license_name (string): Name used in authorization in PDFix-SDK
-        license_key (string): Key used in authorization in PDFix-SDK
-        input_path (string): Path to PDF document
-        output_path (string): Path to JSON file
-        model (string): Paddle layout model
-        zoom (float): Zoom level for rendering the page
-        process_table (bool): Whether to process tables
-        thresholds (dict): Thresholds for layout detection
+        license_name (str): Name used in authorization in PDFix-SDK.
+        license_key (str): Key used in authorization in PDFix-SDK.
+        input_path (str): Path to PDF document.
+        output_path (str): Path to JSON file.
+        model (str): Paddle layout model.
+        zoom (float): Zoom level for rendering the page.
+        process_table (bool): Whether to process tables.
+        thresholds (dict): Thresholds for layout detection.
     """
     if zoom < 1.0 or zoom > 10.0:
         raise Exception("Zoom level must between 1.0 and 10.0")
