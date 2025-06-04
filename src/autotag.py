@@ -91,12 +91,19 @@ class AutotagUsingPaddleXRecognition:
             # Acquire the page
             page = doc.AcquirePage(page_index)
             if page is None:
-                raise PdfixException("Unable to acquire the page")
+                raise PdfixException(pdfix, "Unable to acquire the page")
 
             try:
                 # Process the page
                 self._process_pdf_file_page(
-                    id, page, page_index, paddlex, template_json_creator, progress_bar, max_formulas_and_tables_per_page
+                    pdfix,
+                    id,
+                    page,
+                    page_index,
+                    paddlex,
+                    template_json_creator,
+                    progress_bar,
+                    max_formulas_and_tables_per_page,
                 )
             except Exception:
                 raise
@@ -126,6 +133,7 @@ class AutotagUsingPaddleXRecognition:
 
     def _process_pdf_file_page(
         self,
+        pdfix: Pdfix,
         id: str,
         page: PdfPage,
         page_index: int,
@@ -138,6 +146,7 @@ class AutotagUsingPaddleXRecognition:
         Create template json for current PDF document page.
 
         Args:
+            pdfix (Pdfix): Pdfix SDK.
             id (string): PDF document name.
             page (PdfPage): The PDF document page to process.
             page_index (int): PDF file page index.
@@ -155,7 +164,7 @@ class AutotagUsingPaddleXRecognition:
 
         try:
             # Render the page as an image
-            image = create_image_from_pdf_page(page, page_view)
+            image = create_image_from_pdf_page(pdfix, page, page_view)
 
             # Run layout model analysis and formula and table model analysis using the PaddleX engine
             results = paddlex.process_pdf_page_image_with_ai(
@@ -194,7 +203,7 @@ class AutotagUsingPaddleXRecognition:
             if not doc_template.LoadFromStream(memory_stream, kDataFormatJson):
                 raise Exception(f"Unable to open pdf : {pdfix.GetError()}")
         except Exception as e:
-            raise PdfixException(f"Unable to load template json for tagging: {e}")
+            raise PdfixException(pdfix, f"Unable to load template json for tagging: {e}")
         finally:
             memory_stream.Destroy()
 

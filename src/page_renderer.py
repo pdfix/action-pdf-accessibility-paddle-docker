@@ -4,7 +4,6 @@ import tempfile
 import cv2
 import numpy as np
 from pdfixsdk import (
-    GetPdfix,
     PdfDoc,
     PdfImageParams,
     Pdfix,
@@ -21,11 +20,12 @@ from pdfixsdk import (
 from exceptions import PdfixException
 
 
-def create_image_from_pdf_page(pdf_page: PdfPage, page_view: PdfPageView) -> cv2.typing.MatLike:
+def create_image_from_pdf_page(pdfix: Pdfix, pdf_page: PdfPage, page_view: PdfPageView) -> cv2.typing.MatLike:
     """
     Renders the PDF page into an opencv image of size 792x612.
 
     Args:
+        pdfix (Pdfix): Pdfix SDK.
         pdf_page (PdfPage): The page to render.
         page_view (PdfPageView): The view of the PDF page used
             for coordinate conversion.
@@ -33,9 +33,6 @@ def create_image_from_pdf_page(pdf_page: PdfPage, page_view: PdfPageView) -> cv2
     Returns:
         Rendered page as MatLike object.
     """
-    # Initialize PDFix instance
-    pdfix = GetPdfix()
-
     # Get the dimensions of the page view (device width and height)
     page_width = page_view.GetDeviceWidth()
     page_height = page_view.GetDeviceHeight()
@@ -43,7 +40,7 @@ def create_image_from_pdf_page(pdf_page: PdfPage, page_view: PdfPageView) -> cv2
     # Create an image with the specified dimensions and ARGB format
     page_image = pdfix.CreateImage(page_width, page_height, kImageDIBFormatArgb)
     if page_image is None:
-        raise PdfixException("Unable to create the image")
+        raise PdfixException(pdfix, "Unable to create the image")
 
     try:
         # Set up rendering parameters
@@ -53,7 +50,7 @@ def create_image_from_pdf_page(pdf_page: PdfPage, page_view: PdfPageView) -> cv2
 
         # Render the page content onto the image
         if not pdf_page.DrawContent(render_params):
-            raise PdfixException("Unable to draw the content")
+            raise PdfixException(pdfix, "Unable to draw the content")
 
         # Save the rendered image to a temporary file in JPG format
         with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
@@ -67,7 +64,7 @@ def create_image_from_pdf_page(pdf_page: PdfPage, page_view: PdfPageView) -> cv2
 
                 # Save the image to the file stream
                 if not page_image.SaveToStream(file_stream, image_params):
-                    raise PdfixException("Unable to save the image to the stream")
+                    raise PdfixException(pdfix, "Unable to save the image to the stream")
             except Exception:
                 raise
             finally:
@@ -167,7 +164,7 @@ def render_element_to_image(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfR
 
                         # Save the image to the file stream
                         if not render_parameters.image.SaveToStream(file_stream, image_params):
-                            raise PdfixException("Unable to save the image to the stream")
+                            raise PdfixException(pdfix, "Unable to save the image to the stream")
                     except Exception:
                         raise
                     finally:

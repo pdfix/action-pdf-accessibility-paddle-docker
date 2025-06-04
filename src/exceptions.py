@@ -1,10 +1,10 @@
-from pdfixsdk import GetPdfix
+from pdfixsdk import Pdfix
 
 
 class PdfixException(Exception):
-    def __init__(self, message: str = "") -> None:
-        self.errno = GetPdfix().GetErrorType()
-        self.add_note(message if len(message) else str(GetPdfix().GetError()))
+    def __init__(self, pdfix: Pdfix, message: str = "") -> None:
+        self.errno = pdfix.GetErrorType()
+        self.add_note(message if len(message) else str(pdfix.GetError()))
 
 
 class PdfixAuthorizationException(Exception):
