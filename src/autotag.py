@@ -39,18 +39,18 @@ class AutotagUsingPaddleXRecognition:
         thresholds: dict,
     ) -> None:
         """
-        Initialize class for tagging pdf(s).
+        Initialize class for tagging pdf.
 
         Args:
-            license_name (string): Pdfix sdk license name (e-mail)
-            license_key (string): Pdfix sdk license key
-            input_path (string): Path to PDF document
-            output_path (string): Path where tagged PDF should be saved
-            model (string): Paddle model for layout recognition
-            zoom (float): Zoom level for rendering the page
-            process_formula (bool): Whether to process formulas
-            process_table (bool): Whether to process tables
-            thresholds (dict): Thresholds for layout detection
+            license_name (string): Pdfix sdk license name (e-mail).
+            license_key (string): Pdfix sdk license key.
+            input_path (string): Path to PDF document.
+            output_path (string): Path where tagged PDF should be saved.
+            model (string): Paddle model for layout recognition.
+            zoom (float): Zoom level for rendering the page.
+            process_formula (bool): Whether to process formulas.
+            process_table (bool): Whether to process tables.
+            thresholds (dict): Thresholds for layout detection.
         """
         self.license_name = license_name
         self.license_key = license_key

@@ -7,7 +7,7 @@ from typing import Any
 
 from autotag import AutotagUsingPaddleXRecognition
 from create_template import CreateTemplateJsonUsingPaddleXRecognition
-from generate_mathml import GenerateMathmlFromImage
+from generate_mathml import GenerateMathmlFromImage, GenerateMathmlsInPdf
 
 
 def str2bool(value: Any) -> bool:
@@ -370,6 +370,27 @@ def describing_formula(input_path: str, output_path: str) -> None:
         raise Exception("Input and output file must be JSON files")
 
 
+def run_formula_pdf_subcommand(args) -> None:
+    pdf_processing_formulas(args.name, args.key, args.input, args.output)
+
+
+def pdf_processing_formulas(license_name: str, license_key: str, input_path: str, output_path: str) -> None:
+    """
+    Processing all formulas in PDF document and adding Associate Files to them.
+
+    Args:
+        license_name (str): Name used in authorization in PDFix-SDK.
+        license_key (str): Key used in authorization in PDFix-SDK.
+        input_path (str): Path to PDF document.
+        output_path (str): Path to PDF document.
+    """
+    if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
+        generateMathml = GenerateMathmlsInPdf(license_name, license_key, input_path, output_path)
+        generateMathml.process_file()
+    else:
+        raise Exception("Input and output file must be PDF documents")
+
+
 def run_template_subcommand(args) -> None:
     thresholds = create_threshold_dictionary(args)
     create_template_json(
@@ -506,6 +527,14 @@ def main() -> None:
     )
     set_arguments(formula_subparser, ["input", "output"], True, "JSON", "JSON")
     formula_subparser.set_defaults(func=run_formula_subcommand)
+
+    # Formula pdf subparser
+    formula_pdf_subparser = subparsers.add_parser(
+        "formula_pdf",
+        help="Generates math_ml associate files for all formulas in PDF using Paddle Engine",
+    )
+    set_arguments(formula_pdf_subparser, ["name", "key", "input", "output"], True, "PDF", "PDF")
+    formula_pdf_subparser.set_defaults(func=run_formula_pdf_subcommand)
 
     # Template subparser
     template_subparser = subparsers.add_parser(

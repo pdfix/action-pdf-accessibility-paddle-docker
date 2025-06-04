@@ -5,13 +5,17 @@ import cv2
 import numpy as np
 from pdfixsdk import (
     GetPdfix,
+    PdfDoc,
     PdfImageParams,
+    Pdfix,
     PdfPage,
     PdfPageRenderParams,
     PdfPageView,
+    PdfRect,
     kImageDIBFormatArgb,
     kImageFormatJpg,
     kPsTruncate,
+    kRotate0,
 )
 
 from exceptions import PdfixException
@@ -77,6 +81,9 @@ def create_image_from_pdf_page(pdf_page: PdfPage, page_view: PdfPageView) -> cv2
     finally:
         page_image.Destroy()
 
+    black_pixel = np.zeros((1, 1, 3), dtype=np.uint8)
+    return black_pixel
+
 
 def create_image_from_part_of_page(image: cv2.typing.MatLike, box: list, offset: int) -> cv2.typing.MatLike:
     """
@@ -111,3 +118,75 @@ def convert_base64_image_to_matlike_image(base64_data: str) -> cv2.typing.MatLik
     image_data = base64.b64decode(encoded)
     numpy_array = np.frombuffer(image_data, np.uint8)
     return cv2.imdecode(numpy_array, cv2.IMREAD_COLOR)
+
+
+def render_element_to_image(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfRect, zoom: float) -> cv2.typing.MatLike:
+    """
+    Render element from document into opencv image.
+
+    Args:
+        pdfix (Pdfix): PDFix SDK.
+        doc (PdfDoc): The PDF document to render.
+        page_num (int): The page number where element is located.
+        bbox (PdfRect): The bounding box of element to render.
+        zoom (float): The zoom level for rendering.
+
+    Returns:
+        The rendered element as MatLike object.
+    """
+    page = doc.AcquirePage(page_num)
+    try:
+        page_view = page.AcquirePageView(zoom, kRotate0)
+
+        try:
+            # Convert PDF Rect to Image Rect
+            rect = page_view.RectToDevice(bbox)
+
+            # Set up rendering parameters
+            render_parameters = PdfPageRenderParams()
+            render_parameters.matrix = page_view.GetDeviceMatrix()
+            render_parameters.clip_box = bbox
+            render_parameters.image = pdfix.CreateImage(
+                rect.right - rect.left,
+                rect.bottom - rect.top,
+                kImageDIBFormatArgb,
+            )
+
+            try:
+                # Render the page element content onto the image
+                page.DrawContent(render_parameters)
+
+                with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+                    file_stream = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
+
+                    try:
+                        # Set image parameters (format and quality)
+                        image_params = PdfImageParams()
+                        image_params.format = kImageFormatJpg
+                        image_params.quality = 100
+
+                        # Save the image to the file stream
+                        if not render_parameters.image.SaveToStream(file_stream, image_params):
+                            raise PdfixException("Unable to save the image to the stream")
+                    except Exception:
+                        raise
+                    finally:
+                        file_stream.Destroy()
+
+                    # Return the saved image as a NumPy array using OpenCV
+                    return cv2.imread(temp_file.name)
+            except Exception:
+                raise
+            finally:
+                render_parameters.image.Destroy()
+        except Exception:
+            raise
+        finally:
+            page_view.Release()
+    except Exception:
+        raise
+    finally:
+        page.Release()
+
+    black_pixel = np.zeros((1, 1, 3), dtype=np.uint8)
+    return black_pixel

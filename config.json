@@ -255,6 +255,33 @@
       ]
     },
     {
+      "title": "Generate MathMLs Paddle",
+      "name": "pdfix-generate_mathml_paddle_pdf",
+      "desc": "Automatically generates associate files for all formulas in PDF using Paddle",
+      "icon": "paddle_formula",
+      "version": "v0.0.0",
+      "category": "Paddle",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest formula_pdf --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\"",
+      "args": [
+        {
+          "name": "input_pdf",
+          "desc": "Input PDF file",
+          "flags": 2,
+          "type": "file_path",
+          "ext": "pdf",
+          "value": ""
+        },
+        {
+          "name": "output_pdf",
+          "desc": "Output PDF file",
+          "flags": 4,
+          "type": "file_path",
+          "ext": "pdf",
+          "value": ""
+        }
+      ]
+    },
+    {
       "title": "Create Template Paddle",
       "name": "pdfix-create_template_paddle",
       "desc": "Automatically creates template json for PDFix SDK using Paddle",
