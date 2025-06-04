@@ -1,44 +1,44 @@
-# Autotag PDF document using Paddle and PDFix SDK
+# Autotag PDF Document Using PaddleX and PDFix SDK
 
-Docker image-based autotagging of PDF documents with PaddleX and PDFix SDK
+Docker-based autotagging of PDF documents using PaddleX and PDFix SDK.
 
 ## Table of Contents
 
-- [Autotag PDF document using Paddle and PDFix SDK](#autotag-paddle)
+- [Autotag PDF Document Using PaddleX and PDFix SDK](#autotag-pdf-document-using-paddlex-and-pdfix-sdk)
   - [Table of Contents](#table-of-contents)
   - [Getting Started](#getting-started)
-  - [Run a Docker image ](#run-docker-container)
-    - [Run docker container for autotagging](#run-docker-container-autotagging)
-    - [Run docker container for template json creation](#run-docker-container-template)
-    - [Run docker container for formula description in MathML version 3](#run-docker-container-formula)
-      - [Using JSON file for one formula](#run-docker-container-formula-json)
-      - [Using PDF file for all formulas inside PDF](#run-docker-container-formula-pdf)
-    - [Exporting PDFix Configuration for Integration](#run-docker-container-export-config-json-integration)
-  - [License \& libraries used](#license)
-  - [Help \& Support](#help-support)
+  - [Run a Docker Container ](#run-docker-container)
+    - [Run Docker Container for Autotagging](#run-docker-container-for-autotagging)
+    - [Run Docker Container for Template JSON Creation](#run-docker-container-for-template-json-creation)
+    - [Run Docker Container for Formula Description in MathML Version 3](#run-docker-container-for-formula-description-in-mathml-version-three)
+      - [Using JSON File for One Formula](#using-json-file-for-one-formula)
+      - [Using Tagged PDF Document to Process All Formulas](#using-tagged-pdf-document-to-process-all-formulas)
+    - [Exporting PDFix Configuration for Integration](#exporting-pdfix-configuration-for-integration)
+  - [License \& Libraries Used](#license-and-libraries-used)
+  - [Help \& Support](#help-and-support)
 
 
 ## Getting Started
 
-To use this Docker application, you'll need to have Docker installed on your system. If Docker is not installed, please follow the instructions on the [official Docker website](https://docs.docker.com/get-docker/) to install it.
+To use this application, Docker must be installed on the system. If Docker is not installed, please follow the instructions on the [official Docker website](https://docs.docker.com/get-docker/) to install it.
 
-## Run a Docker image
+## Run a Docker Container
 
-### Run docker container for autotagging
+### Run Docker Container for Autotagging
 
 All available arguments for autotagging:
 
 ```bash
 options:
-  --name NAME           PDFix license name
-  --key KEY             PDFix license key
+  --name NAME           PDFix license name.
+  --key KEY             PDFix license key.
   --input INPUT, -i INPUT
-                        The input PDF file
+                        The input PDF file.
   --output OUTPUT, -o OUTPUT
-                        The output PDF file
+                        The output PDF file.
   --model {PP-DocLayout-L,RT-DETR-H_layout_17cls}
-                        Choose which paddle model to use: PP-DocLayout-L or RT-DETR-H_layout_17cls
-  --zoom ZOOM           Zoom level for the PDF page rendering (default: 2.0)
+                        Choose which paddle model to use: PP-DocLayout-L or RT-DETR-H_layout_17cls.
+  --zoom ZOOM           Zoom level for the PDF page rendering (default: 2.0).
   --process_formula PROCESS_FORMULA
                         Process formulas in the PDF document using formula model. Default is True.
   --process_table PROCESS_TABLE
@@ -91,27 +91,26 @@ options:
                         Threshold for aside text. Value between 0.0 and 1.0. Default is 0.5.
 ```
 
-For example we want to autotag file `/home/pdfs_in/document.pdf` and output should go to `/home/pdfs_out/tagged.pdf` using zoom `3.0`.
-
-To run the Docker container, you should map directories containing PDF documents to the container (using the `-v` parameter) and pass the paths to the input/output PDF documents inside the running container.
+To run the Docker container, map directories containing PDF documents to the container (using the `-v` parameter) and pass the paths to the input/output PDF documents inside the running container.
 
 Example:
+To create a command for autotagging the file `/home/pdfs_in/document.pdf` and output to `/home/pdfs_out/tagged.pdf`, using a zoom level of `3.0`, with formula processing disabled and an increased threshold for text detection:
 
-- Your input PDF document is: `/home/pdfs_in/document.pdf`
-- Your output PDF document is: `/home/pdfs_out/tagged.pdf`
-- Your zoom level is: `3.0`
-- You want to skip formula processing
-- Threshold for text should be 60%
+Arguments:
+- Input PDF document is: `/home/pdfs_in/document.pdf`
+- Output PDF document is: `/home/pdfs_out/tagged.pdf`
+- Zoom level is: `3.0` (three times the original)
+- Formula processing: `off`
+- The threshold for text detection: `60%`
 
-The command will look like:
+Result:
 
 ```bash
 docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out pdfix/pdf-accessibility-paddle:latest tag --name $LICENSE_NAME --key $LICENSE_KEY -i /data_in/document.pdf -o /data_out/tagged.pdf --zoom 3.0 --process_formula False --threshold_text 0.6
 ```
 
-Explanations:
-- you need to map directories into the container like `-v /home/pdfs_in:/data_in`
-- you will use these if you have PDFix license: `--name ${LICENSE_NAME} --key ${LICENSE_KEY}`
+Explanation:
+- Map local directories to the container using `-v` option: `-v /home/pdfs_in:/data_in`
 
 These arguments are for an account-based PDFix license.
 ```bash
@@ -119,38 +118,46 @@ These arguments are for an account-based PDFix license.
 ```
 Contact support for more information.
 
-### Run docker container for template json creation
+### Run Docker Container for Template JSON Creation
 
-This does not process Formulas as currently template json does not support associate files.
-This has arguments as tagging only difference is output. Instead of PDF it is JSON with content looking like:
+Formula processing is not supported in this mode because the template JSON does not support associated files.
+The arguments are the same as for autotagging; the only difference is that the output is a JSON file instead of a PDF.
+The output JSON structure is as follows:
 
 ```json
 {
-    "content": "Template json content as json dictionary"
+    "content": "Template JSON content as JSON dictionary"
 }
 ```
 
-If you want to use it in PDFix Desktop you need to extract template_json_content into new JSON file.
+Template JSON can be extracted from this file for use in PDFix Desktop.
 
-So for example we will change:
+Example:
+To create a command for template creation with similar arguments as for tagging::
 
-- Your output PDF is: `/home/out/template.json`
+Arguments:
+- Input PDF document is: `/home/pdfs_in/document.pdf`
+- Output PDF document is: `/home/out/template.json`
+- Zoom level is: `3.0` (three times the original)
+- The threshold for text detection: `60%`
 
-And the command will look like:
+Result:
 
 ```bash
 docker run --rm -v /home/pdfs_in:/data_in -v /home/out:/data_out pdfix/pdf-accessibility-paddle:latest template -i /data_in/document.pdf -o /data_out/template.json --zoom 3.0 --threshold_text 0.6
 ```
 
-### Run docker container for formula description in MathML version 3
+### Run Docker Container for Formula Description in MathML Version 3
 
-Two actions are hidden here. First for getting mathml representation of 1 formula. Second for setting associate file for all formulas inside PDF document.
+This section includes two main actions:
+- Get MathML representation of one formula
+- Set associated files for all formulas inside PDF document
 
-#### Using JSON file for one formula
+#### Using JSON File for One Formula
 
-A JSON file needs to be prepared with base64-encoded data of the formula image.
+A JSON file containing base64-encoded image data of the formula must be prepared for this command.
 
-Input JSON file expected content:
+Input JSON file content:
 
 ```json
 {
@@ -158,7 +165,7 @@ Input JSON file expected content:
 }
 ```
 
-Output JSON file expected content:
+Output JSON file content:
 
 ```json
 {
@@ -167,50 +174,52 @@ Output JSON file expected content:
 ```
 
 Example:
+To create a command for processing a single formula:
 
-- Your input JSON file is: `/home/data/input.json`
-- Your output JSON file is: `/home/data/output.json`
+Arguments:
+- Input JSON file is: `/home/data/input.json`
+- Output JSON file is: `/home/data/output.json`
+
+Result:
 
 ```bash
 docker run --rm -v /home/data:/data pdfix/pdf-accessibility-paddle:latest formula -i /data/input.json -o /data/output.json
 ```
 
-#### Using PDF file for all formulas inside PDF
+#### Using Tagged PDF Document to Process All Formulas
 
-In case during autotagging formulas processing was turned off, you can use this to postprocess formulas using Paddle Formula Model to create content for associate file for Formula tag.
-PDF needs to be tagged as only Formula tags are processed by this command.
+In case formulas processing was disabled during autotagging, use this subcommand to postprocess formulas using the `Paddle Formula Model` and generate content for the `associated file` of each `Formula tag`.
+The PDF document must be tagged, as only `Formula tags` are processed by this command.
 
 Example:
+To create a command for processing all formulas in PDF document:
 
-- Your input PDF document is: `/home/pdfs_in/document.pdf`
-- Your output PDF document is: `/home/pdfs_out/tagged.pdf`
+Arguments:
+- Input PDF document is: `/home/pdfs_in/document.pdf`
+- Output PDF document is: `/home/pdfs_out/tagged.pdf`
+
+Result:
 
 ```bash
 docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out pdfix/pdf-accessibility-paddle:latest formula_pdf --name $LICENSE_NAME --key $LICENSE_KEY -i /data_in/document.pdf -o /data_out/tagged.pdf
 ```
 
-These arguments are for an account-based PDFix license.
-```bash
---name ${LICENSE_NAME} --key ${LICENSE_KEY}
-```
-Contact support for more information.
-
 ### Exporting PDFix Configuration for Integration
 
-To export the configuration JSON file, use the following command:
+Command for exporting the configuration JSON file:
 
 ```bash
 docker run --rm -v $(pwd):/data -w /data pdfix/pdf-accessibility-paddle:latest config -o config.json
 ```
 
-## License & libraries used
+## License & Libraries Used
 
 - PDFix SDK - https://pdfix.net/terms
 - PaddleX - https://paddlepaddle.github.io/PaddleX
 
-The trial version of the PDFix SDK may apply a watermark on the page and redact random parts of the PDF.
+The trial version of the PDFix SDK may apply watermarks and redact random content in the output PDF.
 
 ## Help & Support
 
 To obtain a PDFix SDK license or report an issue, please contact us at support@pdfix.net.
-For more information visit https://pdfix.net
+For more information, visit https://pdfix.net

@@ -78,22 +78,22 @@ def set_arguments(
     for name in names:
         match name:
             case "input":
-                parser.add_argument("--input", "-i", type=str, required=True, help=f"The input {input_file_type} file")
+                parser.add_argument("--input", "-i", type=str, required=True, help=f"The input {input_file_type} file.")
             case "key":
-                parser.add_argument("--key", type=str, help="PDFix license key")
+                parser.add_argument("--key", type=str, help="PDFix license key.")
             case "model":
                 parser.add_argument(
                     "--model",
                     type=str,
                     choices=["PP-DocLayout-L", "RT-DETR-H_layout_17cls"],
                     default="PP-DocLayout-L",
-                    help="Choose which paddle model to use: PP-DocLayout-L or RT-DETR-H_layout_17cls",
+                    help="Choose which paddle model to use: PP-DocLayout-L or RT-DETR-H_layout_17cls.",
                 )
             case "name":
-                parser.add_argument("--name", type=str, help="PDFix license name")
+                parser.add_argument("--name", type=str, help="PDFix license name.")
             case "output":
                 parser.add_argument(
-                    "--output", "-o", type=str, required=required_output, help=f"The output {output_file_type} file"
+                    "--output", "-o", type=str, required=required_output, help=f"The output {output_file_type} file."
                 )
             case "process_formula":
                 parser.add_argument(
@@ -272,7 +272,7 @@ def set_arguments(
                 )
             case "zoom":
                 parser.add_argument(
-                    "--zoom", type=float, default=2.0, help="Zoom level for the PDF page rendering (default: 2.0)"
+                    "--zoom", type=float, default=2.0, help="Zoom level for the PDF page rendering (default: 2.0)."
                 )
 
 
