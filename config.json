@@ -3,8 +3,8 @@
   "version": "v0.0.0",
   "actions": [
     {
-      "title": "Autotag Paddle",
-      "name": "autotag_paddle",
+      "title": "AutoTag Paddle",
+      "name": "pdfix-autotag_paddle",
       "desc": "Automatically tags PDF using Paddle and PDFix SDK",
       "version": "v0.0.0",
       "icon": "paddle_autotag",
@@ -228,7 +228,7 @@
     },
     {
       "title": "Generate MathML Paddle",
-      "name": "generate_mathml_paddle_json",
+      "name": "pdfix-generate_mathml_paddle_json",
       "desc": "Automatically generates associate file for provided formula using Paddle",
       "icon": "paddle_formula",
       "version": "v0.0.0",
@@ -256,7 +256,7 @@
     },
     {
       "title": "Create Template Paddle",
-      "name": "create_template_paddle",
+      "name": "pdfix-create_template_paddle",
       "desc": "Automatically creates template json for PDFix SDK using Paddle",
       "version": "v0.0.0",
       "subtype": "template",
