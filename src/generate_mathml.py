@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 
 from pdfixsdk import (
     GetPdfix,
@@ -100,8 +99,6 @@ class GenerateMathmlsInPdf:
         """
         Goes through PDF document and for each formula tries to set associate file with MathML.
         """
-        id: str = Path(self.input_path_str).stem
-
         pdfix = GetPdfix()
         if pdfix is None:
             raise Exception("Pdfix Initialization failed")
