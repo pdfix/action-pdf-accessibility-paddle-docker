@@ -27,7 +27,7 @@ def str2bool(value: Any) -> bool:
     elif value.lower() in ("no", "false", "f", "0"):
         return False
     else:
-        raise argparse.ArgumentTypeError("Boolean value expected.")
+        raise ValueError("Boolean value expected.")
 
 
 def clamp(value: float, min_value: float, max_value: float) -> float:

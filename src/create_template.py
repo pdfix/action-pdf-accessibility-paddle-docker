@@ -66,7 +66,7 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         # Open the document
         doc = pdfix.OpenDoc(self.input_path_str, "")
         if doc is None:
-            raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
+            raise PdfixException(pdfix)
 
         # Process images of each page
         num_pages = doc.GetNumPages()

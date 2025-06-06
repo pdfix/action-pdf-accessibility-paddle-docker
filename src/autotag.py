@@ -78,7 +78,7 @@ class AutotagUsingPaddleXRecognition:
         # Open the document
         doc = pdfix.OpenDoc(self.input_path_str, "")
         if doc is None:
-            raise Exception(f"Unable to open PDF : {str(pdfix.GetError())} [{pdfix.GetErrorType()}]")
+            raise PdfixException(pdfix, "Unable to open PDF")
 
         # Process images of each page
         num_pages = doc.GetNumPages()
@@ -129,7 +129,7 @@ class AutotagUsingPaddleXRecognition:
 
         # Save document
         if not doc.Save(self.output_path_str, kSaveFull):
-            raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
+            raise PdfixException(pdfix)
 
     def _process_pdf_file_page(
         self,
@@ -197,20 +197,20 @@ class AutotagUsingPaddleXRecognition:
         try:
             raw_data, raw_data_size = json_to_raw_data(template_json_dict)
             if not memory_stream.Write(0, raw_data, raw_data_size):
-                raise Exception(pdfix.GetError())
+                raise PdfixException(pdfix)
 
             doc_template = doc.GetTemplate()
             if not doc_template.LoadFromStream(memory_stream, kDataFormatJson):
-                raise Exception(f"Unable to open pdf : {pdfix.GetError()}")
-        except Exception as e:
-            raise PdfixException(pdfix, f"Unable to load template json for tagging: {e}")
+                raise PdfixException("Unable save template into document")
+        except Exception:
+            raise
         finally:
             memory_stream.Destroy()
 
         # Autotag document
         tagsParams = PdfTagsParams()
         if not doc.AddTags(tagsParams):
-            raise Exception(pdfix.GetError())
+            raise PdfixException(pdfix)
 
     def _add_afs_for_formulas(self, pdfix: Pdfix, doc: PdfDoc, paddlex: PaddleXEngine, formulas: list) -> None:
         """
@@ -224,7 +224,7 @@ class AutotagUsingPaddleXRecognition:
         """
         struct_tree = doc.GetStructTree()
         if struct_tree is None:
-            raise Exception(f"PDF has no structure tree : {str(pdfix.GetError())} [{pdfix.GetErrorType()}]")
+            raise PdfixException(pdfix, "PDF has no structure tree")
 
         child_element = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
         items = browse_tags_recursive(child_element, "Formula")

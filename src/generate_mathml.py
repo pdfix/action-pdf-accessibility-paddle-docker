@@ -11,6 +11,7 @@ from pdfixsdk import (
 from tqdm import tqdm
 
 from ai import PaddleXEngine
+from exceptions import PdfixException
 from page_renderer import convert_base64_image_to_matlike_image, render_element_to_image
 from utils_sdk import authorize_sdk, browse_tags_recursive, set_associated_file_math_ml
 
@@ -109,14 +110,14 @@ class GenerateMathmlsInPdf:
         # Open the document
         doc = pdfix.OpenDoc(self.input_path_str, "")
         if doc is None:
-            raise Exception(f"Unable to open PDF : {str(pdfix.GetError())} [{pdfix.GetErrorType()}]")
+            raise PdfixException(pdfix, "Unable to open PDF")
 
         ai = PaddleXEngine()
 
         # Get Root Tag element
         struct_tree = doc.GetStructTree()
         if struct_tree is None:
-            raise Exception(f"PDF has no structure tree : {str(pdfix.GetError())}")
+            raise PdfixException(pdfix, "PDF has no structure tree")
 
         child_element = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
 
@@ -131,7 +132,7 @@ class GenerateMathmlsInPdf:
 
         # Save document
         if not doc.Save(self.output_path_str, kSaveFull):
-            raise RuntimeError(f"{pdfix.GetError()} [{pdfix.GetErrorType()}]")
+            raise PdfixException(pdfix)
 
     def _process_element(self, pdfix: Pdfix, doc: PdfDoc, element: PdsStructElement, ai: PaddleXEngine) -> None:
         """
