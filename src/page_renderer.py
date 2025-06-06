@@ -4,6 +4,7 @@ import tempfile
 import cv2
 import numpy as np
 from pdfixsdk import (
+    PdfDevRect,
     PdfDoc,
     PdfImageParams,
     Pdfix,
@@ -11,6 +12,7 @@ from pdfixsdk import (
     PdfPageRenderParams,
     PdfPageView,
     PdfRect,
+    PsFileStream,
     kImageDIBFormatArgb,
     kImageFormatJpg,
     kPsTruncate,
@@ -52,9 +54,11 @@ def create_image_from_pdf_page(pdfix: Pdfix, pdf_page: PdfPage, page_view: PdfPa
         if not pdf_page.DrawContent(render_params):
             raise PdfixException(pdfix, "Unable to draw the content")
 
-        # Save the rendered image to a temporary file in JPG format
+        # Save the renderred image to a temporary file in JPG format
         with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
             file_stream = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
+            if file_stream is None:
+                raise PdfixException(pdfix, "Unable to create file stream")
 
             try:
                 # Set image parameters (format and quality)
@@ -65,6 +69,7 @@ def create_image_from_pdf_page(pdfix: Pdfix, pdf_page: PdfPage, page_view: PdfPa
                 # Save the image to the file stream
                 if not page_image.SaveToStream(file_stream, image_params):
                     raise PdfixException(pdfix, "Unable to save the image to the stream")
+
             except Exception:
                 raise
             finally:
@@ -131,13 +136,18 @@ def render_element_to_image(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfR
     Returns:
         The rendered element as MatLike object.
     """
-    page = doc.AcquirePage(page_num)
+    page: PdfPage = doc.AcquirePage(page_num)
+    if page is None:
+        raise PdfixException(pdfix, "Unable to acquire the page")
+
     try:
-        page_view = page.AcquirePageView(zoom, kRotate0)
+        page_view: PdfPageView = page.AcquirePageView(zoom, kRotate0)
+        if page_view is None:
+            raise PdfixException(pdfix, "Unable to acquire page view")
 
         try:
             # Convert PDF Rect to Image Rect
-            rect = page_view.RectToDevice(bbox)
+            rect: PdfDevRect = page_view.RectToDevice(bbox)
 
             # Set up rendering parameters
             render_parameters = PdfPageRenderParams()
@@ -148,13 +158,18 @@ def render_element_to_image(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfR
                 rect.bottom - rect.top,
                 kImageDIBFormatArgb,
             )
+            if render_parameters.image is None:
+                raise PdfixException(pdfix, "Unable to create the image")
 
             try:
                 # Render the page element content onto the image
-                page.DrawContent(render_parameters)
+                if not page.DrawContent(render_parameters):
+                    raise PdfixException(pdfix, "Unable to draw the content")
 
                 with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-                    file_stream = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
+                    file_stream: PsFileStream = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
+                    if file_stream is None:
+                        raise PdfixException(pdfix, "Unable to create file stream")
 
                     try:
                         # Set image parameters (format and quality)
@@ -165,6 +180,7 @@ def render_element_to_image(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfR
                         # Save the image to the file stream
                         if not render_parameters.image.SaveToStream(file_stream, image_params):
                             raise PdfixException(pdfix, "Unable to save the image to the stream")
+
                     except Exception:
                         raise
                     finally:

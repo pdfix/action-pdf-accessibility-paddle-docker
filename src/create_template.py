@@ -5,6 +5,7 @@ from pdfixsdk import (
     GetPdfix,
     Pdfix,
     PdfPage,
+    PdfPageView,
     kRotate0,
 )
 from tqdm import tqdm
@@ -66,7 +67,7 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         # Open the document
         doc = pdfix.OpenDoc(self.input_path_str, "")
         if doc is None:
-            raise PdfixException(pdfix)
+            raise PdfixException(pdfix, "Unable to open PDF")
 
         # Process images of each page
         num_pages = doc.GetNumPages()
@@ -77,7 +78,7 @@ class CreateTemplateJsonUsingPaddleXRecognition:
 
         for page_index in range(0, num_pages):
             # Acquire the page
-            page = doc.AcquirePage(page_index)
+            page: PdfPage = doc.AcquirePage(page_index)
             if page is None:
                 raise PdfixException(pdfix, "Unable to acquire the page")
 
@@ -136,7 +137,9 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         page_number = page_index + 1
 
         # Define rotation for rendering the page
-        page_view = page.AcquirePageView(self.zoom, kRotate0)
+        page_view: PdfPageView = page.AcquirePageView(self.zoom, kRotate0)
+        if page_view is None:
+            raise PdfixException(pdfix, "Unable to acquire page view")
 
         try:
             # Render the page as an image

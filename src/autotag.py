@@ -5,9 +5,12 @@ from pathlib import Path
 from pdfixsdk import (
     GetPdfix,
     PdfDoc,
+    PdfDocTemplate,
     Pdfix,
     PdfPage,
+    PdfPageView,
     PdfTagsParams,
+    PdsStructTree,
     kDataFormatJson,
     kRotate0,
     kSaveFull,
@@ -89,7 +92,7 @@ class AutotagUsingPaddleXRecognition:
 
         for page_index in range(0, num_pages):
             # Acquire the page
-            page = doc.AcquirePage(page_index)
+            page: PdfPage = doc.AcquirePage(page_index)
             if page is None:
                 raise PdfixException(pdfix, "Unable to acquire the page")
 
@@ -129,7 +132,7 @@ class AutotagUsingPaddleXRecognition:
 
         # Save document
         if not doc.Save(self.output_path_str, kSaveFull):
-            raise PdfixException(pdfix)
+            raise PdfixException(pdfix, "Unable to save PDF")
 
     def _process_pdf_file_page(
         self,
@@ -160,7 +163,9 @@ class AutotagUsingPaddleXRecognition:
         page_number = page_index + 1
 
         # Define rotation for rendering the page
-        page_view = page.AcquirePageView(self.zoom, kRotate0)
+        page_view: PdfPageView = page.AcquirePageView(self.zoom, kRotate0)
+        if page_view is None:
+            raise PdfixException(pdfix, "Unable to acquire page view")
 
         try:
             # Render the page as an image
@@ -189,19 +194,24 @@ class AutotagUsingPaddleXRecognition:
             pdfix (Pdfix): Pdfix SDK.
         """
         # Remove old structure and prepare an empty structure tree
-        doc.RemoveTags()
-        doc.RemoveStructTree()
+        if not doc.RemoveTags():
+            raise PdfixException(pdfix, "Failed to remove tags from doc")
+        if not doc.RemoveStructTree():
+            raise PdfixException(pdfix, "Failed to remove structure from doc")
 
         # Convert template json to memory stream
         memory_stream = pdfix.CreateMemStream()
+        if memory_stream is None:
+            raise PdfixException(pdfix, "Unable to create memory stream")
+
         try:
             raw_data, raw_data_size = json_to_raw_data(template_json_dict)
             if not memory_stream.Write(0, raw_data, raw_data_size):
-                raise PdfixException(pdfix)
+                raise PdfixException(pdfix, "Unable to write template data into memory")
 
-            doc_template = doc.GetTemplate()
+            doc_template: PdfDocTemplate = doc.GetTemplate()
             if not doc_template.LoadFromStream(memory_stream, kDataFormatJson):
-                raise PdfixException("Unable save template into document")
+                raise PdfixException(pdfix, "Unable save template into document")
         except Exception:
             raise
         finally:
@@ -210,7 +220,7 @@ class AutotagUsingPaddleXRecognition:
         # Autotag document
         tagsParams = PdfTagsParams()
         if not doc.AddTags(tagsParams):
-            raise PdfixException(pdfix)
+            raise PdfixException(pdfix, "Failed to tag document")
 
     def _add_afs_for_formulas(self, pdfix: Pdfix, doc: PdfDoc, paddlex: PaddleXEngine, formulas: list) -> None:
         """
@@ -222,7 +232,7 @@ class AutotagUsingPaddleXRecognition:
             paddlex (PaddleXEngine): PaddleX engine instance for processing.
             formulas (list): List of formulas to process.
         """
-        struct_tree = doc.GetStructTree()
+        struct_tree: PdsStructTree = doc.GetStructTree()
         if struct_tree is None:
             raise PdfixException(pdfix, "PDF has no structure tree")
 

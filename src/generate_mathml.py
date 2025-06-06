@@ -6,6 +6,7 @@ from pdfixsdk import (
     Pdfix,
     PdfRect,
     PdsStructElement,
+    PdsStructTree,
     kSaveFull,
 )
 from tqdm import tqdm
@@ -115,7 +116,7 @@ class GenerateMathmlsInPdf:
         ai = PaddleXEngine()
 
         # Get Root Tag element
-        struct_tree = doc.GetStructTree()
+        struct_tree: PdsStructTree = doc.GetStructTree()
         if struct_tree is None:
             raise PdfixException(pdfix, "PDF has no structure tree")
 
@@ -132,7 +133,7 @@ class GenerateMathmlsInPdf:
 
         # Save document
         if not doc.Save(self.output_path_str, kSaveFull):
-            raise PdfixException(pdfix)
+            raise PdfixException(pdfix, "Unable to save PDF")
 
     def _process_element(self, pdfix: Pdfix, doc: PdfDoc, element: PdsStructElement, ai: PaddleXEngine) -> None:
         """
@@ -147,9 +148,9 @@ class GenerateMathmlsInPdf:
             ai (PaddleXEngine): Contains ai models and how to run them.
         """
         # For logging purposes
-        element_object_id = element.GetObject().GetId()
-        element_id = element.GetId()
-        element_type = element.GetType(False)
+        element_object_id: int = element.GetObject().GetId()
+        element_id: str = element.GetId()
+        element_type: str = element.GetType(False)
         log_id = f"{element_type} [obj: {element_object_id}, id: {element_id}]"
 
         # Get page number
