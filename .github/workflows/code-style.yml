@@ -1,5 +1,11 @@
 name: Code style
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - '**'         # Match pushes to any branch (even feat/feature)
+  pull_request:
+    branches:
+      - '**'         # Match PRs targeting any branch (even feat/feature)
 jobs:
   code-style:
     runs-on: ubuntu-latest
