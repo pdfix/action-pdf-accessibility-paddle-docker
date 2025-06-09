@@ -4,5 +4,7 @@ paddlepaddle==3.0.0
 paddlex==3.0.0rc1
 paddlex[ocr]==3.0.0rc1
 pdfix-sdk==8.5.3
+requests==2.32.3
 setuptools==80.0.0
 tqdm==4.67.1
+types-requests==2.32.0.20250515

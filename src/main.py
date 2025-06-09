@@ -8,6 +8,7 @@ from typing import Any
 from autotag import AutotagUsingPaddleXRecognition
 from create_template import CreateTemplateJsonUsingPaddleXRecognition
 from generate_mathml import GenerateMathmlFromImage, GenerateMathmlsInPdf
+from image_update import DockerImageContainerUpdateChecker
 
 
 def str2bool(value: Any) -> bool:
@@ -554,6 +555,10 @@ def main() -> None:
             sys.exit(0)
         print("Failed to parse arguments. Please check the usage and try again.", file=sys.stderr)
         sys.exit(e.code)
+
+    # Update of docker image checker
+    update_checker = DockerImageContainerUpdateChecker()
+    update_checker.check_for_image_updates()
 
     if hasattr(args, "func"):
         # Run subcommand

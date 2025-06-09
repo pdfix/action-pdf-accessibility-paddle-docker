@@ -1,11 +1,30 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode
+.idea/
+
+# Cached file for image update check
+.local_data.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
-.vscode
+*.py[cod]
+*$py.class
 
-build/
-dist/
+# Environments
+.env
+.venv
 env/
 venv/
-.env/
-output/
-models/
+ENV/
+env.bak/
+venv.bak/
+
+# Models
+models
+
+# Side products
+output
