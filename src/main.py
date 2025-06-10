@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import threading
 import traceback
 from pathlib import Path
 from typing import Any
@@ -556,11 +557,13 @@ def main() -> None:
         print("Failed to parse arguments. Please check the usage and try again.", file=sys.stderr)
         sys.exit(e.code)
 
-    # Update of docker image checker
-    update_checker = DockerImageContainerUpdateChecker()
-    update_checker.check_for_image_updates()
-
     if hasattr(args, "func"):
+        # Check for updates only when help is not checked
+        update_checker = DockerImageContainerUpdateChecker()
+        # Check it in separate thread not to be delayed when there is slow or no internet connection
+        update_thread = threading.Thread(target=update_checker.check_for_image_updates)
+        update_thread.start()
+
         # Run subcommand
         try:
             args.func(args)
@@ -568,6 +571,9 @@ def main() -> None:
             print(traceback.format_exc(), file=sys.stderr)
             print(f"Failed to run the program: {e}", file=sys.stderr)
             sys.exit(1)
+        finally:
+            # Make sure to let update thread finish before exiting
+            update_thread.join()
     else:
         parser.print_help()
 
