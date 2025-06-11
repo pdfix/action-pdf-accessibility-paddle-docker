@@ -517,10 +517,10 @@ def main() -> None:
     template_subparser.set_defaults(func=run_template_subcommand)
 
     # MathML subparser
-    mathml_subparser = subparsers.add_parser(
-        "mathml",
-        help="Generates math_ml representation of formula. For PDF -> PDF mode it is saved as associate file. For IMG -> XML mode it is saved as XML file.",
-    )
+    mathml_help = "Generates math_ml representation of formula."
+    mathml_help += " For PDF -> PDF mode it is saved as associate file."
+    mathml_help += " For IMG -> XML mode it is saved as XML file."
+    mathml_subparser = subparsers.add_parser("mathml", help=mathml_help)
     set_arguments(mathml_subparser, ["name", "key", "input", "output"], True, "PDF or IMG", "PDF or XML")
     mathml_subparser.set_defaults(func=run_mathml_subcommand)
 
