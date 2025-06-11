@@ -167,7 +167,5 @@ class GenerateMathmlInPdf:
         # Recognize formula
         mathml_formula = ai.process_formula_image_with_ai(image)
 
-        print(f"Formula in [{log_id}]:\n    {mathml_formula}")
-
         # Set AF
         set_associated_file_math_ml(pdfix, element, mathml_formula, ai.MATH_ML_VERSION)
