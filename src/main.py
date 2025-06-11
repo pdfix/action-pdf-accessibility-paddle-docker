@@ -4,11 +4,11 @@ import sys
 import threading
 import traceback
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from autotag import AutotagUsingPaddleXRecognition
 from create_template import CreateTemplateJsonUsingPaddleXRecognition
-from generate_mathml import GenerateMathmlFromImage, GenerateMathmlsInPdf
+from generate_mathml import GenerateMathmlFromImage, GenerateMathmlInPdf
 from image_update import DockerImageContainerUpdateChecker
 
 
@@ -316,8 +316,8 @@ def run_autotag_subcommand(args) -> None:
 
 
 def autotagging_pdf(
-    license_name: str,
-    license_key: str,
+    license_name: Optional[str],
+    license_key: Optional[str],
     input_path: str,
     output_path: str,
     model: str,
@@ -330,8 +330,8 @@ def autotagging_pdf(
     Autotagging PDF document with provided arguments
 
     Args:
-        license_name (str): Name used in authorization in PDFix-SDK.
-        license_key (str): Key used in authorization in PDFix-SDK.
+        license_name (Optional[str]): Name used in authorization in PDFix-SDK.
+        license_key (Optional[str]): Key used in authorization in PDFix-SDK.
         input_path (str): Path to PDF document.
         output_path (str): Path to PDF document.
         model (str): Paddle layout model.
@@ -352,47 +352,6 @@ def autotagging_pdf(
         raise Exception("Input and output file must be PDF documents")
 
 
-def run_formula_subcommand(args) -> None:
-    describing_formula(args.input, args.output)
-
-
-def describing_formula(input_path: str, output_path: str) -> None:
-    """
-    Taking input and output arguments and passing them to formula description
-    that uses Paddle Engine to describe what it sees.
-
-    Args:
-        input_path (str): Path to JSON file.
-        output_path (str): Path to JSON file.
-    """
-    if input_path.lower().endswith(".json") and output_path.lower().endswith(".json"):
-        ai = GenerateMathmlFromImage(input_path, output_path)
-        ai.process_image()
-    else:
-        raise Exception("Input and output file must be JSON files")
-
-
-def run_formula_pdf_subcommand(args) -> None:
-    pdf_processing_formulas(args.name, args.key, args.input, args.output)
-
-
-def pdf_processing_formulas(license_name: str, license_key: str, input_path: str, output_path: str) -> None:
-    """
-    Processing all formulas in PDF document and adding Associate Files to them.
-
-    Args:
-        license_name (str): Name used in authorization in PDFix-SDK.
-        license_key (str): Key used in authorization in PDFix-SDK.
-        input_path (str): Path to PDF document.
-        output_path (str): Path to PDF document.
-    """
-    if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
-        generateMathml = GenerateMathmlsInPdf(license_name, license_key, input_path, output_path)
-        generateMathml.process_file()
-    else:
-        raise Exception("Input and output file must be PDF documents")
-
-
 def run_template_subcommand(args) -> None:
     thresholds = create_threshold_dictionary(args)
     create_template_json(
@@ -401,8 +360,8 @@ def run_template_subcommand(args) -> None:
 
 
 def create_template_json(
-    license_name: str,
-    license_key: str,
+    license_name: Optional[str],
+    license_key: Optional[str],
     input_path: str,
     output_path: str,
     model: str,
@@ -414,8 +373,8 @@ def create_template_json(
     Creating template json for PDF document using provided arguments
 
     Args:
-        license_name (str): Name used in authorization in PDFix-SDK.
-        license_key (str): Key used in authorization in PDFix-SDK.
+        license_name (Optional[str]): Name used in authorization in PDFix-SDK.
+        license_key (Optional[str]): Key used in authorization in PDFix-SDK.
         input_path (str): Path to PDF document.
         output_path (str): Path to JSON file.
         model (str): Paddle layout model.
@@ -433,6 +392,32 @@ def create_template_json(
         template_creator.process_file()
     else:
         raise Exception("Input file must be PDF and output file must be JSON")
+
+
+def run_mathml_subcommand(args) -> None:
+    formula_to_mathml(args.name, args.key, args.input, args.output)
+
+
+def formula_to_mathml(
+    license_name: Optional[str], license_key: Optional[str], input_path: str, output_path: str
+) -> None:
+    """
+    Processing all formulas in PDF document and adding Associate Files to them.
+
+    Args:
+        license_name (Optional[str]): Name used in authorization in PDFix-SDK.
+        license_key (Optional[str]): Key used in authorization in PDFix-SDK.
+        input_path (str): Path to PDF document.
+        output_path (str): Path to PDF document.
+    """
+    if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
+        generateMathml = GenerateMathmlInPdf(license_name, license_key, input_path, output_path)
+        generateMathml.process_file()
+    elif input_path.lower().endswith(".jpg") and output_path.lower().endswith(".xml"):  # TODO all img formats
+        ai = GenerateMathmlFromImage(input_path, output_path)
+        ai.process_image()
+    else:
+        raise Exception('See "mathml --help" for allowed file combinations')
 
 
 def create_threshold_dictionary(args) -> dict:
@@ -522,22 +507,6 @@ def main() -> None:
     set_arguments(autotag_subparser, tagging_arguments + threshold_arguments, True, "PDF", "PDF")
     autotag_subparser.set_defaults(func=run_autotag_subcommand)
 
-    # Formula subparser
-    formula_subparser = subparsers.add_parser(
-        "formula",
-        help="Generates math_ml associate file for formula using Paddle Engine",
-    )
-    set_arguments(formula_subparser, ["input", "output"], True, "JSON", "JSON")
-    formula_subparser.set_defaults(func=run_formula_subcommand)
-
-    # Formula pdf subparser
-    formula_pdf_subparser = subparsers.add_parser(
-        "formula_pdf",
-        help="Generates math_ml associate files for all formulas in PDF using Paddle Engine",
-    )
-    set_arguments(formula_pdf_subparser, ["name", "key", "input", "output"], True, "PDF", "PDF")
-    formula_pdf_subparser.set_defaults(func=run_formula_pdf_subcommand)
-
     # Template subparser
     template_subparser = subparsers.add_parser(
         "template",
@@ -546,6 +515,14 @@ def main() -> None:
     template_arguments = ["name", "key", "input", "output", "model", "zoom", "process_table"]
     set_arguments(template_subparser, template_arguments + threshold_arguments, True, "PDF", "JSON")
     template_subparser.set_defaults(func=run_template_subcommand)
+
+    # MathML subparser
+    mathml_subparser = subparsers.add_parser(
+        "mathml",
+        help="Generates math_ml associate file for formula. Either works in PDF -> PDF mode or in IMG -> XML mode.",
+    )
+    set_arguments(mathml_subparser, ["name", "key", "input", "output"], True, "PDF or IMG", "PDF or XML")
+    mathml_subparser.set_defaults(func=run_mathml_subcommand)
 
     # Parse arguments
     try:

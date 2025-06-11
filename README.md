@@ -10,8 +10,8 @@ Docker-based autotagging of PDF documents using PaddleX and PDFix SDK.
   - [Run a Docker Container ](#run-docker-container)
     - [Run Docker Container for Autotagging](#run-docker-container-for-autotagging)
     - [Run Docker Container for Template JSON Creation](#run-docker-container-for-template-json-creation)
-    - [Run Docker Container for Formula Description in MathML Version 3](#run-docker-container-for-formula-description-in-mathml-version-three)
-      - [Using JSON File for One Formula](#using-json-file-for-one-formula)
+    - [Run Docker Container for MathML Version 3 Description of Formula](#run-docker-container-for-mathml-version-three-description-of-formula)
+      - [Using Image File for One Formula](#using-image-file-for-one-formula)
       - [Using Tagged PDF Document to Process All Formulas](#using-tagged-pdf-document-to-process-all-formulas)
     - [Exporting PDFix Configuration for Integration](#exporting-pdfix-configuration-for-integration)
   - [License \& Libraries Used](#license-and-libraries-used)
@@ -121,16 +121,7 @@ Contact support for more information.
 ### Run Docker Container for Template JSON Creation
 
 Formula processing is not supported in this mode because the template JSON does not support associated files.
-The arguments are the same as for autotagging; the only difference is that the output is a JSON file instead of a PDF.
-The output JSON structure is as follows:
-
-```json
-{
-    "content": "Template JSON content as JSON dictionary"
-}
-```
-
-Template JSON can be extracted from this file for use in PDFix Desktop.
+The arguments are the same as for autotagging; the only difference is that the output is a JSON file containing template for autotagging.
 
 Example:
 To create a command for template creation with similar arguments as for tagging::
@@ -147,43 +138,27 @@ Result:
 docker run --rm -v /home/pdfs_in:/data_in -v /home/out:/data_out pdfix/pdf-accessibility-paddle:latest template -i /data_in/document.pdf -o /data_out/template.json --zoom 3.0 --threshold_text 0.6
 ```
 
-### Run Docker Container for Formula Description in MathML Version 3
+### Run Docker Container for MathML Version 3 Description of Formula
 
 This section includes two main actions:
 - Get MathML representation of one formula
 - Set associated files for all formulas inside PDF document
 
-#### Using JSON File for One Formula
+#### Using Image File for One Formula
 
-A JSON file containing base64-encoded image data of the formula must be prepared for this command.
-
-Input JSON file content:
-
-```json
-{
-    "image": "<header>,<base64_encoded_image>"
-}
-```
-
-Output JSON file content:
-
-```json
-{
-    "content": "MathML-3 description of formula"
-}
-```
+As input it is expected to get image of formula. Output will be XML file containing MathML.
 
 Example:
 To create a command for processing a single formula:
 
 Arguments:
-- Input JSON file is: `/home/data/input.json`
-- Output JSON file is: `/home/data/output.json`
+- Input Image file is: `/home/data/input.jpg`
+- Output XML file is: `/home/data/output.xml`
 
 Result:
 
 ```bash
-docker run --rm -v /home/data:/data pdfix/pdf-accessibility-paddle:latest formula -i /data/input.json -o /data/output.json
+docker run --rm -v /home/data:/data pdfix/pdf-accessibility-paddle:latest mathml -i /data/input.jpg -o /data/output.xml
 ```
 
 #### Using Tagged PDF Document to Process All Formulas
@@ -201,7 +176,7 @@ Arguments:
 Result:
 
 ```bash
-docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out pdfix/pdf-accessibility-paddle:latest formula_pdf --name $LICENSE_NAME --key $LICENSE_KEY -i /data_in/document.pdf -o /data_out/tagged.pdf
+docker run --rm -v /home/pdfs_in:/data_in -v /home/pdfs_out:/data_out pdfix/pdf-accessibility-paddle:latest mathml --name $LICENSE_NAME --key $LICENSE_KEY -i /data_in/document.pdf -o /data_out/tagged.pdf
 ```
 
 ### Exporting PDFix Configuration for Integration

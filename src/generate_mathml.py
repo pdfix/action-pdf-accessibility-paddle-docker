@@ -1,5 +1,6 @@
-import json
+from typing import Optional
 
+import cv2
 from pdfixsdk import (
     GetPdfix,
     PdfDoc,
@@ -13,7 +14,7 @@ from tqdm import tqdm
 
 from ai import PaddleXEngine
 from exceptions import PdfixException
-from page_renderer import convert_base64_image_to_matlike_image, render_element_to_image
+from page_renderer import render_element_to_image
 from utils_sdk import authorize_sdk, browse_tags_recursive, set_associated_file_math_ml
 
 
@@ -27,50 +28,34 @@ class GenerateMathmlFromImage:
         """
         Initialize class for formula description.
 
-        The input JSON file should have the following structure:
-        {
-            "image": "<header>,<base64_encoded_image>"
-        }
-
-        The output JSON file will look like:
-        {
-            "content": "MathML ver. 3 description of formula"
-        }
-
         Args:
-            input_path (str): Path to the input JSON file.
-            output_path (str): Path to the output JSON file.
+            input_path (str): Path to the image (JPG) file.
+            output_path (str): Path to the mathml (XML) file.
         """
         self.input_path_str = input_path
         self.output_path_str = output_path
 
     def process_image(self) -> None:
         """
-        Processes a JSON file by extracting a base64-encoded image,
-        generating a response using Paddle, and saving the result to an output file.
+        Uses formula image file to generate LaTeX representation using Paddle, and converts it to MathML ver. 3 which
+        is saved to XML  output file.
 
         The function performs the following steps:
-        1. Reads the input JSON file.
-        2. Extracts the base64-encoded image.
-        3. Converts the image data
-        4. Passes the image to paddle engine (that uses formula model)
-        5. Converts response to MathML ver. 3
-        6. Saves the MathMl representation as a dictionary {"content": representation} in the output JSON file.
+        1. Reads the input image file.
+        2. Passes the image to paddle engine (that uses formula model)
+        3. Converts response to MathML ver. 3
+        4. Saves the MathMl in the output XML file.
         """
-        with open(self.input_path_str, "r", encoding="utf-8") as input_file:
-            data = json.load(input_file)
-
-        image = convert_base64_image_to_matlike_image(data["image"])
+        image = cv2.imread(self.input_path_str)
 
         ai = PaddleXEngine()
-        mathml_formula = ai.process_formula_image_with_ai(image)
-        content: dict = {"content": mathml_formula}
+        mathml_formula: str = ai.process_formula_image_with_ai(image)
 
         with open(self.output_path_str, "w", encoding="utf-8") as output_file:
-            json.dump(content, output_file)
+            output_file.write(mathml_formula)
 
 
-class GenerateMathmlsInPdf:
+class GenerateMathmlInPdf:
     """
     Class that takes care of adding associate file with MathML representation of formula to all formulas inside
     tagged PDF document using Paddle Model.
@@ -78,8 +63,8 @@ class GenerateMathmlsInPdf:
 
     def __init__(
         self,
-        license_name: str,
-        license_key: str,
+        license_name: Optional[str],
+        license_key: Optional[str],
         input_path: str,
         output_path: str,
     ) -> None:
@@ -87,10 +72,10 @@ class GenerateMathmlsInPdf:
         Initialize class for generating mathmls for formulas in pdf.
 
         Args:
-            license_name (string): Pdfix sdk license name (e-mail)
-            license_key (string): Pdfix sdk license key
-            input_path (string): Path to PDF document
-            output_path (string): Path where tagged PDF should be saved
+            license_name (Optional[str]): Pdfix sdk license name (e-mail)
+            license_key (striOptional[str]ng): Pdfix sdk license key
+            input_path (str): Path to PDF document
+            output_path (str): Path where tagged PDF should be saved
         """
         self.license_name = license_name
         self.license_key = license_key
