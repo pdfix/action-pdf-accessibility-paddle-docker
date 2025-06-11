@@ -493,7 +493,7 @@ def main() -> None:
     # Config subparser
     config_subparser = subparsers.add_parser(
         "config",
-        help="Extract config file for integration",
+        help="Extract config file for integration.",
     )
     set_arguments(config_subparser, ["output"], False, "JSON", "JSON")
     config_subparser.set_defaults(func=run_config_subcommand)
@@ -501,7 +501,7 @@ def main() -> None:
     # Tagging subparser
     autotag_subparser = subparsers.add_parser(
         "tag",
-        help="Run autotag PDF document",
+        help="Run AutoTag of PDF document.",
     )
     tagging_arguments = ["name", "key", "input", "output", "model", "zoom", "process_formula", "process_table"]
     set_arguments(autotag_subparser, tagging_arguments + threshold_arguments, True, "PDF", "PDF")
@@ -510,7 +510,7 @@ def main() -> None:
     # Template subparser
     template_subparser = subparsers.add_parser(
         "template",
-        help="Generates template JSON for autotagging",
+        help="Create layout template JSON that can be used with PDFix for autotagging PDF.",
     )
     template_arguments = ["name", "key", "input", "output", "model", "zoom", "process_table"]
     set_arguments(template_subparser, template_arguments + threshold_arguments, True, "PDF", "JSON")
@@ -519,7 +519,7 @@ def main() -> None:
     # MathML subparser
     mathml_subparser = subparsers.add_parser(
         "mathml",
-        help="Generates math_ml associate file for formula. Either works in PDF -> PDF mode or in IMG -> XML mode.",
+        help="Generates math_ml representation of formula. For PDF -> PDF mode it is saved as associate file. For IMG -> XML mode it is saved as XML file.",
     )
     set_arguments(mathml_subparser, ["name", "key", "input", "output"], True, "PDF or IMG", "PDF or XML")
     mathml_subparser.set_defaults(func=run_mathml_subcommand)

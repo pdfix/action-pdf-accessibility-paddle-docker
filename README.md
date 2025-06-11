@@ -26,6 +26,7 @@ To use this application, Docker must be installed on the system. If Docker is no
 
 ### Run Docker Container for Autotagging
 
+Automatically tags PDF using AI (Paddle layout recognition) and PDFix SDK (tagging PDF using template json created from recognised layout).
 All available arguments for autotagging:
 
 ```bash
@@ -120,6 +121,7 @@ Contact support for more information.
 
 ### Run Docker Container for Template JSON Creation
 
+Automatically creates layout template json for given PDF using AI (Paddle layout recognition).
 Formula processing is not supported in this mode because the template JSON does not support associated files.
 The arguments are the same as for autotagging; the only difference is that the output is a JSON file containing template for autotagging.
 
@@ -146,6 +148,7 @@ This section includes two main actions:
 
 #### Using Image File for One Formula
 
+Automatically generates MathML ver. 3 for provided formula in image using AI (Paddle formula model) and converted from LaTeX to MathML.
 As input it is expected to get image of formula. Output will be XML file containing MathML.
 
 Example:
@@ -163,6 +166,7 @@ docker run --rm -v /home/data:/data pdfix/pdf-accessibility-paddle:latest mathml
 
 #### Using Tagged PDF Document to Process All Formulas
 
+Automatically generates associate files for all formulas in PDF using AI (Paddle formula model) and converted from LaTeX to MathML.
 In case formulas processing was disabled during autotagging, use this subcommand to postprocess formulas using the `Paddle Formula Model` and generate content for the `associated file` of each `Formula tag`.
 The PDF document must be tagged, as only `Formula tags` are processed by this command.
 

@@ -3,9 +3,9 @@
   "version": "v0.0.0",
   "actions": [
     {
-      "title": "AutoTag PDF to PDF Paddle",
+      "title": "AutoTag (Paddle)",
       "name": "pdfix_autotag_pdf_to_pdf_paddle",
-      "desc": "Automatically tags PDF using Paddle and PDFix SDK",
+      "desc": "Automatically tags PDF using AI (Paddle layout recognition) and PDFix SDK (tagging PDF using template json created from recognised layout).",
       "version": "v0.0.0",
       "icon": "paddle_autotag",
       "category": "Accessibility",
@@ -227,11 +227,11 @@
       ]
     },
     {
-      "title": "Create Template PDF to JSON Paddle",
-      "name": "pdfix_create_template_pdf_to_json_paddle",
-      "desc": "Automatically creates template json for PDFix SDK using Paddle",
+      "title": "Create Layout Template JSON (Paddle)",
+      "name": "pdfix_create_layout_template_json_pdf_to_json_paddle",
+      "desc": "Automatically creates layout template json for given PDF using AI (Paddle layout recognition).",
       "version": "v0.0.0",
-      "subtype": "create_template_pdf_to_json",
+      "subtype": "create_layout_template_json_pdf_to_json",
       "icon": "paddle_autotag",
       "category": "Accessibility",
       "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest template --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_json}\" --model \"${model}\" --zoom \"${zoom}\" --process_table \"${process_table}\" --threshold_paragraph_title \"${threshold_paragraph_title}\" --threshold_image \"${threshold_image}\" --threshold_text \"${threshold_text}\" --threshold_number \"${threshold_number}\" --threshold_abstract \"${threshold_abstract}\" --threshold_content \"${threshold_content}\" --threshold_figure_title \"${threshold_figure_title}\" --threshold_formula \"${threshold_formula}\" --threshold_table \"${threshold_table}\" --threshold_table_title \"${threshold_table_title}\" --threshold_reference \"${threshold_reference}\" --threshold_doc_title \"${threshold_doc_title}\" --threshold_footnote \"${threshold_footnote}\" --threshold_header \"${threshold_header}\" --threshold_algorithm \"${threshold_algorithm}\" --threshold_footer \"${threshold_footer}\" --threshold_seal \"${threshold_seal}\" --threshold_chart_title \"${threshold_chart_title}\" --threshold_chart \"${threshold_chart}\" --threshold_formula_number \"${threshold_formula_number}\" --threshold_header_image \"${threshold_header_image}\" --threshold_footer_image \"${threshold_footer_image}\" --threshold_aside_text \"${threshold_aside_text}\"",
@@ -446,12 +446,12 @@
       ]
     },
     {
-      "title": "Generate MathML IMG to XML Paddle",
-      "name": "pdfix_generate_mathml_img_to_xml_paddle",
-      "desc": "Automatically generates associate file for provided formula using Paddle",
+      "title": "Generate MathML from Formula from Image to XML (Paddle)",
+      "name": "pdfix_generate_formula_mathml_from_image_to_xml_paddle",
+      "desc": "Automatically generates MathML ver. 3 for provided formula in image using AI (Paddle formula model) and converted from LaTeX to MathML.",
       "icon": "paddle_formula",
       "version": "v0.0.0",
-      "subtype": "generate_mathml_img_to_xml",
+      "subtype": "generate_formula_mathml_from_img_to_xml",
       "category": "Tags",
       "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest mathml -i \"/data/${input_json}\" -o \"/data/${output_xml}\"",
       "args": [
@@ -460,7 +460,7 @@
           "desc": "Input image file containing picture of formula",
           "flags": 2,
           "type": "file_path",
-          "ext": "jpg",
+          "ext": "img",
           "value": ""
         },
         {
@@ -474,9 +474,9 @@
       ]
     },
     {
-      "title": "Generate MathML PDF to PDF Paddle",
-      "name": "pdfix_generate_mathml_pdf_to_pdf_paddle",
-      "desc": "Automatically generates associate files for all formulas in PDF using Paddle",
+      "title": "Generate MathML from Formula (Paddle)",
+      "name": "pdfix_generate_formula_mathml_pdf_to_pdf_paddle",
+      "desc": "Automatically generates associate files for all formulas in PDF using AI (Paddle formula model) and converted from LaTeX to MathML.",
       "icon": "paddle_formula",
       "version": "v0.0.0",
       "category": "Tags",
