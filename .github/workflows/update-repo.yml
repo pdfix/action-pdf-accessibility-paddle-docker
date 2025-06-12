@@ -1,4 +1,4 @@
-name: Repo Test
+name: Update Repo Test
 on:
   push:
     branches:
