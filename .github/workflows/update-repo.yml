@@ -16,29 +16,30 @@ jobs:
       - name: Checkout current repository
         uses: actions/checkout@v4
 
-      # Step 2: List all files and folders in the current repository
-      - name: List files in the current repository
-        run: |
-          echo "Listing files in the current repository:"
-          ls -la
-
-      # Step 3: Create 'pdfix-version-updates' directory if it doesn't exist
+      # Step 2: Create 'pdfix-version-updates' directory if it doesn't exist
       - name: Create 'pdfix-version-updates' directory
-        run: mkdir -p ../pdfix-version-updates
+        run: mkdir -p pdfix-version-updates
 
-      # Step 4: Checkout the 'pdfix-version-updates' repository into the 'pdfix-version-updates' directory using the PAT
+      # Step 3: Checkout the 'pdfix-version-updates' repository into the 'pdfix-version-updates' directory using the PAT
       - name: Checkout 'pdfix-version-updates' repository
         uses: actions/checkout@v4
         with:
           repository: pdfix/pdfix-version-updates
-          path: ../pdfix-version-updates
+          path: pdfix-version-updates
           token: ${{ secrets.PAT_VERSIONS }}
-          ref: main 
+          ref: main
+
+      # Step 4: List all files and folders in the current repository
+      - name: List files in the current repository
+        run: |
+          cd pdfix-version-updates
+          echo "Listing files in the pdfix-version-updates repository:"
+          ls -la
 
       # Step 5: Update action in 'v1/versions.json'
       - name: Update 'v1/versions.json'
         run: |
-          cd ../pdfix-version-updates/v1
+          cd pdfix-version-updates/v1
           jq '(.["pdfix-actions"][] | select(.name == "pdfix/pdf-accessibility-paddle")) |= . + {"version": "${{ env.tag }}", "release_date": "$(date +%Y-%m-%d)"}' versions.json > tmp.json
           mv tmp.json versions.json
           cat versions.json
@@ -46,7 +47,7 @@ jobs:
       # Step 6: Commit action update
       - name: Commit and Push changes
         run: |
-          cd ../pdfix-version-updates
+          cd pdfix-version-updates
           git config user.name "PDFix Support"
           git config user.email "support@pdfix.net"
           git add v1/versions.json
@@ -57,7 +58,7 @@ jobs:
       # Step 8: Tag latest commit
       - name: Tag the commit
         run: |
-          cd ../pdfix-version-updates
+          cd pdfix-version-updates
           git pull
           # Check if HEAD already has a tag
           if git describe --exact-match --tags HEAD > /dev/null 2>&1; then
