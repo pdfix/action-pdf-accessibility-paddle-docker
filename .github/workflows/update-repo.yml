@@ -1,10 +1,10 @@
-name: Update Repo Test
+name: Update Repo
 on:
   push:
     branches:
       - '**'         # Match pushes to any branch (even feat/feature)
 jobs:
-  code-style:
+  repo-test:
     runs-on: ubuntu-latest
     steps:
       # Step 0: set env.tag for action to simulate real use
@@ -28,6 +28,7 @@ jobs:
           path: pdfix-version-updates
           token: ${{ secrets.PAT_VERSIONS }}
           ref: main
+          fetch-depth: 0 
 
       # Step 4: List all files and folders in the current repository
       - name: List files in the current repository
