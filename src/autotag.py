@@ -19,6 +19,7 @@ from pdfixsdk import (
 from tqdm import tqdm
 
 from ai import PaddleXEngine
+from constants import MATH_ML_VERSION
 from exceptions import PdfixException
 from page_renderer import create_image_from_pdf_page
 from template_json import TemplateJsonCreator
@@ -129,7 +130,7 @@ class AutotagUsingPaddleXRecognition:
         # Add Associate File (AF) for formulas to document
         if self.process_formula:
             formulas: list = template_json_creator.get_formulas()
-            self._add_afs_for_formulas(pdfix, doc, paddlex, formulas)
+            self._add_afs_for_formulas(pdfix, doc, formulas)
 
         # Save document
         if not doc.Save(self.output_path_str, kSaveFull):
@@ -223,14 +224,13 @@ class AutotagUsingPaddleXRecognition:
         if not doc.AddTags(tagsParams):
             raise PdfixException(pdfix, "Failed to tag document")
 
-    def _add_afs_for_formulas(self, pdfix: Pdfix, doc: PdfDoc, paddlex: PaddleXEngine, formulas: list) -> None:
+    def _add_afs_for_formulas(self, pdfix: Pdfix, doc: PdfDoc, formulas: list) -> None:
         """
         For each formula add associate file to document.
 
         Args:
             pdfix (Pdfix): PDFix SDK.
             doc (PdfDoc): Tagged PDF document.
-            paddlex (PaddleXEngine): PaddleX engine instance for processing.
             formulas (list): List of formulas to process.
         """
         struct_tree: PdsStructTree = doc.GetStructTree()
@@ -250,4 +250,4 @@ class AutotagUsingPaddleXRecognition:
                 # We don't have data for this formula "id"
                 continue
             formula = formulas.pop(index)
-            set_associated_file_math_ml(pdfix, formula_element, formula[1], paddlex.MATH_ML_VERSION)
+            set_associated_file_math_ml(pdfix, formula_element, formula[1], MATH_ML_VERSION)

@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 import sys
 import threading
 import traceback
@@ -7,6 +8,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from autotag import AutotagUsingPaddleXRecognition
+from constants import IMAGE_FILE_EXT_REGEX, SUPPORTED_IMAGE_EXT
 from create_template import CreateTemplateJsonUsingPaddleXRecognition
 from generate_mathml import GenerateMathmlFromImage, GenerateMathmlInPdf
 from image_update import DockerImageContainerUpdateChecker
@@ -413,7 +415,7 @@ def formula_to_mathml(
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
         generateMathml = GenerateMathmlInPdf(license_name, license_key, input_path, output_path)
         generateMathml.process_file()
-    elif input_path.lower().endswith(".jpg") and output_path.lower().endswith(".xml"):  # TODO all img formats
+    elif re.search(IMAGE_FILE_EXT_REGEX, input_path, re.IGNORECASE) and output_path.lower().endswith(".xml"):
         ai = GenerateMathmlFromImage(input_path, output_path)
         ai.process_image()
     else:
@@ -520,6 +522,7 @@ def main() -> None:
     mathml_help = "Generates math_ml representation of formula."
     mathml_help += " For PDF -> PDF mode it is saved as associate file."
     mathml_help += " For IMG -> XML mode it is saved as XML file."
+    mathml_help += f" Supported IMG files are: {SUPPORTED_IMAGE_EXT}."
     mathml_subparser = subparsers.add_parser("mathml", help=mathml_help)
     set_arguments(mathml_subparser, ["name", "key", "input", "output"], True, "PDF or IMG", "PDF or XML")
     mathml_subparser.set_defaults(func=run_mathml_subcommand)

@@ -16,9 +16,6 @@ class PaddleXEngine:
     Class that encapsulates all model predictions done to rendered PDF page.
     """
 
-    # Constant
-    MATH_ML_VERSION = "mathml-3"
-
     def __init__(
         self,
         model: str = "PP-DocLayout-L",

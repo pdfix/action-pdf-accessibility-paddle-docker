@@ -13,6 +13,7 @@ from pdfixsdk import (
 from tqdm import tqdm
 
 from ai import PaddleXEngine
+from constants import MATH_ML_VERSION
 from exceptions import PdfixException
 from page_renderer import render_element_to_image
 from utils_sdk import authorize_sdk, browse_tags_recursive, set_associated_file_math_ml
@@ -168,4 +169,4 @@ class GenerateMathmlInPdf:
         mathml_formula = ai.process_formula_image_with_ai(image)
 
         # Set AF
-        set_associated_file_math_ml(pdfix, element, mathml_formula, ai.MATH_ML_VERSION)
+        set_associated_file_math_ml(pdfix, element, mathml_formula, MATH_ML_VERSION)
