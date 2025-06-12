@@ -75,3 +75,53 @@ jobs:
       - name: Upload to FTP
         run: |
           curl -T config.json ftp.pdfix.net/update-service/v1/actions/${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}/config.json --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" --ftp-create-dirs
+
+      - name: Prepare versions repository
+        run: mkdir -p pdfix-version-updates
+
+      - name: Checkout versions
+        uses: actions/checkout@v4
+        with:
+          repository: pdfix/pdfix-version-updates
+          path: pdfix-version-updates
+          token: ${{ secrets.PAT_VERSIONS }}
+          ref: main
+          fetch-depth: 0
+
+      - name: Update action version and date
+        run: |
+          cd pdfix-version-updates/v1
+          TODAY=$(date +%Y-%m-%d)
+          jq '(.["pdfix-actions"][] | select(.name == "pdfix/pdf-accessibility-paddle")) |= . + {
+            "version": "${{ env.tag }}",
+            "release_date": "'"$TODAY"'"
+          }' versions.json > tmp.json
+          mv tmp.json versions.json
+          cat versions.json
+
+      - name: Commit and Push changes
+        run: |
+          cd pdfix-version-updates
+          git config user.name "PDFix Support"
+          git config user.email "support@pdfix.net"
+          git add v1/versions.json
+          git commit -m "pdfix/pdf-accessibility-paddle ${{ env.tag }}"
+          git push
+
+      - name: Tag latest commit with increment
+        run: |
+          cd pdfix-version-updates
+          git pull
+          if git describe --exact-match --tags HEAD > /dev/null 2>&1; then
+            echo "HEAD already has a tag — skipping tagging."
+          else
+            latest_tag=$(git tag -l "v*.*.*" | sort -V | tail -n 1)
+            echo "Latest tag is: $latest_tag"
+            version=${latest_tag#v}
+            IFS='.' read -r major minor patch <<< "$version"
+            patch=$((patch + 1))
+            new_tag="v$major.$minor.$patch"
+            git tag -a "$new_tag" -m "Release $new_tag"
+            git push origin "$new_tag"
+            echo "Tagged HEAD with: $new_tag"
+          fi
