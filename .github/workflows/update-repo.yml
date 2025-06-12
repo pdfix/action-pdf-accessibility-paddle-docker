@@ -1,4 +1,4 @@
-name: Code style
+name: Repo Test
 on:
   push:
     branches:
@@ -33,6 +33,7 @@ jobs:
           repository: pdfix/pdfix-version-updates
           path: pdfix-version-updates
           token: ${{ secrets.PAT_VERSIONS }}
+          ref: main 
 
       # Step 5: Update action in 'v1/versions.json'
       - name: Update 'v1/versions.json'
