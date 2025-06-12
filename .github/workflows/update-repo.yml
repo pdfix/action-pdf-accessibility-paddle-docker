@@ -41,7 +41,11 @@ jobs:
       - name: Update 'v1/versions.json'
         run: |
           cd pdfix-version-updates/v1
-          jq '(.["pdfix-actions"][] | select(.name == "pdfix/pdf-accessibility-paddle")) |= . + {"version": "${{ env.tag }}", "release_date": "$(date +%Y-%m-%d)"}' versions.json > tmp.json
+          TODAY=$(date +%Y-%m-%d)
+          jq '(.["pdfix-actions"][] | select(.name == "pdfix/pdf-accessibility-paddle")) |= . + {
+            "version": "${{ env.tag }}",
+            "release_date": "'"$TODAY"'"
+          }' versions.json > tmp.json
           mv tmp.json versions.json
           cat versions.json
 
@@ -52,7 +56,6 @@ jobs:
           git config user.name "PDFix Support"
           git config user.email "support@pdfix.net"
           git add v1/versions.json
-          echo "git commit -m "pdfix/pdf-accessibility-paddle ${{ env.tag }}"
           git commit -m "pdfix/pdf-accessibility-paddle ${{ env.tag }}"
           # git push
 
