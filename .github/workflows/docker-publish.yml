@@ -76,10 +76,10 @@ jobs:
         run: |
           curl -T config.json ftp.pdfix.net/update-service/v1/actions/${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}/config.json --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" --ftp-create-dirs
 
-      - name: Prepare versions repository
+      - name: Prepare directory for versions repository
         run: mkdir -p pdfix-version-updates
 
-      - name: Checkout versions
+      - name: Checkout versions repository
         uses: actions/checkout@v4
         with:
           repository: pdfix/pdfix-version-updates
@@ -88,7 +88,7 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Update action version and date
+      - name: Update action version and date in versions repository
         run: |
           cd pdfix-version-updates/v1
           TODAY=$(date +%Y-%m-%d)
@@ -99,7 +99,7 @@ jobs:
           mv tmp.json versions.json
           cat versions.json
 
-      - name: Commit and Push changes
+      - name: Commit and Push changes into versions repository
         run: |
           cd pdfix-version-updates
           git config user.name "PDFix Support"
@@ -108,7 +108,7 @@ jobs:
           git commit -m "pdfix/pdf-accessibility-paddle ${{ env.tag }}"
           git push
 
-      - name: Tag latest commit with increment
+      - name: Tag latest commit with increment in versions repository
         run: |
           cd pdfix-version-updates
           git pull
