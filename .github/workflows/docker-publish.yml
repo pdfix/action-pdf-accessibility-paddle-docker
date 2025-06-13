@@ -92,7 +92,7 @@ jobs:
         run: |
           cd pdfix-version-updates/v1
           TODAY=$(date +%Y-%m-%d)
-          jq '(.["pdfix-actions"][] | select(.name == "pdfix/pdf-accessibility-paddle")) |= . + {
+          jq --indent 4 '(.["pdfix-actions"][] | select(.name == "pdfix/pdf-accessibility-paddle")) |= . + {
             "version": "${{ env.tag }}",
             "release_date": "'"$TODAY"'"
           }' versions.json > tmp.json
