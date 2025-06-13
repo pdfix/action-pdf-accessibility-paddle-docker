@@ -4,8 +4,8 @@
   "actions": [
     {
       "title": "AutoTag (Paddle)",
-      "name": "pdfix_autotag_pdf_to_pdf_paddle",
-      "desc": "Automatically tags PDF using AI (Paddle layout recognition) and PDFix SDK (tagging PDF using template json created from recognised layout).",
+      "name": "pdfix_autotag_paddle",
+      "desc": "Automatically tags PDF using Paddle.",
       "version": "v0.0.0",
       "icon": "paddle_autotag",
       "category": "Accessibility",
@@ -228,8 +228,8 @@
     },
     {
       "title": "Create Layout Template JSON (Paddle)",
-      "name": "pdfix_create_layout_template_json_pdf_to_json_paddle",
-      "desc": "Automatically creates layout template json for given PDF using AI (Paddle layout recognition).",
+      "name": "pdfix_create_layout_template_json_paddle",
+      "desc": "Automatically creates layout template json using Paddle, saving it as JSON file.",
       "version": "v0.0.0",
       "subtype": "create_layout_template_json_pdf_to_json",
       "icon": "paddle_autotag",
@@ -446,9 +446,9 @@
       ]
     },
     {
-      "title": "Generate MathML from Formula from Image to XML (Paddle)",
+      "title": "Generate Formula MathML from Image to XML (Paddle)",
       "name": "pdfix_generate_formula_mathml_from_image_to_xml_paddle",
-      "desc": "Automatically generates MathML ver. 3 for provided formula in image using AI (Paddle formula model) and converted from LaTeX to MathML.",
+      "desc": "Automatically generates MathML from an image file using Paddle, saving it as an XML file.",
       "icon": "paddle_formula",
       "version": "v0.0.0",
       "subtype": "generate_formula_mathml_from_img_to_xml",
@@ -474,9 +474,9 @@
       ]
     },
     {
-      "title": "Generate MathML from Formula (Paddle)",
-      "name": "pdfix_generate_formula_mathml_pdf_to_pdf_paddle",
-      "desc": "Automatically generates associate files for all formulas in PDF using AI (Paddle formula model) and converted from LaTeX to MathML.",
+      "title": "Generate Formula MathML (Paddle)",
+      "name": "pdfix_generate_formula_mathml_paddle",
+      "desc": "Automatically generates MathML for Formula tags using Paddle, attaching it as an associated file to each tag.",
       "icon": "paddle_formula",
       "version": "v0.0.0",
       "category": "Tags",

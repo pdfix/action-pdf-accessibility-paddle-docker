@@ -512,17 +512,17 @@ def main() -> None:
     # Template subparser
     template_subparser = subparsers.add_parser(
         "template",
-        help="Create layout template JSON that can be used with PDFix for autotagging PDF.",
+        help="Create layout template JSON.",
     )
     template_arguments = ["name", "key", "input", "output", "model", "zoom", "process_table"]
     set_arguments(template_subparser, template_arguments + threshold_arguments, True, "PDF", "JSON")
     template_subparser.set_defaults(func=run_template_subcommand)
 
     # MathML subparser
-    mathml_help = "Generates math_ml representation of formula."
-    mathml_help += " For PDF -> PDF mode it is saved as associate file."
-    mathml_help += " For IMG -> XML mode it is saved as XML file."
-    mathml_help += f" Supported IMG files are: {SUPPORTED_IMAGE_EXT}."
+    mathml_help = "Generate MathML representation of formula. Support 2 modes."
+    mathml_help += " First mode takes PDF and processes all Formula tags."
+    mathml_help += " Second mode takes image and outputs XML file with MathML representation of formula in image."
+    mathml_help += f" Supported image files are: {SUPPORTED_IMAGE_EXT}."
     mathml_subparser = subparsers.add_parser("mathml", help=mathml_help)
     set_arguments(mathml_subparser, ["name", "key", "input", "output"], True, "PDF or IMG", "PDF or XML")
     mathml_subparser.set_defaults(func=run_mathml_subcommand)
