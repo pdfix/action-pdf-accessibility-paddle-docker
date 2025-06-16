@@ -114,9 +114,11 @@ Explanation:
 - Map local directories to the container using `-v` option: `-v /home/pdfs_in:/data_in`
 
 These arguments are for an account-based PDFix license.
+
 ```bash
 --name ${LICENSE_NAME} --key ${LICENSE_KEY}
 ```
+
 Contact support for more information.
 
 ### Run Docker Container for Template JSON Creation
