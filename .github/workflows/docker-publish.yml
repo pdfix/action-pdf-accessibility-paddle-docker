@@ -88,7 +88,18 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Check if app is in version history
+        id: check_version
+        run: |
+          if jq -e '.["pdfix-actions"][] | select(.name == "${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}")' pdfix-version-updates/v1/versions.json > /dev/null; then
+            echo "has_version_history=true" >> $GITHUB_OUTPUT
+          else
+            echo "App not found in version history. Skipping update steps."
+            echo "has_version_history=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Update action version and date in versions repository
+        if: steps.check_version.outputs.has_version_history == 'true'
         run: |
           cd pdfix-version-updates/v1
           TODAY=$(date +%Y-%m-%d)
@@ -100,6 +111,7 @@ jobs:
           cat versions.json
 
       - name: Commit and Push changes into versions repository
+        if: steps.check_version.outputs.has_version_history == 'true'
         run: |
           cd pdfix-version-updates
           git config user.name "PDFix Support"
@@ -109,6 +121,7 @@ jobs:
           git push
 
       - name: Tag latest commit with increment in versions repository
+        if: steps.check_version.outputs.has_version_history == 'true'
         run: |
           cd pdfix-version-updates
           git pull
