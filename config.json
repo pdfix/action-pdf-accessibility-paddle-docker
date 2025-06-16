@@ -453,14 +453,14 @@
       "version": "v0.0.0",
       "subtype": "generate_formula_mathml_img_to_xml",
       "category": "Tags",
-      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest mathml -i \"/data/${input_json}\" -o \"/data/${output_xml}\"",
+      "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest mathml -i \"/data/${input_jpg}\" -o \"/data/${output_xml}\"",
       "args": [
         {
-          "name": "input_img",
+          "name": "input_jpg",
           "desc": "Input image file containing picture of formula",
           "flags": 2,
           "type": "file_path",
-          "ext": "img",
+          "ext": "jpg",
           "value": ""
         },
         {
