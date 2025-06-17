@@ -103,7 +103,7 @@ class CreateTemplateJsonUsingPaddleXRecognition:
 
         # Create template json for whole document
         template_json_dict: dict = template_json_creator.create_json_dict_for_document(self.model, self.zoom)
-        output_data: dict = {"content": template_json_dict}
+        output_data: dict = template_json_dict
 
         # Save template json
         with open(self.output_path_str, "w") as file:
