@@ -34,14 +34,14 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         Initialize class for tagging pdf(s).
 
         Args:
-            license_name (Optional[str]): Pdfix sdk license name (e-mail)
-            license_key (Optional[str]): Pdfix sdk license key
-            input_path (str): Path to PDF document
-            output_path (str): Path where template JSON inside {"content": template_json} should be saved
-            model (str): Paddle model for layout recognition
-            zoom (float): Zoom level for rendering the page
-            process_table (bool): Whether to process tables
-            thresholds (dict): Thresholds for layout detection
+            license_name (Optional[str]): Pdfix sdk license name (e-mail).
+            license_key (Optional[str]): Pdfix sdk license key.
+            input_path (str): Path to PDF document.
+            output_path (str): Path where template JSON should be saved.
+            model (str): Paddle model for layout recognition.
+            zoom (float): Zoom level for rendering the page.
+            process_table (bool): Whether to process tables.
+            thresholds (dict): Thresholds for layout detection.
         """
         self.license_name = license_name
         self.license_key = license_key
