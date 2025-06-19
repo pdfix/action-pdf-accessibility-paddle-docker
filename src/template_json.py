@@ -46,7 +46,7 @@ class TemplateJsonCreator:
         """
         created_date = date.today().strftime("%Y-%m-%d")
         metadata: dict = {
-            "author": f"Autotag Paddle {self._get_current_version()}",
+            "author": f"AutoTag / Create Layout Template (Paddle) {self._get_current_version()}",
             "created": created_date,
             "modified": created_date,
             "notes": f"Created using PaddleX layout model: {model} and PDFix zoom: {zoom}",
@@ -77,7 +77,16 @@ class TemplateJsonCreator:
                 for coordinate conversion.
             zoom (float): Zoom level that page was rendered with.
         """
-        json_for_page = self._create_json_dict_for_page(results, page_number, page_view, zoom)
+        elements: list = self._create_json_for_elements(results, page_view, page_number)
+
+        json_for_page = {
+            "comment": f"Page {page_number}",
+            "elements": elements,
+            "query": {
+                "$and": [{"$page_num": page_number}],
+            },
+            "statement": "$if",
+        }
         self.template_json_pages.append(json_for_page)
 
     def _get_current_version(self) -> str:
@@ -95,34 +104,6 @@ class TemplateJsonCreator:
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"Error reading {self.CONFIG_FILE}: {e}", file=sys.stderr)
             return "unknown"
-
-    def _create_json_dict_for_page(self, results: dict, page_number: int, page_view: PdfPageView, zoom: float) -> dict:
-        """
-        Function that creates json template for one page.
-        It creates json for each page and saves it to list of pages.
-        It is used in create_json_dict_for_document.
-
-        Args:
-            results (dict): Dictionary of results from Paddle, where are
-                list of detected elements, ...
-            page_number (int): PDF file page number.
-            page_view (PdfPageView): The view of the PDF page used
-                for coordinate conversion.
-            zoom (float): Zoom level that page was rendered with.
-
-        Returns:
-            JSON template for one page.
-        """
-        elements: list = self._create_json_for_elements(results, page_view, page_number)
-
-        return {
-            "comment": f"Page {page_number}",
-            "elements": elements,
-            "query": {
-                "$and": [{"$page_num": page_number}],
-            },
-            "statement": "$if",
-        }
 
     def _generate_unique_id(self, page_number: int, type: int, coordinate: list) -> int:
         """
@@ -160,10 +141,8 @@ class TemplateJsonCreator:
         detected regions.
 
         Args:
-            results (dict): Dictionary of results from Paddle, where are
-                list of detected elements, ...
-            page_view (PdfPageView): The view of the PDF page used
-                for coordinate conversion.
+            results (dict): Dictionary of results from Paddle, where are list of detected elements, ...
+            page_view (PdfPageView): The view of the PDF page used for coordinate conversion.
             page_number (int): PDF file page number.
 
         Returns:

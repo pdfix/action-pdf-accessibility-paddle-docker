@@ -47,8 +47,8 @@ class AutotagUsingPaddleXRecognition:
         Initialize class for tagging pdf.
 
         Args:
-            license_name (Optional[str]): Pdfix sdk license name (e-mail).
-            license_key (Optional[str]): Pdfix sdk license key.
+            license_name (Optional[str]): Pdfix SDK license name (e-mail).
+            license_key (Optional[str]): Pdfix SDK license key.
             input_path (str): Path to PDF document.
             output_path (str): Path where tagged PDF should be saved.
             model (str): Paddle model for layout recognition.
@@ -164,7 +164,7 @@ class AutotagUsingPaddleXRecognition:
         """
         page_number = page_index + 1
 
-        # Define rotation for rendering the page
+        # Define zoom level and rotation for rendering the page
         page_view: PdfPageView = page.AcquirePageView(self.zoom, kRotate0)
         if page_view is None:
             raise PdfixException(pdfix, "Unable to acquire page view")
