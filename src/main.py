@@ -84,7 +84,7 @@ def set_arguments(
             case "input":
                 parser.add_argument("--input", "-i", type=str, required=True, help=f"The input {input_file_type} file.")
             case "key":
-                parser.add_argument("--key", type=str, help="PDFix license key.")
+                parser.add_argument("--key", type=str, default="", nargs="?", help="PDFix license key.")
             case "model":
                 parser.add_argument(
                     "--model",
@@ -94,7 +94,7 @@ def set_arguments(
                     help="Choose which paddle model to use: PP-DocLayout-L or RT-DETR-H_layout_17cls.",
                 )
             case "name":
-                parser.add_argument("--name", type=str, help="PDFix license name.")
+                parser.add_argument("--name", type=str, default="", nargs="?", help="PDFix license name.")
             case "output":
                 parser.add_argument(
                     "--output", "-o", type=str, required=required_output, help=f"The output {output_file_type} file."
