@@ -1,27 +1,8 @@
-# Use the official Debian slim image with python 3.12 as a base (paddlex does not work with python 3.13)
-FROM python:3.12-slim
-
-# Update system and Install python3
-RUN apt-get update && \
-    apt-get install -y \
-    python3-pip \
-    python3-venv \
-    python3-opencv \
-    ccache \
-    curl \
-    unzip \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Change working directory for install purposes
-WORKDIR /usr/paddlex/
+# Use cached image so build is faster
+FROM pdfix/pdf-accessibility-paddle-cache:v0.0.1
 
 
-# Create a virtual environment and install paddlex and dependencies
-ENV VIRTUAL_ENV=venv
-RUN python3.12 -m venv venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-COPY requirements.txt /usr/paddlex/
+# Lets install requirements that could have changed from last time we built the cached image
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 
