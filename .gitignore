@@ -23,6 +23,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# Testing folder
+.test/
+
 # Models
 models
 
