@@ -55,13 +55,48 @@ else
 fi
 
 info "Test #03: Run simple autotag with default parameters"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE tag -i example/air_quality.pdf -o $TEMPORARY_DIRECTORY/air_quality.pdf > /dev/null
-if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/air_quality.pdf" ]; then
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE tag -i example/air_quality.pdf -o $TEMPORARY_DIRECTORY/air_quality-tagged.pdf > /dev/null
+if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/air_quality-tagged.pdf" ]; then
     success "passed"
 else
     error "simple autotag failed on example/air_quality.pdf"
     EXIT_STATUS=1
 fi
+
+info "Test #04: Run simple create template with default parameters"
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE template -i example/air_quality.pdf -o $TEMPORARY_DIRECTORY/air_quality.json > /dev/null
+if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/air_quality.json" ]; then
+    success "passed"
+else
+    error "simple create template failed on example/air_quality.pdf"
+    EXIT_STATUS=1
+fi
+
+info "Test #05: Run mathml pdf->pdf"
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE mathml -i $TEMPORARY_DIRECTORY/air_quality-tagged.pdf -o $TEMPORARY_DIRECTORY/air_quality-mathml.pdf > /dev/null
+if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/air_quality-mathml.pdf" ]; then
+    success "passed"
+else
+    error "mathml pdf->pdf failed on $TEMPORARY_DIRECTORY/air_quality-tagged.pdf"
+    EXIT_STATUS=1
+fi
+
+info "Test #06: Run mathml img->xml"
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE mathml -i example/formula_example.jpg -o $TEMPORARY_DIRECTORY/formula_example.xml > /dev/null
+if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/formula_example.xml" ]; then
+    success "passed"
+else
+    error "mathml img->xml failed on example/formula_example.jpg"
+    EXIT_STATUS=1
+fi
+
+info "Cleaning up temporary files from tests"
+rm -f $TEMPORARY_DIRECTORY/config.json
+rm -f $TEMPORARY_DIRECTORY/air_quality-tagged.pdf
+rm -f $TEMPORARY_DIRECTORY/air_quality.json
+rm -f $TEMPORARY_DIRECTORY/air_quality-mathml.pdf
+rm -f $TEMPORARY_DIRECTORY/formula_example.xml
+rmdir $(pwd)/$TEMPORARY_DIRECTORY
 
 info "Removing testing docker image"
 docker rmi $DOCKER_IMAGE
