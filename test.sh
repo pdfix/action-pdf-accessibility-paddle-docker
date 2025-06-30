@@ -54,21 +54,21 @@ else
     EXIT_STATUS=1
 fi
 
-info "Test #03: Run simple autotag with default parameters"
+info "Test #03: Run autotag"
 docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE tag -i example/air_quality.pdf -o $TEMPORARY_DIRECTORY/air_quality-tagged.pdf > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/air_quality-tagged.pdf" ]; then
     success "passed"
 else
-    error "simple autotag failed on example/air_quality.pdf"
+    error "autotag failed on example/air_quality.pdf"
     EXIT_STATUS=1
 fi
 
-info "Test #04: Run simple create template with default parameters"
+info "Test #04: Run create template"
 docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE template -i example/air_quality.pdf -o $TEMPORARY_DIRECTORY/air_quality.json > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/air_quality.json" ]; then
     success "passed"
 else
-    error "simple create template failed on example/air_quality.pdf"
+    error "create template failed on example/air_quality.pdf"
     EXIT_STATUS=1
 fi
 
