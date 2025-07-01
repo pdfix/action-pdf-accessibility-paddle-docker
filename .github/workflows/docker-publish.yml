@@ -91,53 +91,5 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Check if app is in version history
-        id: check_version
-        run: |
-          if jq -e '.["pdfix-actions"][] | select(.name == "${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}")' pdfix-version-updates/v1/versions.json > /dev/null; then
-            echo "has_version_history=true" >> $GITHUB_OUTPUT
-          else
-            echo "App not found in version history. Skipping update steps."
-            echo "has_version_history=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Update action version and date in versions repository
-        if: steps.check_version.outputs.has_version_history == 'true'
-        run: |
-          cd pdfix-version-updates/v1
-          TODAY=$(date +%Y-%m-%d)
-          jq --indent 4 '(.["pdfix-actions"][] | select(.name == "${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}")) |= . + {
-            "version": "${{ env.tag }}",
-            "release_date": "'"$TODAY"'"
-          }' versions.json > tmp.json
-          mv tmp.json versions.json
-          cat versions.json
-
-      - name: Commit and Push changes into versions repository
-        if: steps.check_version.outputs.has_version_history == 'true'
-        run: |
-          cd pdfix-version-updates
-          git config user.name "PDFix Support"
-          git config user.email "support@pdfix.net"
-          git add v1/versions.json
-          git commit -m "${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }} ${{ env.tag }}"
-          git push
-
-      - name: Tag latest commit with increment in versions repository
-        if: steps.check_version.outputs.has_version_history == 'true'
-        run: |
-          cd pdfix-version-updates
-          git pull
-          if git describe --exact-match --tags HEAD > /dev/null 2>&1; then
-            echo "HEAD already has a tag — skipping tagging."
-          else
-            latest_tag=$(git tag -l "v*.*.*" | sort -V | tail -n 1)
-            echo "Latest tag is: $latest_tag"
-            version=${latest_tag#v}
-            IFS='.' read -r major minor patch <<< "$version"
-            patch=$((patch + 1))
-            new_tag="v$major.$minor.$patch"
-            git tag -a "$new_tag" -m "Release $new_tag"
-            git push origin "$new_tag"
-            echo "Tagged HEAD with: $new_tag"
-          fi
+      - name: Update versions repository with new version
+        run: chmod +x update_versions_repository.sh && ./update_versions_repository.sh ${{ env.DOCKER_HUB_NAMESPACE }} ${{ env.DOCKER_HUB_REPOSITORY }} ${{ env.tag }}
