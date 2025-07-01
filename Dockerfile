@@ -37,8 +37,4 @@ COPY config.json /usr/paddlex/
 COPY src/ /usr/paddlex/src/
 
 
-# Change working directory for running purposes
-WORKDIR /data
-
-
 ENTRYPOINT ["/usr/paddlex/venv/bin/python3", "/usr/paddlex/src/main.py"]
