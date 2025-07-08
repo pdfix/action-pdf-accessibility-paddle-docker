@@ -54,7 +54,15 @@ class TemplateJsonCreator:
             # we are creating first one always so it is always "1"
             "version": "1",
         }
-        page_map: list = [{"graphic_table_detect": "0", "statement": "$if", "text_table_detect": "0"}]
+        page_map: list = [
+            {
+                "graphic_table_detect": "0",
+                "statement": "$if",
+                "text_table_detect": "0",
+                "label_image_detect": "0",
+                "label_word_detect": "0",
+            }
+        ]
 
         return {
             "metadata": metadata,
@@ -170,42 +178,59 @@ class TemplateJsonCreator:
             # Determine element type
             match label:
                 case "abstract":
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "algorithm":
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "aside_text":
-                    element["flag"] = "artifact"
+                    element["flag"] = "artifact|no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "chart":
+                    element["flag"] = "no_join|no_split"
                     element["type"] = "pde_image"
 
                 case "chart_title":
                     element["tag"] = "Caption"
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "content":
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "doc_title":
                     element["tag"] = "Title"
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "figure_title":
                     element["tag"] = "Caption"
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "footer":
-                    element["flag"] = "footer|artifact"
+                    element["flag"] = "footer|artifact|no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "footer_image":
-                    element["flag"] = "footer|artifact"
+                    element["flag"] = "footer|artifact|no_join|no_split"
                     element["type"] = "pde_image"
 
                 case "footnote":
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "formula":
@@ -214,37 +239,49 @@ class TemplateJsonCreator:
                         self.formulas.append((formula_id, result["custom"]))
                         element["id"] = str(formula_id)
                     element["tag"] = "Formula"
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_image"
 
                 case "formula_number":
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "header":
-                    element["flag"] = "header|artifact"
+                    element["flag"] = "header|artifact|no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "header_image":
-                    element["flag"] = "header|artifact"
+                    element["flag"] = "header|artifact|no_join|no_split"
                     element["type"] = "pde_image"
 
                 case "image":
+                    element["flag"] = "no_join|no_split"
                     element["type"] = "pde_image"
 
                 case "number":
                     number_flag = self._is_footer_or_header(page_view, bbox)
-                    element["flag"] = f"{number_flag}|artifact"
+                    element["flag"] = f"{number_flag}|artifact|no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "paragraph_title":
                     element["heading"] = "h1"
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "reference":
                     element["tag"] = "Reference"
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "seal":
-                    element["flag"] = "artifact"
+                    element["flag"] = "artifact|no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_image"
 
                 case "table":
@@ -258,16 +295,23 @@ class TemplateJsonCreator:
                         }
                         element["row_num"] = result["custom"]["rows"]
                         element["col_num"] = result["custom"]["columns"]
+                    element["flag"] = "no_join|no_split"
                     element["type"] = "pde_table"
 
                 case "table_title":
                     element["tag"] = "Caption"
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case "text":
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
                 case _:
+                    element["flag"] = "no_join|no_split"
+                    element["text_flag"] = "no_new_line"
                     element["type"] = "pde_text"
 
             elements.append(element)
