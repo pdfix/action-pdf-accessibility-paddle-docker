@@ -1,3 +1,25 @@
+def bboxes_overlaps(bbox1: dict, bbox2: dict) -> bool:
+    """
+    Check if two bounding boxes overlap.
+
+    Args:
+        bbox1 (dict): A region from paddle results.
+        bbox2 (dict): A region from paddle results.
+
+    Returns:
+        True if regions overlap, False otherwise.
+    """
+    x_min_1, y_min_1, x_max_1, y_max_1 = bbox1["coordinate"]
+    x_min_2, y_min_2, x_max_2, y_max_2 = bbox2["coordinate"]
+
+    return not (
+        x_max_1 < x_min_2  # box1 is left of box2
+        or x_min_1 > x_max_2  # box1 is right of box2
+        or y_max_1 < y_min_2  # box1 is above box2
+        or y_min_1 > y_max_2  # box1 is below box2
+    )
+
+
 class PaddleXPostProcessingBBoxes:
     """
     Class that take PaddleX results for bounding boxes (bboxes) and compares all overlaps between them.
@@ -67,15 +89,7 @@ class PaddleXPostProcessingBBoxes:
         Returns:
             True if the bounding boxes overlap, False otherwise.
         """
-        x_min_1, y_min_1, x_max_1, y_max_1 = self.results["boxes"][index1]["coordinate"]
-        x_min_2, y_min_2, x_max_2, y_max_2 = self.results["boxes"][index2]["coordinate"]
-
-        return not (
-            x_max_1 < x_min_2  # box1 is left of box2
-            or x_min_1 > x_max_2  # box1 is right of box2
-            or y_max_1 < y_min_2  # box1 is above box2
-            or y_min_1 > y_max_2  # box1 is below box2
-        )
+        return bboxes_overlaps(self.results["boxes"][index1], self.results["boxes"][index2])
 
     def _is_special_case_of_overlap(self, index1: int, index2: int) -> bool:
         """
@@ -90,7 +104,7 @@ class PaddleXPostProcessingBBoxes:
         Returns:
             True if overlaps is special case and should be ignored.
         """
-        overlap_1, overlap_2 = self._get_overlap_percentage(index1, index2)
+        overlap_1, overlap_2 = self._bboxes_overlaping_percentages(index1, index2)
 
         # Too small overlap, do not remove
         if overlap_1 < 50.0 and overlap_2 < 50.0:
@@ -104,7 +118,7 @@ class PaddleXPostProcessingBBoxes:
 
         return False
 
-    def _get_overlap_percentage(self, index1: int, index2: int) -> tuple:
+    def _bboxes_overlaping_percentages(self, index1: int, index2: int) -> tuple:
         """
         Calculate the overlap percentage between two bounding boxes.
 
@@ -116,48 +130,50 @@ class PaddleXPostProcessingBBoxes:
             First value is percent (0-100) how much first bounding box has in overlaping area.
             Second value is percent (0-100) how much second bounding box has in overlaping area.
         """
-        box1_coordinate = self.results["boxes"][index1]["coordinate"]
-        box2_coordinate = self.results["boxes"][index2]["coordinate"]
-        area_1 = self._calculate_size(box1_coordinate)
-        area_2 = self._calculate_size(box2_coordinate)
-        intersect_area = self._intersection_size(box1_coordinate, box2_coordinate)
+        bbox1 = self.results["boxes"][index1]
+        bbox2 = self.results["boxes"][index2]
+
+        def bbox_size(bbox: dict) -> float:
+            """
+            Calculate the size of a bounding box (bbox).
+
+            Args:
+                bbox (dict): A region from paddle results.
+
+            Returns:
+                Size of the bbox.
+            """
+            x_min, y_min, x_max, y_max = bbox["coordinate"]
+            return max(0, x_max - x_min) * max(0, y_max - y_min)
+
+        area_1 = bbox_size(bbox1)
+        area_2 = bbox_size(bbox2)
+
+        def bboxes_intersection_size(bbox_1: dict, bbox_2: dict) -> float:
+            """
+            Calculate the intersection size of two bounding boxes.
+
+            Args:
+                bbox_1 (dict): A region from paddle results.
+                bbox_2 (dict): A region from paddle results.
+
+            Returns:
+                Size of intersection.
+            """
+            x_min_1, y_min_1, x_max_1, y_max_1 = bbox_1["coordinate"]
+            x_min_2, y_min_2, x_max_2, y_max_2 = bbox_2["coordinate"]
+
+            x_overlap = max(0, min(x_max_1, x_max_2) - max(x_min_1, x_min_2))
+            y_overlap = max(0, min(y_max_1, y_max_2) - max(y_min_1, y_min_2))
+
+            return x_overlap * y_overlap
+
+        intersect_area = bboxes_intersection_size(bbox1, bbox2)
 
         percent1 = (intersect_area / area_1) * 100 if area_1 > 0 else 0
         percent2 = (intersect_area / area_2) * 100 if area_2 > 0 else 0
 
         return percent1, percent2
-
-    def _calculate_size(self, coordinate: list) -> float:
-        """
-        Calculate the size of a bounding box (bbox).
-
-        Args:
-            coordinate (list): bbox coordinates in the format [x_min, y_min, x_max, y_max].
-
-        Returns:
-            Size of the bbox.
-        """
-        x_min, y_min, x_max, y_max = coordinate
-        return max(0, x_max - x_min) * max(0, y_max - y_min)
-
-    def _intersection_size(self, coordinate_1: list, coordinate_2: list) -> float:
-        """
-        Calculate the intersection size of two bounding boxes.
-
-        Args:
-            coordinate_1 (list): First bounding box coordinates in the format [x_min, y_min, x_max, y_max].
-            coordinate_2 (list): Second bounding box coordinates in the format [x_min, y_min, x_max, y_max].
-
-        Returns:
-            Size of intersection.
-        """
-        x_min_1, y_min_1, x_max_1, y_max_1 = coordinate_1
-        x_min_2, y_min_2, x_max_2, y_max_2 = coordinate_2
-
-        x_overlap = max(0, min(x_max_1, x_max_2) - max(x_min_1, x_min_2))
-        y_overlap = max(0, min(y_max_1, y_max_2) - max(y_min_1, y_min_2))
-
-        return x_overlap * y_overlap
 
     def _is_formula_inside_text(self, index1: int, index2: int) -> bool:
         """

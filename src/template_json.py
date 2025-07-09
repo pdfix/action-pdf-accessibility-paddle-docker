@@ -8,6 +8,8 @@ from typing import Any
 
 from pdfixsdk import PdfDevRect, PdfPageView, PdfRect, __version__, kPdeImage
 
+from process_bboxes import bboxes_overlaps
+
 
 class TemplateJsonCreator:
     """
@@ -163,162 +165,223 @@ class TemplateJsonCreator:
             return elements
 
         for result in results["boxes"]:
-            element: dict[str, Any] = {}
+            # get all other regions that overlaps with this one
+            overlaps = self._find_overlaps(result, results)
 
-            rect = PdfDevRect()
-            rect.left = math.floor(result["coordinate"][0])  # min_x
-            rect.top = math.floor(result["coordinate"][1])  # min_y
-            rect.right = math.ceil(result["coordinate"][2])  # max_x
-            rect.bottom = math.ceil(result["coordinate"][3])  # max_y
-            bbox = page_view.RectToPage(rect)
-            element["bbox"] = [str(bbox.left), str(bbox.bottom), str(bbox.right), str(bbox.top)]
-            label = result["label"].lower()
-            element["comment"] = f"{label} {round(result['score'] * 100)}%"
+            # keep only text ones
+            text_overlaps = [overlap for overlap in overlaps if overlap["label"] == "text"]
+            if result["label"] == "formula" and len(text_overlaps) > 0:
+                # formula is inside text skipping it here as it will be added inside text
+                continue
 
-            # Determine element type
-            match label:
-                case "abstract":
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
+            # create template json data for region
+            element = self._convert_result_into_element(result, page_view, page_number)
 
-                case "algorithm":
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "aside_text":
-                    element["flag"] = "artifact|no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "chart":
-                    element["flag"] = "no_join|no_split"
-                    element["type"] = "pde_image"
-
-                case "chart_title":
-                    element["tag"] = "Caption"
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "content":
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "doc_title":
-                    element["tag"] = "Title"
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "figure_title":
-                    element["tag"] = "Caption"
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "footer":
-                    element["flag"] = "footer|artifact|no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "footer_image":
-                    element["flag"] = "footer|artifact|no_join|no_split"
-                    element["type"] = "pde_image"
-
-                case "footnote":
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "formula":
-                    if "custom" in result:
-                        formula_id = self._generate_unique_id(page_number, kPdeImage, result["coordinate"])
-                        self.formulas.append((formula_id, result["custom"]))
-                        element["id"] = str(formula_id)
-                    element["tag"] = "Formula"
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_image"
-
-                case "formula_number":
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "header":
-                    element["flag"] = "header|artifact|no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "header_image":
-                    element["flag"] = "header|artifact|no_join|no_split"
-                    element["type"] = "pde_image"
-
-                case "image":
-                    element["flag"] = "no_join|no_split"
-                    element["type"] = "pde_image"
-
-                case "number":
-                    number_flag = self._is_footer_or_header(page_view, bbox)
-                    element["flag"] = f"{number_flag}|artifact|no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "paragraph_title":
-                    element["heading"] = "h1"
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "reference":
-                    element["tag"] = "Reference"
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "seal":
-                    element["flag"] = "artifact|no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_image"
-
-                case "table":
-                    if "custom" in result:
-                        cell_elements: list = self._create_table_cells(result["custom"], page_view)
-                        element["element_template"] = {
-                            "template": {
-                                "element_create": [{"elements": cell_elements, "query": {}, "statement": "$if"}],
-                                "table_update": [{"cell_header": "true", "statement": "$if"}],
-                            },
-                        }
-                        element["row_num"] = result["custom"]["rows"]
-                        element["col_num"] = result["custom"]["columns"]
-                    element["flag"] = "no_join|no_split"
-                    element["type"] = "pde_table"
-
-                case "table_title":
-                    element["tag"] = "Caption"
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case "text":
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
-
-                case _:
-                    element["flag"] = "no_join|no_split"
-                    element["text_flag"] = "no_new_line"
-                    element["type"] = "pde_text"
+            # keep only formula ones
+            formula_overlaps = [overlap for overlap in overlaps if overlap["label"] == "formula"]
+            if result["label"] == "text":
+                # add all overlapping formulas under this text
+                formula_elements: list = []
+                for formula in formula_overlaps:
+                    formula_element = self._convert_result_into_element(formula, page_view, page_number)
+                    formula_elements.append(formula_element)
+                element["element_template"] = {
+                    "template": {
+                        "element_create": [{"elements": formula_elements, "statement": "$if"}],
+                    },
+                }
 
             elements.append(element)
 
         elements = sorted(elements, key=lambda x: (float(x["bbox"][3]), 1000.0 - float(x["bbox"][0])), reverse=True)
 
         return elements
+
+    def _find_overlaps(self, result: dict, results: dict) -> list:
+        """
+        Return list of all regions that overlaps with given one
+
+        Args:
+            result (dict): A region from paddle results.
+            results (dict): Dictionary of results from Paddle, where are list of detected elements, ...
+
+        Returns:
+            List of overlapping regions.
+        """
+        overlaps: list = []
+
+        for result_2 in results:
+            if result == result_2:
+                continue
+            if bboxes_overlaps(result, result_2):
+                overlaps.append(result_2)
+
+        return overlaps
+
+    def _convert_result_into_element(self, result: dict, page_view: PdfPageView, page_number: int) -> dict:
+        """
+        Convert one region from paddle results into template json element
+
+        Args:
+            result (dict): On result from Paddle.
+            page_view (PdfPageView): The view of the PDF page used for coordinate conversion.
+            page_number (int): PDF file page number.
+
+        Returns:
+            Dictionary ready to be put into template json containing all relevant information
+        """
+        element: dict[str, Any] = {}
+
+        rect = PdfDevRect()
+        rect.left = math.floor(result["coordinate"][0])  # min_x
+        rect.top = math.floor(result["coordinate"][1])  # min_y
+        rect.right = math.ceil(result["coordinate"][2])  # max_x
+        rect.bottom = math.ceil(result["coordinate"][3])  # max_y
+        bbox = page_view.RectToPage(rect)
+        element["bbox"] = [str(bbox.left), str(bbox.bottom), str(bbox.right), str(bbox.top)]
+        label = result["label"].lower()
+        element["comment"] = f"{label} {round(result['score'] * 100)}%"
+
+        # Determine element type
+        match label:
+            case "abstract":
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "algorithm":
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "aside_text":
+                element["flag"] = "artifact|no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "chart":
+                element["flag"] = "no_join|no_split"
+                element["type"] = "pde_image"
+
+            case "chart_title":
+                element["tag"] = "Caption"
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "content":
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "doc_title":
+                element["tag"] = "Title"
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "figure_title":
+                element["tag"] = "Caption"
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "footer":
+                element["flag"] = "footer|artifact|no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "footer_image":
+                element["flag"] = "footer|artifact|no_join|no_split"
+                element["type"] = "pde_image"
+
+            case "footnote":
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "formula":
+                if "custom" in result:
+                    formula_id = self._generate_unique_id(page_number, kPdeImage, result["coordinate"])
+                    self.formulas.append((formula_id, result["custom"]))
+                    element["id"] = str(formula_id)
+                element["tag"] = "Formula"
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_image"
+
+            case "formula_number":
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "header":
+                element["flag"] = "header|artifact|no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "header_image":
+                element["flag"] = "header|artifact|no_join|no_split"
+                element["type"] = "pde_image"
+
+            case "image":
+                element["flag"] = "no_join|no_split"
+                element["type"] = "pde_image"
+
+            case "number":
+                number_flag = self._is_footer_or_header(page_view, bbox)
+                element["flag"] = f"{number_flag}|artifact|no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "paragraph_title":
+                element["heading"] = "h1"
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "reference":
+                element["tag"] = "Reference"
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "seal":
+                element["flag"] = "artifact|no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_image"
+
+            case "table":
+                if "custom" in result:
+                    cell_elements: list = self._create_table_cells(result["custom"], page_view)
+                    element["element_template"] = {
+                        "template": {
+                            "element_create": [{"elements": cell_elements, "query": {}, "statement": "$if"}],
+                            "table_update": [{"cell_header": "true", "statement": "$if"}],
+                        },
+                    }
+                    element["row_num"] = result["custom"]["rows"]
+                    element["col_num"] = result["custom"]["columns"]
+                element["flag"] = "no_join|no_split"
+                element["type"] = "pde_table"
+
+            case "table_title":
+                element["tag"] = "Caption"
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case "text":
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+            case _:
+                element["flag"] = "no_join|no_split"
+                element["text_flag"] = "no_new_line"
+                element["type"] = "pde_text"
+
+        return element
 
     def _create_table_cells(self, result: dict, page_view: PdfPageView) -> list:
         """
