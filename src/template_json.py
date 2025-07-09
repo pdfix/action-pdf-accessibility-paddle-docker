@@ -166,7 +166,7 @@ class TemplateJsonCreator:
 
         for result in results["boxes"]:
             # get all other regions that overlaps with this one
-            overlaps = self._find_overlaps(result, results)
+            overlaps = self._find_overlaps(result, results["boxes"])
 
             # keep only text ones
             text_overlaps = [overlap for overlap in overlaps if overlap["label"] == "text"]
@@ -179,7 +179,7 @@ class TemplateJsonCreator:
 
             # keep only formula ones
             formula_overlaps = [overlap for overlap in overlaps if overlap["label"] == "formula"]
-            if result["label"] == "text":
+            if result["label"] == "text" and len(formula_overlaps) > 0:
                 # add all overlapping formulas under this text
                 formula_elements: list = []
                 for formula in formula_overlaps:
@@ -197,12 +197,12 @@ class TemplateJsonCreator:
 
         return elements
 
-    def _find_overlaps(self, result: dict, results: dict) -> list:
+    def _find_overlaps(self, region: dict, regions: dict) -> list:
         """
         Return list of all regions that overlaps with given one
 
         Args:
-            result (dict): A region from paddle results.
+            region (dict): A region from paddle results.
             results (dict): Dictionary of results from Paddle, where are list of detected elements, ...
 
         Returns:
@@ -210,11 +210,11 @@ class TemplateJsonCreator:
         """
         overlaps: list = []
 
-        for result_2 in results:
-            if result == result_2:
+        for region_2 in regions:
+            if region == region_2:
                 continue
-            if bboxes_overlaps(result, result_2):
-                overlaps.append(result_2)
+            if bboxes_overlaps(region, region_2):
+                overlaps.append(region_2)
 
         return overlaps
 
