@@ -63,7 +63,7 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           context: .
-          file: ./Dockerfile
+          file: ./Dockerfile.withoutcache
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -76,6 +76,7 @@ jobs:
           repository: ${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}
 
       - name: Upload to FTP
+        if: false  # Temporarily disabled for debugging
         run: |
           curl -T config.json ftp.pdfix.net/update-service/v1/actions/${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}/config.json --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" --ftp-create-dirs
 
@@ -92,4 +93,5 @@ jobs:
           fetch-depth: 0
 
       - name: Update versions repository with new version
+        if: false  # Temporarily disabled for debugging
         run: chmod +x update_versions_repository.sh && ./update_versions_repository.sh ${{ env.DOCKER_HUB_NAMESPACE }} ${{ env.DOCKER_HUB_REPOSITORY }} ${{ env.tag }}
