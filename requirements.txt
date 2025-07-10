@@ -3,7 +3,7 @@ opencv-python==4.11.0.86
 paddlepaddle==3.0.0
 paddlex==3.0.0rc1
 paddlex[ocr]==3.0.0rc1
-pdfix-sdk==8.7.0
+pdfix-sdk==8.7.1
 requests==2.32.4
 setuptools==80.0.0
 tqdm==4.67.1
