@@ -1,5 +1,5 @@
 # Use cached image so build is faster
-FROM pdfix/pdf-accessibility-paddle-cache:v0.0.2
+FROM pdfix/pdf-accessibility-paddle-cache:v0.0.3
 
 
 # Lets install requirements that could have changed from last time we built the cached image
