@@ -68,6 +68,7 @@
           "title": "Threshold Paragraph Title",
           "name": "threshold_paragraph_title",
           "desc": "Paddle layout model threshold for paragraph title detection. Number between 0.05 and 0.95. Default is 0.3.",
+          "flags": 16,
           "type": "float",
           "value": "0.3"
         },
@@ -75,6 +76,7 @@
           "title": "Threshold Image",
           "name": "threshold_image",
           "desc": "Paddle layout model threshold for image detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -82,6 +84,7 @@
           "title": "Threshold Text",
           "name": "threshold_text",
           "desc": "Paddle layout model threshold for text detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -89,6 +92,7 @@
           "title": "Threshold Number",
           "name": "threshold_number",
           "desc": "Paddle layout model threshold for number detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -96,6 +100,7 @@
           "title": "Threshold Abstract",
           "name": "threshold_abstract",
           "desc": "Paddle layout model threshold for abstract detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -103,6 +108,7 @@
           "title": "Threshold Content",
           "name": "threshold_content",
           "desc": "Paddle layout model threshold for content detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -110,6 +116,7 @@
           "title": "Threshold Figure Title",
           "name": "threshold_figure_title",
           "desc": "Paddle layout model threshold for figure title detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -117,6 +124,7 @@
           "title": "Threshold Formula",
           "name": "threshold_formula",
           "desc": "Paddle layout model threshold for formula detection. Number between 0.05 and 0.95. Default is 0.3.",
+          "flags": 16,
           "type": "float",
           "value": "0.3"
         },
@@ -124,6 +132,7 @@
           "title": "Threshold Table",
           "name": "threshold_table",
           "desc": "Paddle layout model threshold for table detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -131,6 +140,7 @@
           "title": "Threshold Table Title",
           "name": "threshold_table_title",
           "desc": "Paddle layout model threshold for table title detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -138,6 +148,7 @@
           "title": "Threshold Reference",
           "name": "threshold_reference",
           "desc": "Paddle layout model threshold for reference detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -145,6 +156,7 @@
           "title": "Threshold Document Title",
           "name": "threshold_doc_title",
           "desc": "Paddle layout model threshold for document title detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -152,6 +164,7 @@
           "title": "Threshold Footnote",
           "name": "threshold_footnote",
           "desc": "Paddle layout model threshold for footnote detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -159,6 +172,7 @@
           "title": "Threshold Header",
           "name": "threshold_header",
           "desc": "Paddle layout model threshold for header detection. Number between 0.05 and 0.95. Default is 0.3.",
+          "flags": 16,
           "type": "float",
           "value": "0.3"
         },
@@ -166,6 +180,7 @@
           "title": "Threshold Algorithm",
           "name": "threshold_algorithm",
           "desc": "Paddle layout model threshold for algorithm detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -173,6 +188,7 @@
           "title": "Threshold Footer",
           "name": "threshold_footer",
           "desc": "Paddle layout model threshold for footer detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -180,6 +196,7 @@
           "title": "Threshold Seal",
           "name": "threshold_seal",
           "desc": "Paddle layout model threshold for seal detection. Number between 0.05 and 0.95. Default is 0.3.",
+          "flags": 16,
           "type": "float",
           "value": "0.3"
         },
@@ -187,6 +204,7 @@
           "title": "Threshold Chart Title",
           "name": "threshold_chart_title",
           "desc": "Paddle layout model threshold for chart title detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -194,6 +212,7 @@
           "title": "Threshold Chart",
           "name": "threshold_chart",
           "desc": "Paddle layout model threshold for chart detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -201,6 +220,7 @@
           "title": "Threshold Formula Number",
           "name": "threshold_formula_number",
           "desc": "Paddle layout model threshold for formula number detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -208,6 +228,7 @@
           "title": "Threshold Header Image",
           "name": "threshold_header_image",
           "desc": "Paddle layout model threshold for header image detection. Number between 0.05 and 0.95. Default is 0.3.",
+          "flags": 16,
           "type": "float",
           "value": "0.3"
         },
@@ -215,6 +236,7 @@
           "title": "Threshold Footer Image",
           "name": "threshold_footer_image",
           "desc": "Paddle layout model threshold for footer image detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -222,6 +244,7 @@
           "title": "Threshold Aside Text",
           "name": "threshold_aside_text",
           "desc": "Paddle layout model threshold for aside text detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         }
@@ -288,6 +311,7 @@
           "title": "Threshold Paragraph Title",
           "name": "threshold_paragraph_title",
           "desc": "Paddle layout model threshold for paragraph title detection. Number between 0.05 and 0.95. Default is 0.3.",
+          "flags": 16,
           "type": "float",
           "value": "0.3"
         },
@@ -295,6 +319,7 @@
           "title": "Threshold Image",
           "name": "threshold_image",
           "desc": "Paddle layout model threshold for image detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -302,6 +327,7 @@
           "title": "Threshold Text",
           "name": "threshold_text",
           "desc": "Paddle layout model threshold for text detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -309,6 +335,7 @@
           "title": "Threshold Number",
           "name": "threshold_number",
           "desc": "Paddle layout model threshold for number detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -316,6 +343,7 @@
           "title": "Threshold Abstract",
           "name": "threshold_abstract",
           "desc": "Paddle layout model threshold for abstract detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -323,6 +351,7 @@
           "title": "Threshold Content",
           "name": "threshold_content",
           "desc": "Paddle layout model threshold for content detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -330,6 +359,7 @@
           "title": "Threshold Figure Title",
           "name": "threshold_figure_title",
           "desc": "Paddle layout model threshold for figure title detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -337,6 +367,7 @@
           "title": "Threshold Formula",
           "name": "threshold_formula",
           "desc": "Paddle layout model threshold for formula detection. Number between 0.05 and 0.95. Default is 0.3.",
+          "flags": 16,
           "type": "float",
           "value": "0.3"
         },
@@ -344,6 +375,7 @@
           "title": "Threshold Table",
           "name": "threshold_table",
           "desc": "Paddle layout model threshold for table detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -351,6 +383,7 @@
           "title": "Threshold Table Title",
           "name": "threshold_table_title",
           "desc": "Paddle layout model threshold for table title detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -358,6 +391,7 @@
           "title": "Threshold Reference",
           "name": "threshold_reference",
           "desc": "Paddle layout model threshold for reference detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -365,6 +399,7 @@
           "title": "Threshold Document Title",
           "name": "threshold_doc_title",
           "desc": "Paddle layout model threshold for document title detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -372,6 +407,7 @@
           "title": "Threshold Footnote",
           "name": "threshold_footnote",
           "desc": "Paddle layout model threshold for footnote detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -379,6 +415,7 @@
           "title": "Threshold Header",
           "name": "threshold_header",
           "desc": "Paddle layout model threshold for header detection. Number between 0.05 and 0.95. Default is 0.3.",
+          "flags": 16,
           "type": "float",
           "value": "0.3"
         },
@@ -386,6 +423,7 @@
           "title": "Threshold Algorithm",
           "name": "threshold_algorithm",
           "desc": "Paddle layout model threshold for algorithm detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -393,6 +431,7 @@
           "title": "Threshold Footer",
           "name": "threshold_footer",
           "desc": "Paddle layout model threshold for footer detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -400,6 +439,7 @@
           "title": "Threshold Seal",
           "name": "threshold_seal",
           "desc": "Paddle layout model threshold for seal detection. Number between 0.05 and 0.95. Default is 0.3.",
+          "flags": 16,
           "type": "float",
           "value": "0.3"
         },
@@ -407,6 +447,7 @@
           "title": "Threshold Chart Title",
           "name": "threshold_chart_title",
           "desc": "Paddle layout model threshold for chart title detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -414,6 +455,7 @@
           "title": "Threshold Chart",
           "name": "threshold_chart",
           "desc": "Paddle layout model threshold for chart detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -421,6 +463,7 @@
           "title": "Threshold Formula Number",
           "name": "threshold_formula_number",
           "desc": "Paddle layout model threshold for formula number detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -428,6 +471,7 @@
           "title": "Threshold Header Image",
           "name": "threshold_header_image",
           "desc": "Paddle layout model threshold for header image detection. Number between 0.05 and 0.95. Default is 0.3.",
+          "flags": 16,
           "type": "float",
           "value": "0.3"
         },
@@ -435,6 +479,7 @@
           "title": "Threshold Footer Image",
           "name": "threshold_footer_image",
           "desc": "Paddle layout model threshold for footer image detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         },
@@ -442,6 +487,7 @@
           "title": "Threshold Aside Text",
           "name": "threshold_aside_text",
           "desc": "Paddle layout model threshold for aside text detection. Number between 0.05 and 0.95. Default is 0.5.",
+          "flags": 16,
           "type": "float",
           "value": "0.5"
         }
