@@ -307,7 +307,6 @@ class TemplateJsonCreator:
                     element["id"] = str(formula_id)
                 element["tag"] = "Formula"
                 element["flag"] = "no_join|no_split"
-                element["text_flag"] = "no_new_line"
                 element["type"] = "pde_image"
 
             case "formula_number":
@@ -348,7 +347,6 @@ class TemplateJsonCreator:
 
             case "seal":
                 element["flag"] = "artifact|no_join|no_split"
-                element["text_flag"] = "no_new_line"
                 element["type"] = "pde_image"
 
             case "table":
