@@ -186,6 +186,8 @@ class PaddleXPostProcessingBBoxes:
         Returns:
             True if types are "formula" and "text", False otherwise.
         """
+        # TODO PVQ-4049 - for now remove formulas under texts as SDK won't tag them
+        return False
         label1 = self.results["boxes"][index1]["label"]
         label2 = self.results["boxes"][index2]["label"]
 
