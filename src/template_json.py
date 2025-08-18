@@ -340,7 +340,9 @@ class TemplateJsonCreator:
                 element["type"] = "pde_text"
 
             case "reference":
-                element["tag"] = "Reference"
+                # Do not tag as "Reference" as Paddle fails to detect each [1], [2], ... as separate reference
+                # and groups them together. Normal "P" is better in this case.
+                # element["tag"] = "Reference"
                 element["flag"] = "no_join|no_split"
                 element["text_flag"] = "no_new_line"
                 element["type"] = "pde_text"
