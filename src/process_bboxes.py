@@ -31,7 +31,7 @@ class PaddleXPostProcessingBBoxes:
         Initialize the PaddleXPostProcessingBBoxes class.
 
         Args:
-            Dictionary results containing bounding boxes and their scores.
+            results (dict): Dictionary results containing bounding boxes and their scores.
         """
         self.results = results
 
