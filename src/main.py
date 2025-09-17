@@ -523,6 +523,9 @@ def main() -> None:
             sys.exit(0)
         print("Failed to parse arguments. Please check the usage and try again.", file=sys.stderr)
         sys.exit(e.code)
+    except ValueError as e:
+        print(f"Parsing error: {e}")
+        sys.exit(2)
 
     if hasattr(args, "func"):
         # Check for updates only when help is not checked
