@@ -523,7 +523,7 @@
       ]
     },
     {
-      "title": "Set Formula MathML (Paddle)",
+      "title": "Set Formula MathML  (Paddle)",
       "name": "pdfix_generate_formula_mathml_paddle",
       "desc": "Automatically generates MathML for Formula tags using Paddle, attaching it as an associated file to each tag [Local]",
       "version": "v0.0.0",
