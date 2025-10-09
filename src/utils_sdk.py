@@ -3,7 +3,7 @@ import json
 import re
 from typing import Optional
 
-from pdfixsdk import Pdfix, PdsDictionary, PdsStructElement, kPdsStructChildElement
+from pdfixsdk import PdfDoc, Pdfix, PdsDictionary, PdsStructElement, kPdsStructChildElement
 
 from exceptions import PdfixException
 
@@ -103,8 +103,8 @@ def set_associated_file_math_ml(pdfix: Pdfix, element: PdsStructElement, math_ml
         math_ml_version (str): The MathML version to set.
     """
     # create mathML object
-    document = element.GetStructTree().GetDoc()
-    associated_file_data = document.CreateDictObject(True)
+    document: PdfDoc = element.GetStructTree().GetDoc()
+    associated_file_data: PdsDictionary = document.CreateDictObject(True)
     associated_file_data.PutName("Type", "Filespec")
     associated_file_data.PutName("AFRelationshhip", "Supplement")
     associated_file_data.PutString("F", math_ml_version)
@@ -112,10 +112,10 @@ def set_associated_file_math_ml(pdfix: Pdfix, element: PdsStructElement, math_ml
     associated_file_data.PutString("Desc", math_ml_version)
 
     raw_data = bytearray_to_data(bytearray(math_ml.encode("utf-8")))
-    file_dictionary = document.CreateDictObject(False)
+    file_dictionary: PdsDictionary = document.CreateDictObject(False)
     file_stream = document.CreateStreamObject(True, file_dictionary, raw_data, len(math_ml))
 
-    ef_dict = associated_file_data.PutDict("EF")
+    ef_dict: PdsDictionary = associated_file_data.PutDict("EF")
     ef_dict.Put("F", file_stream)
     ef_dict.Put("UF", file_stream)
 
@@ -132,7 +132,7 @@ def add_associated_file(pdfix: Pdfix, element: PdsStructElement, associated_file
         associated_file_data (PdsDictionary): The associated file data to add.
     """
     element_object = PdsDictionary(element.GetObject().obj)
-    associated_file_dictionary = element_object.GetDictionary("AF")
+    associated_file_dictionary: PdsDictionary = element_object.GetDictionary("AF")
     if associated_file_dictionary:
         # convert dict to an array
         associated_file_array = pdfix.CreateArrayObject(False)
