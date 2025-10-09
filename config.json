@@ -55,14 +55,14 @@
           "name": "process_formula",
           "desc": "Use Paddle Formula model to process formulas in the document",
           "type": "bool",
-          "value": "True"
+          "value": true
         },
         {
           "title": "Process Tables",
           "name": "process_table",
           "desc": "Use Paddle Table models to process tables in the document",
           "type": "bool",
-          "value": "True"
+          "value": true
         },
         {
           "title": "Threshold Paragraph Title",
@@ -305,7 +305,7 @@
           "name": "process_table",
           "desc": "Use Paddle Table models to process tables in the document",
           "type": "bool",
-          "value": "True"
+          "value": true
         },
         {
           "title": "Threshold Paragraph Title",
