@@ -1,6 +1,5 @@
 import json
 import math
-import os
 import sys
 from datetime import date
 from pathlib import Path
@@ -8,6 +7,7 @@ from typing import Any
 
 from pdfixsdk import PdfDevRect, PdfPageView, PdfRect, __version__, kPdeImage
 
+from constants import CONFIG_FILE
 from process_bboxes import bboxes_overlaps
 
 
@@ -16,17 +16,14 @@ class TemplateJsonCreator:
     Class that prepares each page and in the end creates whole template json file for PDFix-SDK
     """
 
-    # Constants
-    CONFIG_FILE = "config.json"
-
     def __init__(self) -> None:
         """
         Initializes pdfix sdk template json creation by preparing list for each page.
         """
         self.template_json_pages: list = []
-        self.formulas: list = []
+        self.formulas: list[tuple[int, str]] = []
 
-    def get_formulas(self) -> list:
+    def get_formulas(self) -> list[tuple[int, str]]:
         """
         Return list of all formula ids with latex text that were gathered during processing pages.
 
@@ -107,13 +104,13 @@ class TemplateJsonCreator:
         Returns:
             The current version of the Docker image.
         """
-        config_path = os.path.join(Path(__file__).parent.absolute(), f"../{self.CONFIG_FILE}")
+        config_path: Path = Path(__file__).parent.joinpath(f"../{CONFIG_FILE}").resolve()
         try:
             with open(config_path, "r", encoding="utf-8") as f:
                 config = json.load(f)
                 return config.get("version", "unknown")
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Error reading {self.CONFIG_FILE}: {e}", file=sys.stderr)
+            print(f"Error reading {CONFIG_FILE}: {e}", file=sys.stderr)
             return "unknown"
 
     def _generate_unique_id(self, page_number: int, type: int, coordinate: list) -> int:

@@ -248,7 +248,23 @@
                     "type": "float",
                     "value": "0.5"
                 }
-            ]
+            ],
+            "errors": {
+                "10": "Failed to parse arguments. Please check the usage and try again.",
+                "11": "Zoom level must between 1.0 and 10.0.",
+                "12": "Input file must be PDF document and output file must be JSON.",
+                "13": "Input and output file must be PDF documents.",
+                "14": "Not allowed input output file combination. Please see --help.",
+                "20": "Failed to initialize PDFix SDK.",
+                "21": "Failed to activate PDFix SDK acount.",
+                "22": "Failed to authorize PDFix SDK acount.",
+                "23": "Failed to render PDF Page into image.",
+                "24": "Failed to open PDF document.",
+                "25": "Failed to save PDF document.",
+                "26": "Failed to tag PDF document.",
+                "27": "Failed to create template JSON.",
+                "28": "PDF document has no tags"
+            }
         },
         {
             "title": "Create Layout Template JSON (Paddle)",
@@ -490,7 +506,23 @@
                     "type": "float",
                     "value": "0.5"
                 }
-            ]
+            ],
+            "errors": {
+                "10": "Failed to parse arguments. Please check the usage and try again.",
+                "11": "Zoom level must between 1.0 and 10.0.",
+                "12": "Input file must be PDF document and output file must be JSON.",
+                "13": "Input and output file must be PDF documents.",
+                "14": "Not allowed input output file combination. Please see --help.",
+                "20": "Failed to initialize PDFix SDK.",
+                "21": "Failed to activate PDFix SDK acount.",
+                "22": "Failed to authorize PDFix SDK acount.",
+                "23": "Failed to render PDF Page into image.",
+                "24": "Failed to open PDF document.",
+                "25": "Failed to save PDF document.",
+                "26": "Failed to tag PDF document.",
+                "27": "Failed to create template JSON.",
+                "28": "PDF document has no tags"
+            }
         },
         {
             "title": "Set Formula MathML (Paddle)",
@@ -519,7 +551,23 @@
                     "ext": "xml",
                     "value": ""
                 }
-            ]
+            ],
+            "errors": {
+                "10": "Failed to parse arguments. Please check the usage and try again.",
+                "11": "Zoom level must between 1.0 and 10.0.",
+                "12": "Input file must be PDF document and output file must be JSON.",
+                "13": "Input and output file must be PDF documents.",
+                "14": "Not allowed input output file combination. Please see --help.",
+                "20": "Failed to initialize PDFix SDK.",
+                "21": "Failed to activate PDFix SDK acount.",
+                "22": "Failed to authorize PDFix SDK acount.",
+                "23": "Failed to render PDF Page into image.",
+                "24": "Failed to open PDF document.",
+                "25": "Failed to save PDF document.",
+                "26": "Failed to tag PDF document.",
+                "27": "Failed to create template JSON.",
+                "28": "PDF document has no tags"
+            }
         },
         {
             "title": "Set Formula MathML  (Paddle)",
@@ -547,7 +595,23 @@
                     "ext": "pdf",
                     "value": ""
                 }
-            ]
+            ],
+            "errors": {
+                "10": "Failed to parse arguments. Please check the usage and try again.",
+                "11": "Zoom level must between 1.0 and 10.0.",
+                "12": "Input file must be PDF document and output file must be JSON.",
+                "13": "Input and output file must be PDF documents.",
+                "14": "Not allowed input output file combination. Please see --help.",
+                "20": "Failed to initialize PDFix SDK.",
+                "21": "Failed to activate PDFix SDK acount.",
+                "22": "Failed to authorize PDFix SDK acount.",
+                "23": "Failed to render PDF Page into image.",
+                "24": "Failed to open PDF document.",
+                "25": "Failed to save PDF document.",
+                "26": "Failed to tag PDF document.",
+                "27": "Failed to create template JSON.",
+                "28": "PDF document has no tags"
+            }
         }
     ]
 }

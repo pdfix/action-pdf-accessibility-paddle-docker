@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import Optional
 from xml.etree import ElementTree as ET
@@ -37,12 +36,12 @@ class PaddleXEngine:
             thresholds (dict): Thresholds for layout detection, if not provided
                 default thresholds will be used.
         """
-        self.model_name = model
-        model_path = os.path.join(Path(__file__).parent.absolute(), f"../models/{model}")
-        self.model_dir = model_path
-        self.process_formula = process_formula
-        self.process_table = process_table
-        self.threshold = thresholds
+        self.model_name: str = model
+        model_path: str = Path(__file__).parent.joinpath(f"../models/{model}").resolve().as_posix()
+        self.model_dir: str = model_path
+        self.process_formula: bool = process_formula
+        self.process_table: bool = process_table
+        self.threshold: dict = thresholds
 
         # Remove thresholds for classes that are not in model
         if model == "RT-DETR-H_layout_17cls":
@@ -82,16 +81,16 @@ class PaddleXEngine:
         output = model.predict(input=image, batch_size=1, layout_nms=True)
 
         for res in output:
-            output_name = f"{id}-page{page_number}.png"
-            output_path = os.path.join(Path(__file__).parent.absolute(), f"../output/{output_name}")
+            output_name: str = f"{id}-page{page_number}.png"
+            output_path: str = Path(__file__).parent.joinpath(f"../output/{output_name}").resolve().as_posix()
             res.save_to_img(save_path=output_path)
 
-            table_index = 0
+            table_index: int = 0
 
             # How many tables and formulas we will process
-            number_of_tables = len([box for box in res["boxes"] if box["label"] == "table"])
-            number_of_formulas = len([box for box in res["boxes"] if box["label"] == "formula"])
-            boxes_to_process = 0
+            number_of_tables: int = len([box for box in res["boxes"] if box["label"] == "table"])
+            number_of_formulas: int = len([box for box in res["boxes"] if box["label"] == "formula"])
+            boxes_to_process: int = 0
             if self.process_table:
                 boxes_to_process += number_of_tables
             if self.process_formula:
@@ -116,16 +115,18 @@ class PaddleXEngine:
                                 continue
 
                             # Get table image
-                            coordinate = box["coordinate"]
-                            table_image = create_image_from_part_of_page(image, coordinate, 1)
+                            coordinate: list = box["coordinate"]
+                            table_image: cv2.typing.MatLike = create_image_from_part_of_page(image, coordinate, 1)
 
                             # Process table
-                            output_file_name = f"{id}_{page_number}-table{table_index}.png"
-                            output_file_path = os.path.join(
-                                Path(__file__).parent.absolute(), f"../output/{output_file_name}"
+                            output_file_name: str = f"{id}_{page_number}-table{table_index}.png"
+                            output_file_path: str = (
+                                Path(__file__).parent.joinpath(f"../output/{output_file_name}").resolve().as_posix()
                             )
                             table_index += 1
-                            table_dict = self._process_table_image_with_ai_v2(table_image, coordinate, output_file_path)
+                            table_dict: dict = self._process_table_image_with_ai_v2(
+                                table_image, coordinate, output_file_path
+                            )
 
                             # Save as additional data to PaddleX result
                             box["custom"] = table_dict
@@ -172,8 +173,8 @@ class PaddleXEngine:
         Returns:
             TBE, currently empty dictionary
         """
-        model_name = "PP-FormulaNet-L"
-        model_path = os.path.join(Path(__file__).parent.absolute(), f"../models/{model_name}")
+        model_name: str = "PP-FormulaNet-L"
+        model_path: str = Path(__file__).parent.joinpath(f"../models/{model_name}").resolve().as_posix()
 
         # Formula model prediction
         formula_model = create_model(
@@ -185,8 +186,8 @@ class PaddleXEngine:
         output = formula_model.predict(input=image, batch_size=1)
 
         for res in output:
-            latex_formula = res["rec_formula"]
-            mathml_formula = self._convert_to_mathml(latex_formula)
+            latex_formula: str = res["rec_formula"]
+            mathml_formula: str = self._convert_to_mathml(latex_formula)
             return mathml_formula
 
         # No formula output
@@ -282,8 +283,8 @@ class PaddleXEngine:
         Returns:
             List of recognized cell elements with additional data
         """
-        model_name = "PP-LCNet_x1_0_table_cls"
-        model_path = os.path.join(Path(__file__).parent.absolute(), f"../models/{model_name}")
+        model_name: str = "PP-LCNet_x1_0_table_cls"
+        model_path: str = Path(__file__).parent.joinpath(f"../models/{model_name}").resolve().as_posix()
 
         # Table classification model prediction
         model = create_model(
@@ -295,13 +296,15 @@ class PaddleXEngine:
         output = model.predict(input=image, batch_size=1)
 
         for classification_result in output:
-            is_wired = self._use_wired_model(classification_result)
+            is_wired: bool = self._use_wired_model(classification_result)
 
             # Table cells model prediction
-            table_cell_model_name = (
+            table_cell_model_name: str = (
                 "RT-DETR-L_wired_table_cell_det" if is_wired else "RT-DETR-L_wireless_table_cell_det"
             )
-            table_cell_model_dir = os.path.join(Path(__file__).parent.absolute(), f"../models/{table_cell_model_name}")
+            table_cell_model_dir: str = (
+                Path(__file__).parent.joinpath(f"../models/{table_cell_model_name}").resolve().as_posix()
+            )
 
             table_cell_model = create_model(
                 model_name=table_cell_model_name,
@@ -315,7 +318,7 @@ class PaddleXEngine:
                 cell_results.save_to_img(save_path=output_file_path)
 
                 # We are processing 1 table so we are expecting just 1 result:
-                post_processing = PaddleXPostProcessingTable()
+                post_processing: PaddleXPostProcessingTable = PaddleXPostProcessingTable()
                 return post_processing.create_custom_result_from_paddlex_cell_result(cell_results, coordinate)
 
         # No classification or cell recognition

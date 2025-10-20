@@ -7,6 +7,8 @@ from typing import Optional
 
 import requests
 
+from constants import CONFIG_FILE
+
 
 class DockerImageContainerUpdateChecker:
     """
@@ -15,7 +17,6 @@ class DockerImageContainerUpdateChecker:
 
     # Constants
     DOCKER_IMAGE = "pdfix/pdf-accessibility-paddle"
-    CONFIG_FILE = "config.json"
     LAST_CHECK_FILE = ".local_data.json"
 
     def check_for_image_updates(self) -> None:
@@ -46,13 +47,13 @@ class DockerImageContainerUpdateChecker:
         Returns:
             The current version of the Docker image.
         """
-        config_path = os.path.join(Path(__file__).parent.absolute(), f"../{self.CONFIG_FILE}")
+        config_path: Path = Path(__file__).parent.joinpath(f"../{CONFIG_FILE}").resolve()
         try:
             with open(config_path, "r", encoding="utf-8") as f:
                 config = json.load(f)
                 return config.get("version", "unknown")
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Error reading {self.CONFIG_FILE}: {e}", file=sys.stderr)
+            print(f"Error reading {CONFIG_FILE}: {e}", file=sys.stderr)
             return "unknown"
 
     def _get_latest_docker_version(self) -> Optional[str]:

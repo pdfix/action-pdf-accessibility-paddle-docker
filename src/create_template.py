@@ -2,8 +2,10 @@ import json
 from pathlib import Path
 from typing import Optional
 
+import cv2
 from pdfixsdk import (
     GetPdfix,
+    PdfDoc,
     Pdfix,
     PdfPage,
     PdfPageView,
@@ -12,7 +14,7 @@ from pdfixsdk import (
 from tqdm import tqdm
 
 from ai import PaddleXEngine
-from exceptions import PdfixException
+from exceptions import PdfixFailedToCreateTemplateException, PdfixFailedToOpenException, PdfixInitializeException
 from page_renderer import create_image_from_pdf_page
 from template_json import TemplateJsonCreator
 from utils_sdk import authorize_sdk
@@ -43,14 +45,14 @@ class CreateTemplateJsonUsingPaddleXRecognition:
             process_table (bool): Whether to process tables.
             thresholds (dict): Thresholds for layout detection.
         """
-        self.license_name = license_name
-        self.license_key = license_key
-        self.input_path_str = input_path
-        self.output_path_str = output_path
-        self.model = model
-        self.zoom = zoom
-        self.process_table = process_table
-        self.thresholds = thresholds
+        self.license_name: Optional[str] = license_name
+        self.license_key: Optional[str] = license_key
+        self.input_path_str: str = input_path
+        self.output_path_str: str = output_path
+        self.model: str = model
+        self.zoom: float = zoom
+        self.process_table: bool = process_table
+        self.thresholds: dict = thresholds
 
     def process_file(self) -> None:
         """
@@ -58,30 +60,30 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         """
         id: str = Path(self.input_path_str).stem
 
-        pdfix = GetPdfix()
+        pdfix: Pdfix = GetPdfix()
         if pdfix is None:
-            raise Exception("Pdfix Initialization failed")
+            raise PdfixInitializeException()
 
         # Try to authorize PDFix SDK
         authorize_sdk(pdfix, self.license_name, self.license_key)
 
         # Open the document
-        doc = pdfix.OpenDoc(self.input_path_str, "")
+        doc: PdfDoc = pdfix.OpenDoc(self.input_path_str, "")
         if doc is None:
-            raise PdfixException(pdfix, "Unable to open PDF")
+            raise PdfixFailedToOpenException(pdfix, self.input_path_str)
 
         # Process images of each page
-        num_pages = doc.GetNumPages()
-        paddlex = PaddleXEngine(self.model, False, self.process_table, self.thresholds)
-        template_json_creator = TemplateJsonCreator()
-        max_formulas_and_tables_per_page = 1000
-        progress_bar = tqdm(total=num_pages * max_formulas_and_tables_per_page, desc="Processing pages")
+        num_pages: int = doc.GetNumPages()
+        paddlex: PaddleXEngine = PaddleXEngine(self.model, False, self.process_table, self.thresholds)
+        template_json_creator: TemplateJsonCreator = TemplateJsonCreator()
+        max_formulas_and_tables_per_page: int = 1000
+        progress_bar: tqdm = tqdm(total=num_pages * max_formulas_and_tables_per_page, desc="Processing pages")
 
         for page_index in range(0, num_pages):
             # Acquire the page
             page: PdfPage = doc.AcquirePage(page_index)
             if page is None:
-                raise PdfixException(pdfix, "Unable to acquire the page")
+                raise PdfixFailedToCreateTemplateException(pdfix, "Unable to acquire the page")
 
             try:
                 # Process the page
@@ -135,19 +137,19 @@ class CreateTemplateJsonUsingPaddleXRecognition:
             max_formulas_and_tables_per_page (int): Our estimation how many
                 tables and formulas can be in one page.
         """
-        page_number = page_index + 1
+        page_number: int = page_index + 1
 
         # Define rotation for rendering the page
         page_view: PdfPageView = page.AcquirePageView(self.zoom, kRotate0)
         if page_view is None:
-            raise PdfixException(pdfix, "Unable to acquire page view")
+            raise PdfixFailedToCreateTemplateException(pdfix, "Unable to acquire page view")
 
         try:
             # Render the page as an image
-            image = create_image_from_pdf_page(pdfix, page, page_view)
+            image: cv2.typing.MatLike = create_image_from_pdf_page(pdfix, page, page_view)
 
             # Run layout model analysis and formula and table model analysis using the PaddleX engine
-            results = paddlex.process_pdf_page_image_with_ai(
+            results: dict = paddlex.process_pdf_page_image_with_ai(
                 image, id, page_number, progress_bar, max_formulas_and_tables_per_page
             )
 

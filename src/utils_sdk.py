@@ -3,9 +3,9 @@ import json
 import re
 from typing import Optional
 
-from pdfixsdk import PdfDoc, Pdfix, PdsDictionary, PdsStructElement, kPdsStructChildElement
+from pdfixsdk import PdfDoc, Pdfix, PdsArray, PdsDictionary, PdsStream, PdsStructElement, kPdsStructChildElement
 
-from exceptions import PdfixException
+from exceptions import PdfixActivationException, PdfixAuthorizationException
 
 
 def authorize_sdk(pdfix: Pdfix, license_name: Optional[str], license_key: Optional[str]) -> None:
@@ -20,10 +20,10 @@ def authorize_sdk(pdfix: Pdfix, license_name: Optional[str], license_key: Option
     if license_name and license_key:
         authorization = pdfix.GetAccountAuthorization()
         if not authorization.Authorize(license_name, license_key):
-            raise PdfixException(pdfix, "Failed to authorize acount")
+            raise PdfixAuthorizationException(pdfix)
     elif license_key:
         if not pdfix.GetStandarsAuthorization().Activate(license_key):
-            raise PdfixException(pdfix, "Failed to activate acount")
+            raise PdfixActivationException(pdfix)
     else:
         print("No license name or key provided. Using PDFix SDK trial")
 
@@ -63,9 +63,9 @@ def browse_tags_recursive(element: PdsStructElement, regex_tag: str) -> list[Pds
         element (PdsStructElement): The parent structure element to start browsing from.
         regex_tag (str): The regular expression to match tags.
     """
-    result = []
-    count = element.GetNumChildren()
-    structure_tree = element.GetStructTree()
+    result: list[PdsStructElement] = []
+    count: int = element.GetNumChildren()
+    structure_tree: PdsStructElement = element.GetStructTree()
     for i in range(0, count):
         if element.GetChildType(i) != kPdsStructChildElement:
             continue
@@ -88,7 +88,7 @@ def bytearray_to_data(byte_array: bytearray) -> ctypes.Array[ctypes.c_ubyte]:
     Returns:
         The converted ctypes array.
     """
-    size = len(byte_array)
+    size: int = len(byte_array)
     return (ctypes.c_ubyte * size).from_buffer(byte_array)
 
 
@@ -111,9 +111,9 @@ def set_associated_file_math_ml(pdfix: Pdfix, element: PdsStructElement, math_ml
     associated_file_data.PutString("UF", math_ml_version)
     associated_file_data.PutString("Desc", math_ml_version)
 
-    raw_data = bytearray_to_data(bytearray(math_ml.encode("utf-8")))
+    raw_data: ctypes.Array[ctypes.c_ubyte] = bytearray_to_data(bytearray(math_ml.encode("utf-8")))
     file_dictionary: PdsDictionary = document.CreateDictObject(False)
-    file_stream = document.CreateStreamObject(True, file_dictionary, raw_data, len(math_ml))
+    file_stream: PdsStream = document.CreateStreamObject(True, file_dictionary, raw_data, len(math_ml))
 
     ef_dict: PdsDictionary = associated_file_data.PutDict("EF")
     ef_dict.Put("F", file_stream)
@@ -131,11 +131,11 @@ def add_associated_file(pdfix: Pdfix, element: PdsStructElement, associated_file
         element (PdsStructElement): The structure element to add the associated file to.
         associated_file_data (PdsDictionary): The associated file data to add.
     """
-    element_object = PdsDictionary(element.GetObject().obj)
+    element_object: PdsDictionary = PdsDictionary(element.GetObject().obj)
     associated_file_dictionary: PdsDictionary = element_object.GetDictionary("AF")
     if associated_file_dictionary:
         # convert dict to an array
-        associated_file_array = pdfix.CreateArrayObject(False)
+        associated_file_array: PdsArray = pdfix.CreateArrayObject(False)
         associated_file_array.Put(0, associated_file_dictionary.Clone(False))
         element_object.Put("AF", associated_file_array)
 

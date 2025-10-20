@@ -1,5 +1,4 @@
 import argparse
-import os
 import re
 import sys
 import threading
@@ -8,8 +7,17 @@ from pathlib import Path
 from typing import Any, Optional
 
 from autotag import AutotagUsingPaddleXRecognition
-from constants import IMAGE_FILE_EXT_REGEX, SUPPORTED_IMAGE_EXT
+from constants import CONFIG_FILE, IMAGE_FILE_EXT_REGEX, SUPPORTED_IMAGE_EXT
 from create_template import CreateTemplateJsonUsingPaddleXRecognition
+from exceptions import (
+    EC_ARG_GENERAL,
+    MESSAGE_ARG_GENERAL,
+    ArgumentInputOutputNotAllowedException,
+    ArgumentInputPdfOutputJsonException,
+    ArgumentInputPdfOutputPdfException,
+    ArgumentZoomException,
+    ExpectedException,
+)
 from generate_mathml import GenerateMathmlFromImage, GenerateMathmlInPdf
 from image_update import DockerImageContainerUpdateChecker
 
@@ -279,8 +287,7 @@ def get_pdfix_config(path: str) -> None:
     Args:
         path (str): Destination path for config.json file
     """
-    config_path = os.path.join(Path(__file__).parent.absolute(), "../config.json")
-
+    config_path: Path = Path(__file__).parent.joinpath(f"../{CONFIG_FILE}").resolve()
     with open(config_path, "r", encoding="utf-8") as file:
         if path is None:
             print(file.read())
@@ -330,7 +337,7 @@ def autotagging_pdf(
         thresholds (dict): Thresholds for layout detection.
     """
     if zoom < 1.0 or zoom > 10.0:
-        raise Exception("Zoom level must between 1.0 and 10.0")
+        raise ArgumentZoomException()
 
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
         autotag = AutotagUsingPaddleXRecognition(
@@ -338,7 +345,7 @@ def autotagging_pdf(
         )
         autotag.process_file()
     else:
-        raise Exception("Input and output file must be PDF documents")
+        raise ArgumentInputPdfOutputPdfException()
 
 
 def run_template_subcommand(args) -> None:
@@ -372,7 +379,7 @@ def create_template_json(
         thresholds (dict): Thresholds for layout detection.
     """
     if zoom < 1.0 or zoom > 10.0:
-        raise Exception("Zoom level must between 1.0 and 10.0")
+        raise ArgumentZoomException()
 
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".json"):
         template_creator = CreateTemplateJsonUsingPaddleXRecognition(
@@ -380,7 +387,7 @@ def create_template_json(
         )
         template_creator.process_file()
     else:
-        raise Exception("Input file must be PDF and output file must be JSON")
+        raise ArgumentInputPdfOutputJsonException()
 
 
 def run_mathml_subcommand(args) -> None:
@@ -406,7 +413,7 @@ def formula_to_mathml(
         ai = GenerateMathmlFromImage(input_path, output_path)
         ai.process_image()
     else:
-        raise Exception('See "mathml --help" for allowed file combinations')
+        raise ArgumentInputOutputNotAllowedException()
 
 
 def create_threshold_dictionary(args) -> dict:
@@ -517,15 +524,15 @@ def main() -> None:
     # Parse arguments
     try:
         args = parser.parse_args()
-    except SystemExit as e:
-        if e.code == 0:
-            # This happens when --help is used, exit gracefully
-            sys.exit(0)
-        print("Failed to parse arguments. Please check the usage and try again.", file=sys.stderr)
-        sys.exit(e.code)
-    except ValueError as e:
-        print(f"Parsing error: {e}")
-        sys.exit(2)
+    except ExpectedException as e:
+        print(e.message, file=sys.stderr)
+        sys.exit(e.error_code)
+    except SystemExit as e:  # TODO Change in all repositories SystemExit -> Exception
+        if e.code != 0:
+            print(MESSAGE_ARG_GENERAL, file=sys.stderr)
+            sys.exit(EC_ARG_GENERAL)
+        # This happens when --help is used, exit gracefully
+        sys.exit(0)
 
     if hasattr(args, "func"):
         # Check for updates only when help is not checked
@@ -537,6 +544,9 @@ def main() -> None:
         # Run subcommand
         try:
             args.func(args)
+        except ExpectedException as e:
+            print(e.message, file=sys.stderr)
+            sys.exit(e.error_code)
         except Exception as e:
             print(traceback.format_exc(), file=sys.stderr)
             print(f"Failed to run the program: {e}", file=sys.stderr)

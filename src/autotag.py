@@ -1,8 +1,8 @@
 import json
-import os
 from pathlib import Path
 from typing import Optional
 
+import cv2
 from pdfixsdk import (
     GetPdfix,
     PdfDoc,
@@ -11,7 +11,9 @@ from pdfixsdk import (
     PdfPage,
     PdfPageView,
     PdfTagsParams,
+    PdsStructElement,
     PdsStructTree,
+    PsMemoryStream,
     kDataFormatJson,
     kRotate0,
     kSaveFull,
@@ -20,7 +22,13 @@ from tqdm import tqdm
 
 from ai import PaddleXEngine
 from constants import MATH_ML_VERSION
-from exceptions import PdfixException
+from exceptions import (
+    PdfixFailedToOpenException,
+    PdfixFailedToSaveException,
+    PdfixFailedToTagException,
+    PdfixInitializeException,
+    PdfixNoTagsException,
+)
 from page_renderer import create_image_from_pdf_page
 from template_json import TemplateJsonCreator
 from utils_sdk import authorize_sdk, browse_tags_recursive, json_to_raw_data, set_associated_file_math_ml
@@ -57,15 +65,15 @@ class AutotagUsingPaddleXRecognition:
             process_table (bool): Whether to process tables.
             thresholds (dict): Thresholds for layout detection.
         """
-        self.license_name = license_name
-        self.license_key = license_key
-        self.input_path_str = input_path
-        self.output_path_str = output_path
-        self.model = model
-        self.zoom = zoom
-        self.process_formula = process_formula
-        self.process_table = process_table
-        self.thresholds = thresholds
+        self.license_name: Optional[str] = license_name
+        self.license_key: Optional[str] = license_key
+        self.input_path_str: str = input_path
+        self.output_path_str: str = output_path
+        self.model: str = model
+        self.zoom: float = zoom
+        self.process_formula: bool = process_formula
+        self.process_table: bool = process_table
+        self.thresholds: dict = thresholds
 
     def process_file(self) -> None:
         """
@@ -73,30 +81,30 @@ class AutotagUsingPaddleXRecognition:
         """
         id: str = Path(self.input_path_str).stem
 
-        pdfix = GetPdfix()
+        pdfix: Pdfix = GetPdfix()
         if pdfix is None:
-            raise Exception("Pdfix Initialization failed")
+            raise PdfixInitializeException()
 
         # Try to authorize PDFix SDK
         authorize_sdk(pdfix, self.license_name, self.license_key)
 
         # Open the document
-        doc = pdfix.OpenDoc(self.input_path_str, "")
+        doc: PdfDoc = pdfix.OpenDoc(self.input_path_str, "")
         if doc is None:
-            raise PdfixException(pdfix, "Unable to open PDF")
+            raise PdfixFailedToOpenException(pdfix, self.input_path_str)
 
         # Process images of each page
-        num_pages = doc.GetNumPages()
-        paddlex = PaddleXEngine(self.model, self.process_formula, self.process_table, self.thresholds)
-        template_json_creator = TemplateJsonCreator()
-        max_formulas_and_tables_per_page = 1000
-        progress_bar = tqdm(total=num_pages * max_formulas_and_tables_per_page, desc="Processing pages")
+        num_pages: int = doc.GetNumPages()
+        paddlex: PaddleXEngine = PaddleXEngine(self.model, self.process_formula, self.process_table, self.thresholds)
+        template_json_creator: TemplateJsonCreator = TemplateJsonCreator()
+        max_formulas_and_tables_per_page: int = 1000
+        progress_bar: tqdm = tqdm(total=num_pages * max_formulas_and_tables_per_page, desc="Processing pages")
 
         for page_index in range(0, num_pages):
             # Acquire the page
             page: PdfPage = doc.AcquirePage(page_index)
             if page is None:
-                raise PdfixException(pdfix, "Unable to acquire the page")
+                raise PdfixFailedToTagException(pdfix, "Unable to acquire the page")
 
             try:
                 # Process the page
@@ -120,7 +128,7 @@ class AutotagUsingPaddleXRecognition:
         template_json_dict: dict = template_json_creator.create_json_dict_for_document(self.model, self.zoom)
 
         # Save template to file
-        template_path = os.path.join(Path(__file__).parent.absolute(), f"../output/{id}-template_json.json")
+        template_path: Path = Path(__file__).parent.joinpath(f"../output/{id}-template_json.json").resolve()
         with open(template_path, "w") as file:
             file.write(json.dumps(template_json_dict, indent=2))
 
@@ -129,12 +137,12 @@ class AutotagUsingPaddleXRecognition:
 
         # Add Associate File (AF) for formulas to document
         if self.process_formula:
-            formulas: list = template_json_creator.get_formulas()
+            formulas: list[tuple[int, str]] = template_json_creator.get_formulas()
             self._add_afs_for_formulas(pdfix, doc, formulas)
 
         # Save document
         if not doc.Save(self.output_path_str, kSaveFull):
-            raise PdfixException(pdfix, "Unable to save PDF")
+            raise PdfixFailedToSaveException(pdfix, self.output_path_str)
 
     def _process_pdf_file_page(
         self,
@@ -162,19 +170,19 @@ class AutotagUsingPaddleXRecognition:
             max_formulas_and_tables_per_page (int): Our estimation how many
                 tables and formulas can be in one page.
         """
-        page_number = page_index + 1
+        page_number: int = page_index + 1
 
         # Define zoom level and rotation for rendering the page
         page_view: PdfPageView = page.AcquirePageView(self.zoom, kRotate0)
         if page_view is None:
-            raise PdfixException(pdfix, "Unable to acquire page view")
+            raise PdfixFailedToTagException(pdfix, "Unable to acquire page view")
 
         try:
             # Render the page as an image
-            image = create_image_from_pdf_page(pdfix, page, page_view)
+            image: cv2.typing.MatLike = create_image_from_pdf_page(pdfix, page, page_view)
 
             # Run layout model analysis and formula and table model analysis using the PaddleX engine
-            results = paddlex.process_pdf_page_image_with_ai(
+            results: dict = paddlex.process_pdf_page_image_with_ai(
                 image, id, page_number, progress_bar, max_formulas_and_tables_per_page
             )
 
@@ -197,23 +205,23 @@ class AutotagUsingPaddleXRecognition:
         """
         # Remove old structure and prepare an empty structure tree
         if not doc.RemoveTags():
-            raise PdfixException(pdfix, "Failed to remove tags from doc")
+            raise PdfixFailedToTagException(pdfix, "Failed to remove tags from doc")
         if not doc.RemoveStructTree():
-            raise PdfixException(pdfix, "Failed to remove structure from doc")
+            raise PdfixFailedToTagException(pdfix, "Failed to remove structure from doc")
 
         # Convert template json to memory stream
-        memory_stream = pdfix.CreateMemStream()
+        memory_stream: PsMemoryStream = pdfix.CreateMemStream()
         if memory_stream is None:
-            raise PdfixException(pdfix, "Unable to create memory stream")
+            raise PdfixFailedToTagException(pdfix, "Unable to create memory stream")
 
         try:
             raw_data, raw_data_size = json_to_raw_data(template_json_dict)
             if not memory_stream.Write(0, raw_data, raw_data_size):
-                raise PdfixException(pdfix, "Unable to write template data into memory")
+                raise PdfixFailedToTagException(pdfix, "Unable to write template data into memory")
 
             doc_template: PdfDocTemplate = doc.GetTemplate()
             if not doc_template.LoadFromStream(memory_stream, kDataFormatJson):
-                raise PdfixException(pdfix, "Unable save template into document")
+                raise PdfixFailedToTagException(pdfix, "Unable save template into document")
         except Exception:
             raise
         finally:
@@ -222,32 +230,32 @@ class AutotagUsingPaddleXRecognition:
         # Autotag document
         tagsParams = PdfTagsParams()
         if not doc.AddTags(tagsParams):
-            raise PdfixException(pdfix, "Failed to tag document")
+            raise PdfixFailedToTagException(pdfix, "Failed to tag document")
 
-    def _add_afs_for_formulas(self, pdfix: Pdfix, doc: PdfDoc, formulas: list) -> None:
+    def _add_afs_for_formulas(self, pdfix: Pdfix, doc: PdfDoc, formulas: list[tuple[int, str]]) -> None:
         """
         For each formula add associate file to document.
 
         Args:
             pdfix (Pdfix): PDFix SDK.
             doc (PdfDoc): Tagged PDF document.
-            formulas (list): List of formulas to process.
+            formulas (list[tuple[int, str]]): List of formulas to process.
         """
         struct_tree: PdsStructTree = doc.GetStructTree()
         if struct_tree is None:
-            raise PdfixException(pdfix, "PDF has no structure tree")
+            raise PdfixNoTagsException(pdfix, "PDF has no structure tree")
 
-        child_element = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
-        items = browse_tags_recursive(child_element, "Formula")
+        child_element: PdsStructElement = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
+        items: list[PdsStructElement] = browse_tags_recursive(child_element, "Formula")
         for formula_element in items:
             element_id: str = formula_element.GetId()
             if element_id == "":
                 # This formula element does not have "id"
                 continue
 
-            index = next((i for i, data in enumerate(formulas) if str(data[0]) == element_id), -1)
+            index: int = next((i for i, data in enumerate(formulas) if str(data[0]) == element_id), -1)
             if index < 0:
                 # We don't have data for this formula "id"
                 continue
-            formula = formulas.pop(index)
+            formula: tuple[int, str] = formulas.pop(index)
             set_associated_file_math_ml(pdfix, formula_element, formula[1], MATH_ML_VERSION)

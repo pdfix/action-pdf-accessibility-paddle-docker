@@ -200,11 +200,11 @@ class PaddleXPostProcessingTable:
             Cell position in one direction
             Cell span in one direction
         """
-        min_index = self._find_line_index(min, lines)
-        max_index = self._find_line_index(max, lines)
+        min_index: int = self._find_line_index(min, lines)
+        max_index: int = self._find_line_index(max, lines)
 
-        span = max_index - min_index
-        position = min_index + 1
+        span: int = max_index - min_index
+        position: int = min_index + 1
         return min_index, max_index, position, span
 
     def _find_line_index(self, target_line: int, lines: list) -> int:

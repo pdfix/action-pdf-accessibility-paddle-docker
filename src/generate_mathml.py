@@ -14,7 +14,12 @@ from tqdm import tqdm
 
 from ai import PaddleXEngine
 from constants import MATH_ML_VERSION
-from exceptions import PdfixException
+from exceptions import (
+    PdfixFailedToOpenException,
+    PdfixFailedToSaveException,
+    PdfixInitializeException,
+    PdfixNoTagsException,
+)
 from page_renderer import render_element_to_image
 from utils_sdk import authorize_sdk, browse_tags_recursive, set_associated_file_math_ml
 
@@ -33,8 +38,8 @@ class GenerateMathmlFromImage:
             input_path (str): Path to the image (JPG) file.
             output_path (str): Path to the mathml (XML) file.
         """
-        self.input_path_str = input_path
-        self.output_path_str = output_path
+        self.input_path_str: str = input_path
+        self.output_path_str: str = output_path
 
     def process_image(self) -> None:
         """
@@ -47,9 +52,9 @@ class GenerateMathmlFromImage:
         3. Converts response to MathML ver. 3
         4. Saves the MathMl in the output XML file.
         """
-        image = cv2.imread(self.input_path_str)
+        image: cv2.typing.MatLike = cv2.imread(self.input_path_str)
 
-        ai = PaddleXEngine()
+        ai: PaddleXEngine = PaddleXEngine()
         mathml_formula: str = ai.process_formula_image_with_ai(image)
 
         with open(self.output_path_str, "w", encoding="utf-8") as output_file:
@@ -78,48 +83,47 @@ class GenerateMathmlInPdf:
             input_path (str): Path to PDF document
             output_path (str): Path where tagged PDF should be saved
         """
-        self.license_name = license_name
-        self.license_key = license_key
-        self.input_path_str = input_path
-        self.output_path_str = output_path
+        self.license_name: Optional[str] = license_name
+        self.license_key: Optional[str] = license_key
+        self.input_path_str: str = input_path
+        self.output_path_str: str = output_path
 
     def process_file(self) -> None:
         """
         Goes through PDF document and for each formula tries to set associate file with MathML.
         """
-        pdfix = GetPdfix()
+        pdfix: Pdfix = GetPdfix()
         if pdfix is None:
-            raise Exception("Pdfix Initialization failed")
+            raise PdfixInitializeException()
 
         # Try to authorize PDFix SDK
         authorize_sdk(pdfix, self.license_name, self.license_key)
 
         # Open the document
-        doc = pdfix.OpenDoc(self.input_path_str, "")
+        doc: PdfDoc = pdfix.OpenDoc(self.input_path_str, "")
         if doc is None:
-            raise PdfixException(pdfix, "Unable to open PDF")
+            raise PdfixFailedToOpenException(pdfix, self.input_path_str)
 
-        ai = PaddleXEngine()
+        ai: PaddleXEngine = PaddleXEngine()
 
         # Get Root Tag element
         struct_tree: PdsStructTree = doc.GetStructTree()
         if struct_tree is None:
-            raise PdfixException(pdfix, "PDF has no structure tree")
+            raise PdfixNoTagsException(pdfix, "PDF has no structure tree")
 
-        child_element = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
+        child_element: PdsStructElement = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
 
         # Find all formulas:
-        items = browse_tags_recursive(child_element, "Formula")
-        count = len(items)
-        ai = PaddleXEngine()
+        items: list[PdsStructElement] = browse_tags_recursive(child_element, "Formula")
+        count: int = len(items)
 
         for index in tqdm(range(count)):
-            element = items[index]
+            element: PdsStructElement = items[index]
             self._process_element(pdfix, doc, element, ai)
 
         # Save document
         if not doc.Save(self.output_path_str, kSaveFull):
-            raise PdfixException(pdfix, "Unable to save PDF")
+            raise PdfixFailedToSaveException(pdfix, self.output_path_str)
 
     def _process_element(self, pdfix: Pdfix, doc: PdfDoc, element: PdsStructElement, ai: PaddleXEngine) -> None:
         """
@@ -137,10 +141,10 @@ class GenerateMathmlInPdf:
         element_object_id: int = element.GetObject().GetId()
         element_id: str = element.GetId()
         element_type: str = element.GetType(False)
-        log_id = f"{element_type} [obj: {element_object_id}, id: {element_id}]"
+        log_id: str = f"{element_type} [obj: {element_object_id}, id: {element_id}]"
 
         # Get page number
-        page_number = element.GetPageNumber(0)
+        page_number: int = element.GetPageNumber(0)
         if page_number == -1:
             for i in range(0, element.GetNumChildren()):
                 page_number = element.GetChildPageNumber(i)
@@ -152,9 +156,9 @@ class GenerateMathmlInPdf:
             return
 
         # Get bounding box
-        bbox = PdfRect()
+        bbox: PdfRect = PdfRect()
         for i in range(element.GetNumPages()):
-            page_num = element.GetPageNumber(i)
+            page_num: int = element.GetPageNumber(i)
             bbox = element.GetBBox(page_num)
             break
 
@@ -163,10 +167,10 @@ class GenerateMathmlInPdf:
             return
 
         # Create image
-        image = render_element_to_image(pdfix, doc, page_num, bbox, 1)
+        image: cv2.typing.MatLike = render_element_to_image(pdfix, doc, page_num, bbox, 1)
 
         # Recognize formula
-        mathml_formula = ai.process_formula_image_with_ai(image)
+        mathml_formula: str = ai.process_formula_image_with_ai(image)
 
         # Set AF
         set_associated_file_math_ml(pdfix, element, mathml_formula, MATH_ML_VERSION)

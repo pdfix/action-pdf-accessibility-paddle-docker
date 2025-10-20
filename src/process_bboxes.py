@@ -33,7 +33,7 @@ class PaddleXPostProcessingBBoxes:
         Args:
             results (dict): Dictionary results containing bounding boxes and their scores.
         """
-        self.results = results
+        self.results: dict = results
 
     def process_bboxes(self) -> list:
         """
@@ -64,7 +64,7 @@ class PaddleXPostProcessingBBoxes:
             Unique list of all tupples that overlaps.
         """
         overlaps: list[tuple[int, int]] = []
-        number_bboxes = len(self.results["boxes"])  # Ensure there are boxes to process
+        number_bboxes: int = len(self.results["boxes"])  # Ensure there are boxes to process
 
         # print("Overlaps:")
         for index1 in range(number_bboxes):
@@ -118,7 +118,7 @@ class PaddleXPostProcessingBBoxes:
 
         return False
 
-    def _bboxes_overlaping_percentages(self, index1: int, index2: int) -> tuple:
+    def _bboxes_overlaping_percentages(self, index1: int, index2: int) -> tuple[float, float]:
         """
         Calculate the overlap percentage between two bounding boxes.
 
@@ -130,8 +130,8 @@ class PaddleXPostProcessingBBoxes:
             First value is percent (0-100) how much first bounding box has in overlaping area.
             Second value is percent (0-100) how much second bounding box has in overlaping area.
         """
-        bbox1 = self.results["boxes"][index1]
-        bbox2 = self.results["boxes"][index2]
+        bbox1: dict = self.results["boxes"][index1]
+        bbox2: dict = self.results["boxes"][index2]
 
         def bbox_size(bbox: dict) -> float:
             """
@@ -146,8 +146,8 @@ class PaddleXPostProcessingBBoxes:
             x_min, y_min, x_max, y_max = bbox["coordinate"]
             return max(0, x_max - x_min) * max(0, y_max - y_min)
 
-        area_1 = bbox_size(bbox1)
-        area_2 = bbox_size(bbox2)
+        area_1: float = bbox_size(bbox1)
+        area_2: float = bbox_size(bbox2)
 
         def bboxes_intersection_size(bbox_1: dict, bbox_2: dict) -> float:
             """
@@ -163,15 +163,15 @@ class PaddleXPostProcessingBBoxes:
             x_min_1, y_min_1, x_max_1, y_max_1 = bbox_1["coordinate"]
             x_min_2, y_min_2, x_max_2, y_max_2 = bbox_2["coordinate"]
 
-            x_overlap = max(0, min(x_max_1, x_max_2) - max(x_min_1, x_min_2))
-            y_overlap = max(0, min(y_max_1, y_max_2) - max(y_min_1, y_min_2))
+            x_overlap: float = max(0, min(x_max_1, x_max_2) - max(x_min_1, x_min_2))
+            y_overlap: float = max(0, min(y_max_1, y_max_2) - max(y_min_1, y_min_2))
 
             return x_overlap * y_overlap
 
-        intersect_area = bboxes_intersection_size(bbox1, bbox2)
+        intersect_area: float = bboxes_intersection_size(bbox1, bbox2)
 
-        percent1 = (intersect_area / area_1) * 100 if area_1 > 0 else 0
-        percent2 = (intersect_area / area_2) * 100 if area_2 > 0 else 0
+        percent1: float = (intersect_area / area_1) * 100 if area_1 > 0 else 0
+        percent2: float = (intersect_area / area_2) * 100 if area_2 > 0 else 0
 
         return percent1, percent2
 
@@ -188,8 +188,8 @@ class PaddleXPostProcessingBBoxes:
         """
         # TODO PVQ-4049 - for now remove formulas under texts as SDK won't tag them
         return False
-        label1 = self.results["boxes"][index1]["label"]
-        label2 = self.results["boxes"][index2]["label"]
+        label1: str = self.results["boxes"][index1]["label"]
+        label2: str = self.results["boxes"][index2]["label"]
 
         if label1 == "formula" and label2 == "text":
             return True
@@ -255,16 +255,16 @@ class PaddleXPostProcessingBBoxes:
                 groups[group_index] = group
 
         # Merge groups that have any member in intersection
-        remove_group_indexes = []
-        unique_groups = []
+        remove_group_indexes: list[int] = []
+        unique_groups: list[set[int]] = []
         for group_index1 in range(len(groups)):
             if group_index1 in remove_group_indexes:
                 continue
-            group1 = groups[group_index1]
+            group1: set[int] = groups[group_index1]
             for group_index2 in range(group_index1 + 1, len(groups)):
                 if group_index2 in remove_group_indexes:
                     continue
-                group2 = groups[group_index2]
+                group2: set[int] = groups[group_index2]
                 if group1.intersection(group2):
                     group1 = group1.union(group2)
                     remove_group_indexes.append(group_index2)
@@ -282,11 +282,21 @@ class PaddleXPostProcessingBBoxes:
         return unique_groups
 
     def _indexes_that_can_be_merged(self, groups: list[set[int]]) -> tuple[int, int]:
-        groups_size = len(groups)
+        """
+        Find two groups that can be merged (have intersection).
+
+        Args:
+            groups (list[set[int]]): List of groups, where each group contains set of bbox indexes that overlaps either
+                directly or through some other bbox(es).
+
+        Returns:
+            Indexes of two groups that can be merged, -1, -1 otherwise (no two groups can be merged).
+        """
+        groups_size: int = len(groups)
         for index1 in range(groups_size):
-            group1 = groups[index1]
+            group1: set[int] = groups[index1]
             for index2 in range(index1 + 1, groups_size):
-                group2 = groups[index2]
+                group2: set[int] = groups[index2]
                 if group1 & group2:
                     return index1, index2
         return -1, -1
@@ -325,9 +335,9 @@ class PaddleXPostProcessingBBoxes:
     def _process_group(self, group: set[int], overlaps: list[tuple[int, int]]) -> set[int]:
         """
         Process members of group:
-        - take highest score members
-        - remove all its direct neighbours
-        - repeat till all members are processed
+        1. take highest score members
+        2. remove all its direct neighbours
+        3. repeat till all members are processed
 
         Args:
             group (set[int]): Group containing set of bbox indexes that overlaps either directly
