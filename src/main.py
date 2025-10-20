@@ -527,12 +527,16 @@ def main() -> None:
     except ExpectedException as e:
         print(e.message, file=sys.stderr)
         sys.exit(e.error_code)
-    except SystemExit as e:  # TODO Change in all repositories SystemExit -> Exception
+    except SystemExit as e:
         if e.code != 0:
             print(MESSAGE_ARG_GENERAL, file=sys.stderr)
             sys.exit(EC_ARG_GENERAL)
         # This happens when --help is used, exit gracefully
         sys.exit(0)
+    except Exception as e:
+        print(traceback.format_exc(), file=sys.stderr)
+        print(f"{MESSAGE_ARG_GENERAL} {e}", file=sys.stderr)
+        sys.exit(EC_ARG_GENERAL)
 
     if hasattr(args, "func"):
         # Check for updates only when help is not checked
