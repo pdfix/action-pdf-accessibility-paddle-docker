@@ -21,6 +21,7 @@ A Dockerized solution for automated PDF tagging using Paddle and PDFix SDK. Supp
 ## Getting Started
 
 To use this application, Docker must be installed on the system. If Docker is not installed, please follow the instructions on the [official Docker website](https://docs.docker.com/get-docker/) to install it.
+First run will pull the docker image, which may take some time. Make your own image for more advanced use.
 
 ## Run a Docker Container
 
