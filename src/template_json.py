@@ -87,7 +87,7 @@ class TemplateJsonCreator:
         """
         elements: list = self._create_json_for_elements(results, page_view, page_number)
 
-        json_for_page = {
+        json_for_page: dict[str, Any] = {
             "comment": f"Page {page_number}",
             "elements": elements,
             "query": {
@@ -126,7 +126,7 @@ class TemplateJsonCreator:
             32-bit integer number.
         """
         # Create string that we will hash
-        string_to_hash = f"{page_number}{type}"
+        string_to_hash: str = f"{page_number}{type}"
         for index in range(4):
             string_to_hash += str(int(coordinate[index]))
 
@@ -164,19 +164,19 @@ class TemplateJsonCreator:
 
         for result in results["boxes"]:
             # get all other regions that overlaps with this one
-            overlaps = self._find_overlaps(result, results["boxes"])
+            overlaps: list = self._find_overlaps(result, results["boxes"])
 
             # keep only text ones
-            text_overlaps = [overlap for overlap in overlaps if overlap["label"] == "text"]
+            text_overlaps: list = [overlap for overlap in overlaps if overlap["label"] == "text"]
             if result["label"] == "formula" and len(text_overlaps) > 0:
                 # formula is inside text skipping it here as it will be added inside text
                 continue
 
             # create template json data for region
-            element = self._convert_result_into_element(result, page_view, page_number)
+            element: dict = self._convert_result_into_element(result, page_view, page_number)
 
             # keep only formula ones
-            formula_overlaps = [overlap for overlap in overlaps if overlap["label"] == "formula"]
+            formula_overlaps: list = [overlap for overlap in overlaps if overlap["label"] == "formula"]
             if result["label"] == "text" and len(formula_overlaps) > 0:
                 # add all overlapping formulas under this text
                 formula_elements: list = []
@@ -230,14 +230,14 @@ class TemplateJsonCreator:
         """
         element: dict[str, Any] = {}
 
-        rect = PdfDevRect()
+        rect: PdfDevRect = PdfDevRect()
         rect.left = math.floor(result["coordinate"][0])  # min_x
         rect.top = math.floor(result["coordinate"][1])  # min_y
         rect.right = math.ceil(result["coordinate"][2])  # max_x
         rect.bottom = math.ceil(result["coordinate"][3])  # max_y
-        bbox = page_view.RectToPage(rect)
+        bbox: PdfRect = page_view.RectToPage(rect)
         element["bbox"] = [str(bbox.left), str(bbox.bottom), str(bbox.right), str(bbox.top)]
-        label = result["label"].lower()
+        label: str = result["label"].lower()
         element["comment"] = f"{label} {round(result['score'] * 100)}%"
 
         # Determine element type
@@ -413,12 +413,12 @@ class TemplateJsonCreator:
             # create_cell["cell_scope"] = "0"
 
             if "bbox" in cell:
-                rect = PdfDevRect()
+                rect: PdfDevRect = PdfDevRect()
                 rect.left = math.ceil(cell["bbox"][0])  # min_x
                 rect.top = math.ceil(cell["bbox"][1])  # min_y
                 rect.right = math.floor(cell["bbox"][2])  # max_x
                 rect.bottom = math.floor(cell["bbox"][3])  # max_y
-                bbox = page_view.RectToPage(rect)
+                bbox: PdfRect = page_view.RectToPage(rect)
                 create_cell["bbox"] = [str(bbox.left), str(bbox.bottom), str(bbox.right), str(bbox.top)]
 
             cells.append(create_cell)
@@ -448,6 +448,6 @@ class TemplateJsonCreator:
         Returns:
             "header" or "footer"
         """
-        page_height = page_view.GetDeviceHeight()
-        half_height = page_height / 2
+        page_height: int = page_view.GetDeviceHeight()
+        half_height: float = page_height / 2
         return "footer" if bbox.top < half_height else "header"

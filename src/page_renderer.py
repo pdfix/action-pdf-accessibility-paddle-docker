@@ -1,5 +1,6 @@
 import base64
 import tempfile
+from typing import Optional
 
 import cv2
 import numpy as np
@@ -41,7 +42,7 @@ def create_image_from_pdf_page(pdfix: Pdfix, pdf_page: PdfPage, page_view: PdfPa
     page_height: int = page_view.GetDeviceHeight()
 
     # Create an image with the specified dimensions and ARGB format
-    page_image: PsImage = pdfix.CreateImage(page_width, page_height, kImageDIBFormatArgb)
+    page_image: Optional[PsImage] = pdfix.CreateImage(page_width, page_height, kImageDIBFormatArgb)
     if page_image is None:
         raise PdfixFailedToRenderException(pdfix, "Unable to create the image")
 
@@ -57,7 +58,7 @@ def create_image_from_pdf_page(pdfix: Pdfix, pdf_page: PdfPage, page_view: PdfPa
 
         # Save the renderred image to a temporary file in JPG format
         with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-            file_stream: PsFileStream = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
+            file_stream: Optional[PsFileStream] = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
             if file_stream is None:
                 raise PdfixFailedToRenderException(pdfix, "Unable to create file stream")
 
@@ -137,12 +138,12 @@ def render_element_to_image(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfR
     Returns:
         The rendered element as MatLike object.
     """
-    page: PdfPage = doc.AcquirePage(page_num)
+    page: Optional[PdfPage] = doc.AcquirePage(page_num)
     if page is None:
         raise PdfixFailedToRenderException(pdfix, "Unable to acquire the page")
 
     try:
-        page_view: PdfPageView = page.AcquirePageView(zoom, kRotate0)
+        page_view: Optional[PdfPageView] = page.AcquirePageView(zoom, kRotate0)
         if page_view is None:
             raise PdfixFailedToRenderException(pdfix, "Unable to acquire page view")
 
@@ -154,13 +155,15 @@ def render_element_to_image(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfR
             render_parameters: PdfPageRenderParams = PdfPageRenderParams()
             render_parameters.matrix = page_view.GetDeviceMatrix()
             render_parameters.clip_box = bbox
-            render_parameters.image = pdfix.CreateImage(
+            ps_image: Optional[PsImage] = pdfix.CreateImage(
                 rect.right - rect.left,
                 rect.bottom - rect.top,
                 kImageDIBFormatArgb,
             )
-            if render_parameters.image is None:
+            if ps_image is None:
                 raise PdfixFailedToRenderException(pdfix, "Unable to create the image")
+
+            render_parameters.image = ps_image
 
             try:
                 # Render the page element content onto the image
@@ -168,7 +171,7 @@ def render_element_to_image(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfR
                     raise PdfixFailedToRenderException(pdfix, "Unable to draw the content")
 
                 with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-                    file_stream: PsFileStream = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
+                    file_stream: Optional[PsFileStream] = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
                     if file_stream is None:
                         raise PdfixFailedToRenderException(pdfix, "Unable to create file stream")
 

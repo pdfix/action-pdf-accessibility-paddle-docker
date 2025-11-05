@@ -60,7 +60,7 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         """
         id: str = Path(self.input_path_str).stem
 
-        pdfix: Pdfix = GetPdfix()
+        pdfix: Optional[Pdfix] = GetPdfix()
         if pdfix is None:
             raise PdfixInitializeException()
 
@@ -68,7 +68,7 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         authorize_sdk(pdfix, self.license_name, self.license_key)
 
         # Open the document
-        doc: PdfDoc = pdfix.OpenDoc(self.input_path_str, "")
+        doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_path_str, "")
         if doc is None:
             raise PdfixFailedToOpenException(pdfix, self.input_path_str)
 
@@ -81,7 +81,7 @@ class CreateTemplateJsonUsingPaddleXRecognition:
 
         for page_index in range(0, num_pages):
             # Acquire the page
-            page: PdfPage = doc.AcquirePage(page_index)
+            page: Optional[PdfPage] = doc.AcquirePage(page_index)
             if page is None:
                 raise PdfixFailedToCreateTemplateException(pdfix, "Unable to acquire the page")
 
@@ -140,7 +140,7 @@ class CreateTemplateJsonUsingPaddleXRecognition:
         page_number: int = page_index + 1
 
         # Define rotation for rendering the page
-        page_view: PdfPageView = page.AcquirePageView(self.zoom, kRotate0)
+        page_view: Optional[PdfPageView] = page.AcquirePageView(self.zoom, kRotate0)
         if page_view is None:
             raise PdfixFailedToCreateTemplateException(pdfix, "Unable to acquire page view")
 

@@ -56,7 +56,7 @@ class PaddleXPostProcessingTable:
                 int(min_x), int(max_x), column_lines
             )
 
-            bbox = [
+            bbox: list = [
                 column_lines[column_min_index],
                 row_lines[row_min_index],
                 column_lines[column_max_index],

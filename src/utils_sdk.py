@@ -3,7 +3,18 @@ import json
 import re
 from typing import Optional
 
-from pdfixsdk import PdfDoc, Pdfix, PdsArray, PdsDictionary, PdsStream, PdsStructElement, kPdsStructChildElement
+from pdfixsdk import (
+    PdfDoc,
+    Pdfix,
+    PdsArray,
+    PdsDictionary,
+    PdsObject,
+    PdsStream,
+    PdsStructElement,
+    PdsStructTree,
+    PsAccountAuthorization,
+    kPdsStructChildElement,
+)
 
 from exceptions import PdfixActivationException, PdfixAuthorizationException
 
@@ -18,7 +29,7 @@ def authorize_sdk(pdfix: Pdfix, license_name: Optional[str], license_key: Option
         license_key (string): Pdfix sdk license key
     """
     if license_name and license_key:
-        authorization = pdfix.GetAccountAuthorization()
+        authorization: PsAccountAuthorization = pdfix.GetAccountAuthorization()
         if not authorization.Authorize(license_name, license_key):
             raise PdfixAuthorizationException(pdfix)
     elif license_key:
@@ -65,11 +76,19 @@ def browse_tags_recursive(element: PdsStructElement, regex_tag: str) -> list[Pds
     """
     result: list[PdsStructElement] = []
     count: int = element.GetNumChildren()
-    structure_tree: PdsStructElement = element.GetStructTree()
+    structure_tree: Optional[PdsStructTree] = element.GetStructTree()
+    if structure_tree is None:
+        return result
+
     for i in range(0, count):
         if element.GetChildType(i) != kPdsStructChildElement:
             continue
-        child_element: PdsStructElement = structure_tree.GetStructElementFromObject(element.GetChildObject(i))
+        child_object: Optional[PdsObject] = element.GetChildObject(i)
+        if child_object is None:
+            continue
+        child_element: Optional[PdsStructElement] = structure_tree.GetStructElementFromObject(child_object)
+        if child_element is None:
+            continue
         if re.match(regex_tag, child_element.GetType(True)) or re.match(regex_tag, child_element.GetType(False)):
             # process element
             result.append(child_element)
@@ -103,8 +122,18 @@ def set_associated_file_math_ml(pdfix: Pdfix, element: PdsStructElement, math_ml
         math_ml_version (str): The MathML version to set.
     """
     # create mathML object
-    document: PdfDoc = element.GetStructTree().GetDoc()
-    associated_file_data: PdsDictionary = document.CreateDictObject(True)
+    structure_tree: Optional[PdsStructTree] = element.GetStructTree()
+    if structure_tree is None:
+        print("Failed to get structure tree from element")
+        return
+    document: Optional[PdfDoc] = structure_tree.GetDoc()
+    if document is None:
+        print("Failed to get document from structure tree")
+        return
+    associated_file_data: Optional[PdsDictionary] = document.CreateDictObject(True)
+    if associated_file_data is None:
+        print("Failed to create dictionary in document")
+        return
     associated_file_data.PutName("Type", "Filespec")
     associated_file_data.PutName("AFRelationshhip", "Supplement")
     associated_file_data.PutString("F", math_ml_version)
@@ -112,10 +141,19 @@ def set_associated_file_math_ml(pdfix: Pdfix, element: PdsStructElement, math_ml
     associated_file_data.PutString("Desc", math_ml_version)
 
     raw_data: ctypes.Array[ctypes.c_ubyte] = bytearray_to_data(bytearray(math_ml.encode("utf-8")))
-    file_dictionary: PdsDictionary = document.CreateDictObject(False)
-    file_stream: PdsStream = document.CreateStreamObject(True, file_dictionary, raw_data, len(math_ml))
+    file_dictionary: Optional[PdsDictionary] = document.CreateDictObject(False)
+    if file_dictionary is None:
+        print("Failed to create dictionary in document")
+        return
+    file_stream: Optional[PdsStream] = document.CreateStreamObject(True, file_dictionary, raw_data, len(math_ml))
+    if file_dictionary is None:
+        print("Failed to create file stream object in document")
+        return
 
-    ef_dict: PdsDictionary = associated_file_data.PutDict("EF")
+    ef_dict: Optional[PdsDictionary] = associated_file_data.PutDict("EF")
+    if ef_dict is None:
+        print("Failed to create dictionary in dictionary")
+        return
     ef_dict.Put("F", file_stream)
     ef_dict.Put("UF", file_stream)
 
@@ -132,14 +170,16 @@ def add_associated_file(pdfix: Pdfix, element: PdsStructElement, associated_file
         associated_file_data (PdsDictionary): The associated file data to add.
     """
     element_object: PdsDictionary = PdsDictionary(element.GetObject().obj)
-    associated_file_dictionary: PdsDictionary = element_object.GetDictionary("AF")
+    associated_file_dictionary: Optional[PdsDictionary] = element_object.GetDictionary("AF")
     if associated_file_dictionary:
         # convert dict to an array
-        associated_file_array: PdsArray = pdfix.CreateArrayObject(False)
-        associated_file_array.Put(0, associated_file_dictionary.Clone(False))
-        element_object.Put("AF", associated_file_array)
+        associated_file_array: Optional[PdsArray] = pdfix.CreateArrayObject(False)
+        if associated_file_array:
+            associated_file_array.Put(0, associated_file_dictionary.Clone(False))
+            element_object.Put("AF", associated_file_array)
 
     associated_file_array = element_object.GetArray("AF")
     if not associated_file_array:
         associated_file_array = element_object.PutArray("AF")
-    associated_file_array.Put(associated_file_array.GetNumObjects(), associated_file_data)
+    if associated_file_array:
+        associated_file_array.Put(associated_file_array.GetNumObjects(), associated_file_data)

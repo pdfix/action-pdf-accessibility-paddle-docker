@@ -6,6 +6,7 @@ from pdfixsdk import (
     PdfDoc,
     Pdfix,
     PdfRect,
+    PdsObject,
     PdsStructElement,
     PdsStructTree,
     kSaveFull,
@@ -92,7 +93,7 @@ class GenerateMathmlInPdf:
         """
         Goes through PDF document and for each formula tries to set associate file with MathML.
         """
-        pdfix: Pdfix = GetPdfix()
+        pdfix: Optional[Pdfix] = GetPdfix()
         if pdfix is None:
             raise PdfixInitializeException()
 
@@ -100,18 +101,23 @@ class GenerateMathmlInPdf:
         authorize_sdk(pdfix, self.license_name, self.license_key)
 
         # Open the document
-        doc: PdfDoc = pdfix.OpenDoc(self.input_path_str, "")
+        doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_path_str, "")
         if doc is None:
             raise PdfixFailedToOpenException(pdfix, self.input_path_str)
 
         ai: PaddleXEngine = PaddleXEngine()
 
         # Get Root Tag element
-        struct_tree: PdsStructTree = doc.GetStructTree()
+        struct_tree: Optional[PdsStructTree] = doc.GetStructTree()
         if struct_tree is None:
             raise PdfixNoTagsException(pdfix, "PDF has no structure tree")
 
-        child_element: PdsStructElement = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
+        child_object: Optional[PdsObject] = struct_tree.GetChildObject(0)
+        if child_object is None:
+            raise PdfixNoTagsException(pdfix, "PDF has no child objects in structure tree")
+        child_element: Optional[PdsStructElement] = struct_tree.GetStructElementFromObject(child_object)
+        if child_element is None:
+            raise PdfixNoTagsException(pdfix, "PDF has no elements in structure tree")
 
         # Find all formulas:
         items: list[PdsStructElement] = browse_tags_recursive(child_element, "Formula")

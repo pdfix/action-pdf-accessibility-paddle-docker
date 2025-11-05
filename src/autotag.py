@@ -11,6 +11,7 @@ from pdfixsdk import (
     PdfPage,
     PdfPageView,
     PdfTagsParams,
+    PdsObject,
     PdsStructElement,
     PdsStructTree,
     PsMemoryStream,
@@ -81,7 +82,7 @@ class AutotagUsingPaddleXRecognition:
         """
         id: str = Path(self.input_path_str).stem
 
-        pdfix: Pdfix = GetPdfix()
+        pdfix: Optional[Pdfix] = GetPdfix()
         if pdfix is None:
             raise PdfixInitializeException()
 
@@ -89,7 +90,7 @@ class AutotagUsingPaddleXRecognition:
         authorize_sdk(pdfix, self.license_name, self.license_key)
 
         # Open the document
-        doc: PdfDoc = pdfix.OpenDoc(self.input_path_str, "")
+        doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_path_str, "")
         if doc is None:
             raise PdfixFailedToOpenException(pdfix, self.input_path_str)
 
@@ -102,7 +103,7 @@ class AutotagUsingPaddleXRecognition:
 
         for page_index in range(0, num_pages):
             # Acquire the page
-            page: PdfPage = doc.AcquirePage(page_index)
+            page: Optional[PdfPage] = doc.AcquirePage(page_index)
             if page is None:
                 raise PdfixFailedToTagException(pdfix, "Unable to acquire the page")
 
@@ -173,7 +174,7 @@ class AutotagUsingPaddleXRecognition:
         page_number: int = page_index + 1
 
         # Define zoom level and rotation for rendering the page
-        page_view: PdfPageView = page.AcquirePageView(self.zoom, kRotate0)
+        page_view: Optional[PdfPageView] = page.AcquirePageView(self.zoom, kRotate0)
         if page_view is None:
             raise PdfixFailedToTagException(pdfix, "Unable to acquire page view")
 
@@ -210,7 +211,7 @@ class AutotagUsingPaddleXRecognition:
             raise PdfixFailedToTagException(pdfix, "Failed to remove structure from doc")
 
         # Convert template json to memory stream
-        memory_stream: PsMemoryStream = pdfix.CreateMemStream()
+        memory_stream: Optional[PsMemoryStream] = pdfix.CreateMemStream()
         if memory_stream is None:
             raise PdfixFailedToTagException(pdfix, "Unable to create memory stream")
 
@@ -219,16 +220,16 @@ class AutotagUsingPaddleXRecognition:
             if not memory_stream.Write(0, raw_data, raw_data_size):
                 raise PdfixFailedToTagException(pdfix, "Unable to write template data into memory")
 
-            doc_template: PdfDocTemplate = doc.GetTemplate()
-            if not doc_template.LoadFromStream(memory_stream, kDataFormatJson):
-                raise PdfixFailedToTagException(pdfix, "Unable save template into document")
+            doc_template: Optional[PdfDocTemplate] = doc.GetTemplate()
+            if doc_template is None or not doc_template.LoadFromStream(memory_stream, kDataFormatJson):
+                raise PdfixFailedToTagException(pdfix, "Unable to save template into document")
         except Exception:
             raise
         finally:
             memory_stream.Destroy()
 
         # Autotag document
-        tagsParams = PdfTagsParams()
+        tagsParams: PdfTagsParams = PdfTagsParams()
         if not doc.AddTags(tagsParams):
             raise PdfixFailedToTagException(pdfix, "Failed to tag document")
 
@@ -241,11 +242,18 @@ class AutotagUsingPaddleXRecognition:
             doc (PdfDoc): Tagged PDF document.
             formulas (list[tuple[int, str]]): List of formulas to process.
         """
-        struct_tree: PdsStructTree = doc.GetStructTree()
+        struct_tree: Optional[PdsStructTree] = doc.GetStructTree()
         if struct_tree is None:
             raise PdfixNoTagsException(pdfix, "PDF has no structure tree")
 
-        child_element: PdsStructElement = struct_tree.GetStructElementFromObject(struct_tree.GetChildObject(0))
+        child_object: Optional[PdsObject] = struct_tree.GetChildObject(0)
+        if struct_tree is None:
+            raise PdfixNoTagsException(pdfix, "PDF has no child objects in structure tree")
+
+        child_element: PdsStructElement = struct_tree.GetStructElementFromObject(child_object)
+        if struct_tree is None:
+            raise PdfixNoTagsException(pdfix, "PDF has no elements in structure tree")
+
         items: list[PdsStructElement] = browse_tags_recursive(child_element, "Formula")
         for formula_element in items:
             element_id: str = formula_element.GetId()

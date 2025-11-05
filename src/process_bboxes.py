@@ -275,7 +275,7 @@ class PaddleXPostProcessingBBoxes:
         # for group in groups:
         #     print("Group:")
         #     for member_index in group:
-        #         box = self.results["boxes"][member_index]
+        #         box: dict = self.results["boxes"][member_index]
         #         print(f"{box['label']} {round(box['score'] * 100)}%    {box['coordinate']}")
 
         # Return disjoint sets
@@ -321,13 +321,13 @@ class PaddleXPostProcessingBBoxes:
             # # For debugging
             # print("Removing:")
             # for index in removed:
-            #     box = self.results["boxes"][index]
+            #     box: dict = self.results["boxes"][index]
             #     print(f"{box['label']} {round(box['score'] * 100)}%")
 
         # # For debugging
         # print("All Removing:")
         # for index in remove_indexes:
-        #     box = self.results["boxes"][index]
+        #     box: dict = self.results["boxes"][index]
         #     print(f"{box['label']} {round(box['score'] * 100)}%")
 
         return remove_indexes

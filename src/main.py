@@ -287,7 +287,7 @@ def get_pdfix_config(path: str) -> None:
     Args:
         path (str): Destination path for config.json file
     """
-    config_path: Path = Path(__file__).parent.joinpath(f"../{CONFIG_FILE}").resolve()
+    config_path: Path = Path(__file__).parent.parent.joinpath(CONFIG_FILE).resolve()
     with open(config_path, "r", encoding="utf-8") as file:
         if path is None:
             print(file.read())

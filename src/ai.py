@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional
+from typing import Any, Generator, Optional
 from xml.etree import ElementTree as ET
 
 import cv2
@@ -78,7 +78,7 @@ class PaddleXEngine:
             threshold=self.threshold,
         )
 
-        output = model.predict(input=image, batch_size=1, layout_nms=True)
+        output: Generator[Any, Any, None] = model.predict(input=image, batch_size=1, layout_nms=True)
 
         for res in output:
             output_name: str = f"{id}-page{page_number}.png"
@@ -140,10 +140,10 @@ class PaddleXEngine:
 
                             # Get formula image
                             coordinate = box["coordinate"]
-                            formula_image = create_image_from_part_of_page(image, coordinate, 1)
+                            formula_image: cv2.typing.MatLike = create_image_from_part_of_page(image, coordinate, 1)
 
                             # Process formula
-                            formula_representation = self.process_formula_image_with_ai(formula_image)
+                            formula_representation: str = self.process_formula_image_with_ai(formula_image)
 
                             # Save as additional data to PaddleX result
                             if formula_representation != "":
@@ -152,7 +152,7 @@ class PaddleXEngine:
                             # Update progress after 1 processed formula
                             progress_bar.update(one_step)
 
-                bbox_post_processing = PaddleXPostProcessingBBoxes(res)
+                bbox_post_processing: PaddleXPostProcessingBBoxes = PaddleXPostProcessingBBoxes(res)
                 res["boxes"] = bbox_post_processing.process_bboxes()
                 if last_step > 0:
                     progress_bar.update(last_step)
@@ -183,7 +183,7 @@ class PaddleXEngine:
             device="cpu",
         )
 
-        output = formula_model.predict(input=image, batch_size=1)
+        output: Generator[Any, Any, None] = formula_model.predict(input=image, batch_size=1)
 
         for res in output:
             latex_formula: str = res["rec_formula"]
@@ -293,7 +293,7 @@ class PaddleXEngine:
             device="cpu",
         )
 
-        output = model.predict(input=image, batch_size=1)
+        output: Generator[Any, Any, None] = model.predict(input=image, batch_size=1)
 
         for classification_result in output:
             is_wired: bool = self._use_wired_model(classification_result)
@@ -303,7 +303,7 @@ class PaddleXEngine:
                 "RT-DETR-L_wired_table_cell_det" if is_wired else "RT-DETR-L_wireless_table_cell_det"
             )
             table_cell_model_dir: str = (
-                Path(__file__).parent.joinpath(f"../models/{table_cell_model_name}").resolve().as_posix()
+                Path(__file__).parent.parent.joinpath(f"models/{table_cell_model_name}").resolve().as_posix()
             )
 
             table_cell_model = create_model(
