@@ -7,7 +7,7 @@ from typing import Any, Optional
 
 import requests
 
-from constants import CONFIG_FILE, DOCKER_IMAGE
+from constants import CONFIG_FILE, DOCKER_IMAGE, DOCKER_NAMESPACE, DOCKER_REPOSITORY
 
 
 class DockerImageContainerUpdateChecker:
@@ -62,14 +62,24 @@ class DockerImageContainerUpdateChecker:
         Returns:
             The latest version of the Docker image, or None if an error occurs.
         """
-        url: str = f"https://hub.docker.com/v2/repositories/{DOCKER_IMAGE}/tags?page_size=1"
+        # Get last updated tag as only result from Docker API
+        url: str = (
+            f"https://hub.docker.com/v2/"
+            f"namespaces/{DOCKER_NAMESPACE}/"
+            f"repositories/{DOCKER_REPOSITORY}/"
+            f"tags?page_size=1&ordering=last_updated"
+        )
         try:
             response: requests.Response = requests.get(url)
             response.raise_for_status()
-            tags: list = response.json().get("results", [])
-            if tags:
-                # Latest tag
-                return tags[0]["name"]
+            data: Any = response.json()
+            if isinstance(data, dict) and "results" in data:
+                results: Any = data["results"]
+                if isinstance(results, list):
+                    first: Any = results[0]
+                    # Get latest tag
+                    if isinstance(first, dict) and "name" in first:
+                        return first["name"]
         except requests.RequestException as e:
             print(f"Error checking for updates: {e}", file=sys.stderr)
         return None
