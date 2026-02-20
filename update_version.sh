@@ -17,6 +17,12 @@ if [ "$1" == "latest" ]; then
     exit 0
 fi
 
+version=$1
+
+echo "Version: ${version}"
+
+
+# config.json
 # Check if config.json exists
 if [ ! -f "config.json" ]; then
     echo "File config.json does not exist."
@@ -24,12 +30,25 @@ if [ ! -f "config.json" ]; then
 fi
 
 # Replace "latest" with the provided argument in config.json
-sed -i "s|latest|$1|g" config.json
+sed -i.bak "s|:latest|:${version}|g" config.json && rm config.json.bak
 
-echo "Replaced all occurrences of 'latest' with '$1' in config.json."
+echo "Replaced all occurrences of 'latest' with '${version}' in config.json."
 
 # Replace in config.json in "version" : "v0.0.0"
 # "v0.0.0" in with the provided argument
-sed -i "s|v0\.0\.0|$1|g" config.json
+sed -i.bak "s|v0\.0\.0|${version}|g" config.json && rm config.json.bak
 
-echo "Replaced all occurrences of 'v0.0.0' with '$1' in config.json."
+echo "Replaced all occurrences of 'v0.0.0' with '${version}' in config.json."
+
+
+# README.md
+# Check if README.md exists
+if [ ! -f "README.md" ]; then
+    echo "File README.md does not exist."
+    exit 1
+fi
+
+# Replace "latest" with the provided argument in README.md
+sed -i.bak "s/:latest/:${version}/g" README.md && rm README.md.bak
+
+echo "Replaced all occurrences of 'latest' with '${version}' in README.md."
