@@ -49,6 +49,6 @@ if [ ! -f "README.md" ]; then
 fi
 
 # Replace "latest" with the provided argument in README.md
-sed -i.bak "s/:latest/:${version}/g" README.md && rm README.md.bak
+sed -i.bak "s|:latest|:${version}|g" README.md && rm README.md.bak
 
 echo "Replaced all occurrences of 'latest' with '${version}' in README.md."
