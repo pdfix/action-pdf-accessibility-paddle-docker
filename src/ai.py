@@ -54,7 +54,7 @@ class PaddleXEngine:
         id: str,
         page_number: int,
         progress_bar: tqdm,
-        max_formulas_and_tables_per_page: int,
+        total_units_for_page_processing: float,
     ) -> dict:
         """
         Let AI do its magic for PDF page image.
@@ -63,10 +63,8 @@ class PaddleXEngine:
             image (cv2.typing.MatLike): Rendered image of PDF page.
             id (string): PDF document name.
             page_number (int): Page number.
-            progress_bar (tqdm): Progress bar that we update for each model
-                call.
-            max_formulas_and_tables_per_page (int): Our estimation how many
-                tables and formulas can be in one page.
+            progress_bar (tqdm): Progress bar.
+            total_units_for_page_processing (float): How many units progress bar needs to update.
 
         Returns:
             List of recognized elements with data about possition and type.
@@ -95,17 +93,14 @@ class PaddleXEngine:
                 boxes_to_process += number_of_tables
             if self.process_formula:
                 boxes_to_process += number_of_formulas
-
             # Add one box as layout recognition that already passed
             boxes_to_process += 1
 
-            # Calculate steps - there will never be division by 0
-            # not all processings are equal in time but at least keep updating the progress bar
-            one_step: int = max_formulas_and_tables_per_page // boxes_to_process
-            last_step: int = max_formulas_and_tables_per_page - (boxes_to_process * one_step)
+            # Calculate step amount - there will never be division by 0
+            step: float = total_units_for_page_processing / boxes_to_process
 
-            # Layout recognition is already done
-            progress_bar.update(one_step)
+            # Layout recognition step
+            progress_bar.update(step)
 
             if "boxes" in res:
                 for box in res["boxes"]:
@@ -132,7 +127,7 @@ class PaddleXEngine:
                             box["custom"] = table_dict
 
                             # Update progress after 1 processed table
-                            progress_bar.update(one_step)
+                            progress_bar.update(step)
 
                         case "formula":
                             if not self.process_formula:
@@ -150,17 +145,15 @@ class PaddleXEngine:
                                 box["custom"] = formula_representation
 
                             # Update progress after 1 processed formula
-                            progress_bar.update(one_step)
+                            progress_bar.update(step)
 
                 bbox_post_processing: PaddleXPostProcessingBBoxes = PaddleXPostProcessingBBoxes(res)
                 res["boxes"] = bbox_post_processing.process_bboxes()
-                if last_step > 0:
-                    progress_bar.update(last_step)
 
                 return res
 
         # No layout output
-        progress_bar.update(max_formulas_and_tables_per_page)
+        progress_bar.update(total_units_for_page_processing)
         return {}
 
     def process_formula_image_with_ai(self, image: cv2.typing.MatLike) -> str:

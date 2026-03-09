@@ -569,7 +569,8 @@
                 "26": "Failed to tag PDF document.",
                 "27": "Failed to create template JSON.",
                 "28": "PDF document has no tags."
-            }
+            },
+            "progress_regex": "^[^:]+:\\s+(?<progress>\\d{1,3})%"
         },
         {
             "title": "Set Formula MathML  (Paddle)",

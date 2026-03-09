@@ -22,7 +22,16 @@ from pdfixsdk import (
 from tqdm import tqdm
 
 from ai import PaddleXEngine
-from constants import MATH_ML_VERSION
+from constants import (
+    MATH_ML_VERSION,
+    PERCENT_AI,
+    PERCENT_RENDER,
+    PERCENT_TEMPLATE,
+    PROGRESS_FIRST_STEP,
+    PROGRESS_FOURTH_STEP,
+    PROGRESS_SECOND_STEP,
+    PROGRESS_THIRD_STEP,
+)
 from exceptions import (
     PdfixFailedToOpenException,
     PdfixFailedToSaveException,
@@ -80,70 +89,85 @@ class AutotagUsingPaddleXRecognition:
         """
         Automatically tags a PDF document.
         """
-        id: str = Path(self.input_path_str).stem
+        total_progress_count: int = (
+            PROGRESS_FIRST_STEP + PROGRESS_SECOND_STEP + PROGRESS_THIRD_STEP + PROGRESS_FOURTH_STEP
+        )
+        with tqdm(total=total_progress_count) as progress_bar:
+            progress_bar.set_description("Initializing")
 
-        pdfix: Optional[Pdfix] = GetPdfix()
-        if pdfix is None:
-            raise PdfixInitializeException()
+            id: str = Path(self.input_path_str).stem
 
-        # Try to authorize PDFix SDK
-        authorize_sdk(pdfix, self.license_name, self.license_key)
+            pdfix: Optional[Pdfix] = GetPdfix()
+            if pdfix is None:
+                raise PdfixInitializeException()
 
-        # Open the document
-        doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_path_str, "")
-        if doc is None:
-            raise PdfixFailedToOpenException(pdfix, self.input_path_str)
+            # Try to authorize PDFix SDK
+            authorize_sdk(pdfix, self.license_name, self.license_key)
 
-        # Process images of each page
-        num_pages: int = doc.GetNumPages()
-        paddlex: PaddleXEngine = PaddleXEngine(self.model, self.process_formula, self.process_table, self.thresholds)
-        template_json_creator: TemplateJsonCreator = TemplateJsonCreator()
-        max_formulas_and_tables_per_page: int = 1000
-        progress_bar: tqdm = tqdm(total=num_pages * max_formulas_and_tables_per_page, desc="Processing pages")
+            # Open the document
+            doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_path_str, "")
+            if doc is None:
+                raise PdfixFailedToOpenException(pdfix, self.input_path_str)
 
-        for page_index in range(0, num_pages):
-            # Acquire the page
-            page: Optional[PdfPage] = doc.AcquirePage(page_index)
-            if page is None:
-                raise PdfixFailedToTagException(pdfix, "Unable to acquire the page")
+            # Process images of each page
+            number_of_pages: int = doc.GetNumPages()
+            paddlex: PaddleXEngine = PaddleXEngine(
+                self.model, self.process_formula, self.process_table, self.thresholds
+            )
+            template_json_creator: TemplateJsonCreator = TemplateJsonCreator()
 
-            try:
-                # Process the page
-                self._process_pdf_file_page(
-                    pdfix,
-                    id,
-                    page,
-                    page_index,
-                    paddlex,
-                    template_json_creator,
-                    progress_bar,
-                    max_formulas_and_tables_per_page,
-                )
-            except Exception:
-                raise
-            finally:
-                # Clean-up
-                page.Release()
+            progress_bar.update(PROGRESS_FIRST_STEP)
+            progress_bar.set_description("Processing pages")
+            step_count: float = float(PROGRESS_SECOND_STEP) / number_of_pages
 
-        # Create template for whole document
-        template_json_dict: dict = template_json_creator.create_json_dict_for_document(self.model, self.zoom)
+            for page_index in range(0, number_of_pages):
+                # Acquire the page
+                page: Optional[PdfPage] = doc.AcquirePage(page_index)
+                if page is None:
+                    raise PdfixFailedToTagException(pdfix, "Unable to acquire the page")
 
-        # Save template to file
-        template_path: Path = Path(__file__).parent.joinpath(f"../output/{id}-template_json.json").resolve()
-        with open(template_path, "w") as file:
-            file.write(json.dumps(template_json_dict, indent=2))
+                try:
+                    # Process the page
+                    self._process_pdf_file_page(
+                        pdfix, id, page, page_index, paddlex, template_json_creator, progress_bar, step_count
+                    )
+                except Exception:
+                    raise
+                finally:
+                    # Clean-up
+                    page.Release()
 
-        # Autotag document
-        self._autotag_using_template(doc, template_json_dict, pdfix)
+            progress_bar.n = PROGRESS_FIRST_STEP + PROGRESS_SECOND_STEP
+            progress_bar.set_description("Saving template")
+            progress_bar.refresh()
 
-        # Add Associate File (AF) for formulas to document
-        if self.process_formula:
-            formulas: list[tuple[int, str]] = template_json_creator.get_formulas()
-            self._add_afs_for_formulas(pdfix, doc, formulas)
+            # Create template for whole document
+            template_json_dict: dict = template_json_creator.create_json_dict_for_document(self.model, self.zoom)
 
-        # Save document
-        if not doc.Save(self.output_path_str, kSaveFull):
-            raise PdfixFailedToSaveException(pdfix, self.output_path_str)
+            # Save template to file
+            template_path: Path = Path(__file__).parent.joinpath(f"../output/{id}-template_json.json").resolve()
+            with open(template_path, "w") as file:
+                file.write(json.dumps(template_json_dict, indent=2))
+
+            progress_bar.n = PROGRESS_FIRST_STEP + PROGRESS_SECOND_STEP + PROGRESS_THIRD_STEP
+            progress_bar.set_description("Autotagging document")
+            progress_bar.refresh()
+
+            # Autotag document
+            self._autotag_using_template(doc, template_json_dict, pdfix)
+
+            # Add Associate File (AF) for formulas to document
+            if self.process_formula:
+                formulas: list[tuple[int, str]] = template_json_creator.get_formulas()
+                self._add_afs_for_formulas(pdfix, doc, formulas)
+
+            # Save document
+            if not doc.Save(self.output_path_str, kSaveFull):
+                raise PdfixFailedToSaveException(pdfix, self.output_path_str)
+
+            progress_bar.n = total_progress_count
+            progress_bar.set_description("Done")
+            progress_bar.refresh()
 
     def _process_pdf_file_page(
         self,
@@ -154,7 +178,7 @@ class AutotagUsingPaddleXRecognition:
         paddlex: PaddleXEngine,
         templateJsonCreator: TemplateJsonCreator,
         progress_bar: tqdm,
-        max_formulas_and_tables_per_page: int,
+        total_units_for_page_processing: float,
     ) -> None:
         """
         Create template json for current PDF document page.
@@ -166,12 +190,14 @@ class AutotagUsingPaddleXRecognition:
             page_index (int): PDF file page index.
             paddlex (PaddleXEngine): PaddleX engine instance for processing.
             templateJsonCreator (TemplateJsonCreator): Template JSON creator.
-            progress_bar (tqdm): Progress bar that we update for each model
-                call.
-            max_formulas_and_tables_per_page (int): Our estimation how many
-                tables and formulas can be in one page.
+            progress_bar (tqdm): Progress bar.
+            total_units_for_page_processing (float): How many units progress bar needs to update.
         """
         page_number: int = page_index + 1
+
+        render_step_units: float = total_units_for_page_processing * PERCENT_RENDER
+        ai_step_units: float = total_units_for_page_processing * PERCENT_AI
+        template_step_units: float = total_units_for_page_processing * PERCENT_TEMPLATE
 
         # Define zoom level and rotation for rendering the page
         page_view: Optional[PdfPageView] = page.AcquirePageView(self.zoom, kRotate0)
@@ -181,14 +207,14 @@ class AutotagUsingPaddleXRecognition:
         try:
             # Render the page as an image
             image: cv2.typing.MatLike = create_image_from_pdf_page(pdfix, page, page_view)
+            progress_bar.update(render_step_units)
 
             # Run layout model analysis and formula and table model analysis using the PaddleX engine
-            results: dict = paddlex.process_pdf_page_image_with_ai(
-                image, id, page_number, progress_bar, max_formulas_and_tables_per_page
-            )
+            results: dict = paddlex.process_pdf_page_image_with_ai(image, id, page_number, progress_bar, ai_step_units)
 
             # Create template json from PaddleX results for this page
             templateJsonCreator.process_page(results, page_number, page_view, self.zoom)
+            progress_bar.update(template_step_units)
         except Exception:
             raise
         finally:

@@ -14,7 +14,16 @@ from pdfixsdk import (
 from tqdm import tqdm
 
 from ai import PaddleXEngine
-from constants import MATH_ML_VERSION
+from constants import (
+    MATH_ML_VERSION,
+    PERCENT_AI,
+    PERCENT_RENDER,
+    PERCENT_TEMPLATE,
+    PROGRESS_FIRST_STEP,
+    PROGRESS_FOURTH_STEP,
+    PROGRESS_SECOND_STEP,
+    PROGRESS_THIRD_STEP,
+)
 from exceptions import (
     PdfixFailedToOpenException,
     PdfixFailedToSaveException,
@@ -53,13 +62,20 @@ class GenerateMathmlFromImage:
         3. Converts response to MathML ver. 3
         4. Saves the MathMl in the output XML file.
         """
-        image: cv2.typing.MatLike = cv2.imread(self.input_path_str)
+        with tqdm(total=100) as progress_bar:
+            progress_bar.set_description("Processing")
 
-        ai: PaddleXEngine = PaddleXEngine()
-        mathml_formula: str = ai.process_formula_image_with_ai(image)
+            image: cv2.typing.MatLike = cv2.imread(self.input_path_str)
 
-        with open(self.output_path_str, "w", encoding="utf-8") as output_file:
-            output_file.write(mathml_formula)
+            ai: PaddleXEngine = PaddleXEngine()
+            mathml_formula: str = ai.process_formula_image_with_ai(image)
+
+            with open(self.output_path_str, "w", encoding="utf-8") as output_file:
+                output_file.write(mathml_formula)
+
+            progress_bar.n = 100
+            progress_bar.set_description("Done")
+            progress_bar.refresh()
 
 
 class GenerateMathmlInPdf:
@@ -93,45 +109,71 @@ class GenerateMathmlInPdf:
         """
         Goes through PDF document and for each formula tries to set associate file with MathML.
         """
-        pdfix: Optional[Pdfix] = GetPdfix()
-        if pdfix is None:
-            raise PdfixInitializeException()
+        total_progress_count: int = (
+            PROGRESS_FIRST_STEP + PROGRESS_SECOND_STEP + PROGRESS_THIRD_STEP + PROGRESS_FOURTH_STEP
+        )
+        with tqdm(total=total_progress_count) as progress_bar:
+            progress_bar.set_description("Initializing")
 
-        # Try to authorize PDFix SDK
-        authorize_sdk(pdfix, self.license_name, self.license_key)
+            pdfix: Optional[Pdfix] = GetPdfix()
+            if pdfix is None:
+                raise PdfixInitializeException()
 
-        # Open the document
-        doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_path_str, "")
-        if doc is None:
-            raise PdfixFailedToOpenException(pdfix, self.input_path_str)
+            # Try to authorize PDFix SDK
+            authorize_sdk(pdfix, self.license_name, self.license_key)
 
-        ai: PaddleXEngine = PaddleXEngine()
+            # Open the document
+            doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_path_str, "")
+            if doc is None:
+                raise PdfixFailedToOpenException(pdfix, self.input_path_str)
 
-        # Get Root Tag element
-        struct_tree: Optional[PdsStructTree] = doc.GetStructTree()
-        if struct_tree is None:
-            raise PdfixNoTagsException(pdfix, "PDF has no structure tree")
+            ai: PaddleXEngine = PaddleXEngine()
 
-        child_object: Optional[PdsObject] = struct_tree.GetChildObject(0)
-        if child_object is None:
-            raise PdfixNoTagsException(pdfix, "PDF has no child objects in structure tree")
-        child_element: Optional[PdsStructElement] = struct_tree.GetStructElementFromObject(child_object)
-        if child_element is None:
-            raise PdfixNoTagsException(pdfix, "PDF has no elements in structure tree")
+            # Get Root Tag element
+            struct_tree: Optional[PdsStructTree] = doc.GetStructTree()
+            if struct_tree is None:
+                raise PdfixNoTagsException(pdfix, "PDF has no structure tree")
 
-        # Find all formulas:
-        items: list[PdsStructElement] = browse_tags_recursive(child_element, "Formula")
-        count: int = len(items)
+            child_object: Optional[PdsObject] = struct_tree.GetChildObject(0)
+            if child_object is None:
+                raise PdfixNoTagsException(pdfix, "PDF has no child objects in structure tree")
+            child_element: Optional[PdsStructElement] = struct_tree.GetStructElementFromObject(child_object)
+            if child_element is None:
+                raise PdfixNoTagsException(pdfix, "PDF has no elements in structure tree")
 
-        for index in tqdm(range(count)):
-            element: PdsStructElement = items[index]
-            self._process_element(pdfix, doc, element, ai)
+            # Find all formulas:
+            items: list[PdsStructElement] = browse_tags_recursive(child_element, "Formula")
+            count: int = len(items)
 
-        # Save document
-        if not doc.Save(self.output_path_str, kSaveFull):
-            raise PdfixFailedToSaveException(pdfix, self.output_path_str)
+            progress_bar.update(PROGRESS_FIRST_STEP)
+            progress_bar.set_description("Processing elements")
+            step_count: float = float(PROGRESS_SECOND_STEP + PROGRESS_THIRD_STEP) / count
 
-    def _process_element(self, pdfix: Pdfix, doc: PdfDoc, element: PdsStructElement, ai: PaddleXEngine) -> None:
+            for index in tqdm(range(count)):
+                element: PdsStructElement = items[index]
+                self._process_element(pdfix, doc, element, ai, progress_bar, step_count)
+
+            progress_bar.n = PROGRESS_FIRST_STEP + PROGRESS_SECOND_STEP + PROGRESS_THIRD_STEP
+            progress_bar.set_description("Saving document")
+            progress_bar.refresh()
+
+            # Save document
+            if not doc.Save(self.output_path_str, kSaveFull):
+                raise PdfixFailedToSaveException(pdfix, self.output_path_str)
+
+            progress_bar.n = total_progress_count
+            progress_bar.set_description("Done")
+            progress_bar.refresh()
+
+    def _process_element(
+        self,
+        pdfix: Pdfix,
+        doc: PdfDoc,
+        element: PdsStructElement,
+        ai: PaddleXEngine,
+        progress_bar: tqdm,
+        total_units_for_element_processing: float,
+    ) -> None:
         """
         For given element, tries to get page number and bounding box. If successfull creates image of element and
         sents it to Paddle Formula Model and transforms answer to MathMl ver.3. Then sets it to element as associate
@@ -142,7 +184,13 @@ class GenerateMathmlInPdf:
             doc (PdfDoc): PDF document.
             element (PdsStructElement): Formula element.
             ai (PaddleXEngine): Contains ai models and how to run them.
+            progress_bar (tqdm): Progress bar.
+            total_units_for_element_processing (float): How many units progress bar needs to update.
         """
+        render_step_units: float = total_units_for_element_processing * PERCENT_RENDER
+        ai_step_units: float = total_units_for_element_processing * PERCENT_AI
+        template_step_units: float = total_units_for_element_processing * PERCENT_TEMPLATE
+
         # For logging purposes
         element_object_id: int = element.GetObject().GetId()
         element_id: str = element.GetId()
@@ -174,9 +222,12 @@ class GenerateMathmlInPdf:
 
         # Create image
         image: cv2.typing.MatLike = render_element_to_image(pdfix, doc, page_num, bbox, 1)
+        progress_bar.update(render_step_units)
 
         # Recognize formula
         mathml_formula: str = ai.process_formula_image_with_ai(image)
+        progress_bar.update(ai_step_units)
 
         # Set AF
         set_associated_file_math_ml(pdfix, element, mathml_formula, MATH_ML_VERSION)
+        progress_bar.update(template_step_units)
