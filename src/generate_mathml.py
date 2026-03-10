@@ -145,13 +145,15 @@ class GenerateMathmlInPdf:
             items: list[PdsStructElement] = browse_tags_recursive(child_element, "Formula")
             count: int = len(items)
 
-            progress_bar.update(PROGRESS_FIRST_STEP)
-            progress_bar.set_description("Processing elements")
-            step_count: float = float(PROGRESS_SECOND_STEP + PROGRESS_THIRD_STEP) / count
+            # Process elements only if there is any element for processing
+            if count > 0:
+                progress_bar.update(PROGRESS_FIRST_STEP)
+                progress_bar.set_description("Processing elements")
+                step_count: float = float(PROGRESS_SECOND_STEP + PROGRESS_THIRD_STEP) / count
 
-            for index in tqdm(range(count)):
-                element: PdsStructElement = items[index]
-                self._process_element(pdfix, doc, element, ai, progress_bar, step_count)
+                for index in tqdm(range(count)):
+                    element: PdsStructElement = items[index]
+                    self._process_element(pdfix, doc, element, ai, progress_bar, step_count)
 
             progress_bar.n = PROGRESS_FIRST_STEP + PROGRESS_SECOND_STEP + PROGRESS_THIRD_STEP
             progress_bar.set_description("Saving document")
