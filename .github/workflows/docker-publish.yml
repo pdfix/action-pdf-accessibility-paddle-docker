@@ -82,14 +82,25 @@ jobs:
       - name: Prepare directory for versions repository
         run: mkdir -p pdfix-version-updates
 
-      - name: Checkout versions repository
+      - name: Generate GitHub App token
+        id: app-token
+        # v2.2.2 last stable version pinned by sha commit to avoid what happened to Lite LLM
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: pdfix
+          repositories: pdfix-version-updates
+
+      - name: Checkout versions repo
         uses: actions/checkout@v4
         with:
           repository: pdfix/pdfix-version-updates
           path: pdfix-version-updates
-          token: ${{ secrets.PAT_VERSIONS }}
+          token: ${{ steps.app-token.outputs.token }}
           ref: main
           fetch-depth: 0
+          fetch-tags: true
 
       - name: Update versions repository with new version
         run: chmod +x update_versions_repository.sh && ./update_versions_repository.sh ${{ env.DOCKER_HUB_NAMESPACE }} ${{ env.DOCKER_HUB_REPOSITORY }} ${{ env.tag }}

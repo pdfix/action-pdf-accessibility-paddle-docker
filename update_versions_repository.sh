@@ -41,18 +41,28 @@ if jq -e --arg name "$DOCKER_NAME" '.["pdfix-actions"][] | select(.name == $name
     git push
 
     # Step 4: Tag latest commit with increment
+    git fetch --tags
     git pull
+
     if git describe --exact-match --tags HEAD > /dev/null 2>&1; then
         echo "HEAD already has a tag — skipping tagging."
     else
         LATEST_TAG=$(git tag -l "v*.*.*" | sort -V | tail -n 1)
-        echo "Latest tag is: $LATEST_TAG"
-        VERSION=${LATEST_TAG#v}
-        IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-        PATCH=$((PATCH + 1))
-        NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+
+        if [ -z "$LATEST_TAG" ]; then
+            echo "No existing tags found, starting from v0.0.1"
+            NEW_TAG="v0.0.1"
+        else
+            echo "Latest tag is: $LATEST_TAG"
+            VERSION=${LATEST_TAG#v}
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+            PATCH=$((PATCH + 1))
+            NEW_TAG="v$MAJOR.$MINOR.$PATCH"
+        fi
+
         git tag -a "$NEW_TAG" -m "Release $NEW_TAG"
         git push origin "$NEW_TAG"
+
         echo "Tagged HEAD with: $NEW_TAG"
     fi
 
