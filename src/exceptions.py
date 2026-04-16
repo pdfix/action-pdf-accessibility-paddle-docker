@@ -74,57 +74,55 @@ class PdfixInitializeException(ExpectedException):
         self._add_note(MESSAGE_PDFIX_INITIALIZE)
 
 
-class PdfixException(Exception):
-    def __init__(self, pdfix: Pdfix, message: str = "") -> None:
-        error_code = pdfix.GetErrorType()
-        error = str(pdfix.GetError())
-        self.errno = error_code
-        self.add_note(f"[{error_code}] [{error}]: {message}" if len(message) > 0 else f"[{error_code}] {error}")
+class PdfixException(ExpectedException):
+    def __init__(self, pdfix: Pdfix, error_code: int, message: str = "") -> None:
+        super().__init__(error_code)
+        pdfix_error_code: int = pdfix.GetErrorType()
+        pdfix_error: str = str(pdfix.GetError())
+        self.add_note(
+            f"[{pdfix_error_code}] [{pdfix_error}]: {message}"
+            if len(message) > 0
+            else f"[{pdfix_error_code}] {pdfix_error}"
+        )
 
 
 class PdfixActivationException(PdfixException):
     def __init__(self, pdfix: Pdfix) -> None:
-        super().__init__(pdfix, MESSAGE_PDFIX_ACTIVATION_FAILED)
-        self.error_code = EC_PDFIX_ACTIVATION_FAILED
+        super().__init__(pdfix, EC_PDFIX_ACTIVATION_FAILED, MESSAGE_PDFIX_ACTIVATION_FAILED)
 
 
 class PdfixAuthorizationException(PdfixException):
     def __init__(self, pdfix: Pdfix) -> None:
-        super().__init__(pdfix, MESSAGE_PDFIX_AUTHORIZATION_FAILED)
-        self.error_code = EC_PDFIX_AUTHORIZATION_FAILED
+        super().__init__(pdfix, EC_PDFIX_AUTHORIZATION_FAILED, MESSAGE_PDFIX_AUTHORIZATION_FAILED)
 
 
 class PdfixFailedToRenderException(PdfixException):
     def __init__(self, pdfix: Pdfix, message: str = "") -> None:
-        super().__init__(pdfix, f"{MESSAGE_PDFIX_FAILED_TO_RENDER} {message}")
-        self.error_code = EC_PDFIX_FAILED_TO_RENDER
+        super().__init__(pdfix, EC_PDFIX_FAILED_TO_RENDER, f"{MESSAGE_PDFIX_FAILED_TO_RENDER} {message}")
 
 
 class PdfixFailedToOpenException(PdfixException):
     def __init__(self, pdfix: Pdfix, pdf_path: str = "") -> None:
-        super().__init__(pdfix, f"{MESSAGE_PDFIX_FAILED_TO_OPEN} {pdf_path}")
-        self.error_code = EC_PDFIX_FAILED_TO_OPEN
+        super().__init__(pdfix, EC_PDFIX_FAILED_TO_OPEN, f"{MESSAGE_PDFIX_FAILED_TO_OPEN} {pdf_path}")
 
 
 class PdfixFailedToSaveException(PdfixException):
     def __init__(self, pdfix: Pdfix, message: str = "") -> None:
-        super().__init__(pdfix, f"{MESSAGE_PDFIX_FAILED_TO_SAVE} {message}")
-        self.error_code = EC_PDFIX_FAILED_TO_SAVE
+        super().__init__(pdfix, EC_PDFIX_FAILED_TO_SAVE, f"{MESSAGE_PDFIX_FAILED_TO_SAVE} {message}")
 
 
 class PdfixFailedToTagException(PdfixException):
     def __init__(self, pdfix: Pdfix, message: str = "") -> None:
-        super().__init__(pdfix, f"{MESSAGE_PDFIX_FAILED_TO_TAG} {message}")
-        self.error_code = EC_PDFIX_FAILED_TO_TAG
+        super().__init__(pdfix, EC_PDFIX_FAILED_TO_TAG, f"{MESSAGE_PDFIX_FAILED_TO_TAG} {message}")
 
 
 class PdfixFailedToCreateTemplateException(PdfixException):
     def __init__(self, pdfix: Pdfix, message: str = "") -> None:
-        super().__init__(pdfix, f"{MESSAGE_PDFIX_FAILED_TO_CREATE_TEMPLATE} {message}")
-        self.error_code = EC_PDFIX_FAILED_TO_CREATE_TEMPLATE
+        super().__init__(
+            pdfix, EC_PDFIX_FAILED_TO_CREATE_TEMPLATE, f"{MESSAGE_PDFIX_FAILED_TO_CREATE_TEMPLATE} {message}"
+        )
 
 
 class PdfixNoTagsException(PdfixException):
     def __init__(self, pdfix: Pdfix, message: str = "") -> None:
-        super().__init__(pdfix, f"{MESSAGE_PDFIX_NO_TAGS} {message}")
-        self.error_code = EC_PDFIX_NO_TAGS
+        super().__init__(pdfix, EC_PDFIX_NO_TAGS, f"{MESSAGE_PDFIX_NO_TAGS} {message}")
