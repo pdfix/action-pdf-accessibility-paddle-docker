@@ -269,7 +269,7 @@
                 "27": "Failed to create template JSON.",
                 "28": "PDF document has no tags."
             },
-            "progress_regex": "^[^:]+:\\s+(?<progress>\\d{1,3})%"
+            "progress_regex": "^(?<text>[^:]+):\\s+(?<progress>\\d{1,3})%"
         },
         {
             "title": "Create Layout Template JSON (Paddle)",
@@ -532,7 +532,7 @@
                 "27": "Failed to create template JSON.",
                 "28": "PDF document has no tags."
             },
-            "progress_regex": "^[^:]+:\\s+(?<progress>\\d{1,3})%"
+            "progress_regex": "^(?<text>[^:]+):\\s+(?<progress>\\d{1,3})%"
         },
         {
             "title": "Set Formula MathML (Paddle)",
@@ -582,7 +582,7 @@
                 "27": "Failed to create template JSON.",
                 "28": "PDF document has no tags."
             },
-            "progress_regex": "^[^:]+:\\s+(?<progress>\\d{1,3})%"
+            "progress_regex": "^(?<text>[^:]+):\\s+(?<progress>\\d{1,3})%"
         },
         {
             "title": "Set Formula MathML  (Paddle)",
@@ -631,7 +631,7 @@
                 "27": "Failed to create template JSON.",
                 "28": "PDF document has no tags."
             },
-            "progress_regex": "^[^:]+:\\s+(?<progress>\\d{1,3})%"
+            "progress_regex": "^(?<text>[^:]+):\\s+(?<progress>\\d{1,3})%"
         }
     ]
 }
