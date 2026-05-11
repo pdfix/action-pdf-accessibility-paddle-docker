@@ -75,6 +75,12 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: ${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}
 
+      - name: Tag as latest on Docker Hub
+        if: env.tag != 'latest'
+        run: |
+          docker buildx imagetools create -t ${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}:latest \
+            ${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}:${{ env.tag }}
+
       - name: Upload to FTP
         run: |
           curl -T config.json ftp.pdfix.net/update-service/v1/actions/${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}/config.json --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" --ftp-create-dirs
