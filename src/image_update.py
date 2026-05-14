@@ -62,12 +62,12 @@ class DockerImageContainerUpdateChecker:
         Returns:
             The latest version of the Docker image, or None if an error occurs.
         """
-        # Get last updated tag as only result from Docker API
+        # Most-recently-updated tags first; skip floating "latest" in favor of a concrete version tag.
         url: str = (
             f"https://hub.docker.com/v2/"
             f"namespaces/{DOCKER_NAMESPACE}/"
             f"repositories/{DOCKER_REPOSITORY}/"
-            f"tags?page_size=1&ordering=last_updated"
+            f"tags?page_size=50&ordering=last_updated"
         )
         try:
             response: requests.Response = requests.get(url)
@@ -76,10 +76,11 @@ class DockerImageContainerUpdateChecker:
             if isinstance(data, dict) and "results" in data:
                 results: Any = data["results"]
                 if isinstance(results, list):
-                    first: Any = results[0]
-                    # Get latest tag
-                    if isinstance(first, dict) and "name" in first:
-                        return first["name"]
+                    for item in results:
+                        if isinstance(item, dict) and "name" in item:
+                            name: str = str(item["name"])
+                            if name != "latest":
+                                return name
         except requests.RequestException as e:
             print(f"Error checking for updates: {e}", file=sys.stderr)
         return None
