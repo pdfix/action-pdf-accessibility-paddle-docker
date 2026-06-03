@@ -194,7 +194,10 @@ class GenerateMathmlInPdf:
         template_step_units: float = total_units_for_element_processing * PERCENT_TEMPLATE
 
         # For logging purposes
-        element_object_id: int = element.GetObject().GetId()
+        element_object: Optional[PdsObject] = element.GetObject()
+        if element_object is None:
+            return
+        element_object_id: int = element_object.GetId()
         element_id: str = element.GetId()
         element_type: str = element.GetType(False)
         log_id: str = f"{element_type} [obj: {element_object_id}, id: {element_id}]"

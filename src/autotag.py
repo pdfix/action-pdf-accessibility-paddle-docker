@@ -273,11 +273,11 @@ class AutotagUsingPaddleXRecognition:
             raise PdfixNoTagsException(pdfix, "PDF has no structure tree")
 
         child_object: Optional[PdsObject] = struct_tree.GetChildObject(0)
-        if struct_tree is None:
+        if child_object is None:
             raise PdfixNoTagsException(pdfix, "PDF has no child objects in structure tree")
 
-        child_element: PdsStructElement = struct_tree.GetStructElementFromObject(child_object)
-        if struct_tree is None:
+        child_element: Optional[PdsStructElement] = struct_tree.GetStructElementFromObject(child_object)
+        if child_element is None:
             raise PdfixNoTagsException(pdfix, "PDF has no elements in structure tree")
 
         items: list[PdsStructElement] = browse_tags_recursive(child_element, "Formula")
