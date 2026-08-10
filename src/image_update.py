@@ -16,7 +16,7 @@ class DockerImageContainerUpdateChecker:
     """
 
     # Constants
-    LAST_CHECK_FILE = ".local_data.json"
+    LAST_CHECK_FILE: str = ".local_data.json"
 
     def check_for_image_updates(self) -> None:
         """
