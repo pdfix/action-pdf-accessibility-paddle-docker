@@ -1,10 +1,8 @@
 # Use cached image so build is faster
 FROM pdfix/pdf-accessibility-paddle-cache:v0.0.3
 
-
 # Lets install requirements that could have changed from last time we built the cached image
 RUN pip3 install --no-cache-dir -r requirements.txt
-
 
 # Download models from web into "models" folder so they are not downloaded for each container run
 RUN models_path=/usr/paddlex/models/ ; \
@@ -18,7 +16,6 @@ RUN models_path=/usr/paddlex/models/ ; \
         fi ; \
     done
 
-
 # Download fonts from web into "fonts" folder so they are not downloaded for each container run
 RUN font_path=/usr/paddlex/venv/lib/python3.12/site-packages/paddlex/utils/fonts/ ; \
     for font in PingFang-SC-Regular.ttf simfang.ttf; do \
@@ -26,7 +23,6 @@ RUN font_path=/usr/paddlex/venv/lib/python3.12/site-packages/paddlex/utils/fonts
         curl -o ${font_path}${font} https://paddle-model-ecology.bj.bcebos.com/paddlex/PaddleX3.0/fonts/${font} ; \
         fi ; \
     done
-
 
 # Create required folders
 RUN mkdir -p /usr/paddlex/output \
@@ -36,5 +32,8 @@ RUN mkdir -p /usr/paddlex/output \
 COPY config.json /usr/paddlex/
 COPY src/ /usr/paddlex/src/
 
+# License
+COPY THIRD_PARTY_LICENSES.md /THIRD_PARTY_LICENSES.md
+LABEL license="https://pdfix.net/terms (PDFix SDK) and Apache-2.0 (PaddleX / PaddlePaddle)"
 
 ENTRYPOINT ["/usr/paddlex/venv/bin/python3", "/usr/paddlex/src/main.py"]

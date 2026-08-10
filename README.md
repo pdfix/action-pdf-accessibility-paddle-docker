@@ -121,4 +121,5 @@ For PDFix SDK licensing or issues, contact `support@pdfix.net`.
 ## Licenses
 
 - [PDFix Terms](https://pdfix.net/terms)
-- [PaddleX](https://github.com/PaddlePaddle/PaddleX)
+- [PaddleX](https://github.com/PaddlePaddle/PaddleX) — [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+
