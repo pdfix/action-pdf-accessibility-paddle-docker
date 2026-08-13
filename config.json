@@ -564,6 +564,14 @@
                     "type": "file_path",
                     "ext": "xml",
                     "value": ""
+                },
+                {
+                    "title": "Rendering Zoom Level",
+                    "name": "zoom",
+                    "desc": "Zoom level used to render the selected formula into an image.",
+                    "flags": 128,
+                    "type": "float",
+                    "value": "2.0"
                 }
             ],
             "errors": {
