@@ -2,6 +2,7 @@
 FROM pdfix/pdf-accessibility-paddle-cache:v0.0.3
 
 # Lets install requirements that could have changed from last time we built the cached image
+COPY requirements.txt /usr/paddlex/
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Download models from web into "models" folder so they are not downloaded for each container run
