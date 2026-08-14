@@ -10,12 +10,16 @@ from pdfixsdk import (
     Pdfix,
     PdfPage,
     PdfPageView,
+    PdfStructElemEnumProcType,
     PdfTagsParams,
     PdsObject,
     PdsStructElement,
     PdsStructTree,
     PsMemoryStream,
     kDataFormatJson,
+    kEnumNone,
+    kEnumResultContinue,
+    kPdsStructChildElement,
     kRotate0,
     kSaveFull,
 )
@@ -41,7 +45,7 @@ from exceptions import (
 )
 from page_renderer import create_image_from_pdf_page
 from template_json import TemplateJsonCreator
-from utils_sdk import authorize_sdk, browse_tags_recursive, json_to_raw_data, set_associated_file_math_ml
+from utils_sdk import authorize_sdk, json_to_raw_data, set_associated_file_math_ml
 
 
 class AutotagUsingPaddleXRecognition:
@@ -84,6 +88,10 @@ class AutotagUsingPaddleXRecognition:
         self.process_formula: bool = process_formula
         self.process_table: bool = process_table
         self.thresholds: dict = thresholds
+
+        self._formula_afs_pdfix: Optional[Pdfix] = None
+        self._formula_afs_formulas: Optional[list[tuple[int, str]]] = None
+        self._formula_afs_struct_tree: Optional[PdsStructTree] = None
 
     def process_file(self) -> None:
         """
@@ -272,24 +280,98 @@ class AutotagUsingPaddleXRecognition:
         if struct_tree is None:
             raise PdfixNoTagsException(pdfix, "PDF has no structure tree")
 
-        child_object: Optional[PdsObject] = struct_tree.GetChildObject(0)
+        self._formula_afs_pdfix = pdfix
+        self._formula_afs_formulas = formulas
+        self._formula_afs_struct_tree = struct_tree
+        try:
+            # Keep a local reference so the ctypes callback is not GC'd during enumeration.
+            enum_proc = PdfStructElemEnumProcType(self._enumerate_formula_afs)
+            doc.EnumStructTree(None, kEnumNone, enum_proc, None)
+        except Exception:
+            raise
+        finally:
+            self._formula_afs_struct_tree = None
+            self._formula_afs_formulas = None
+            self._formula_afs_pdfix = None
+
+    def _enumerate_formula_afs(
+        self, documnet_pointer: int, parent_pointer: int, index: int, client_data: int
+    ) -> int:
+        """
+        Callback invoked for each struct element while attaching formula associated files.
+
+        Args:
+            documnet_pointer (int): Document pointer passed by PDFix SDK (unused).
+            parent_pointer (int): Parent struct element pointer, or 0 for the root.
+            index (int): Child index under the parent.
+            client_data (int): Client data pointer passed by PDFix SDK (unused).
+
+        Returns:
+            Enumeration result code; always continues to the next element.
+        """
+        struct_element: Optional[PdsStructElement] = self._resolve_struct_element(
+            self._formula_afs_struct_tree, parent_pointer, index
+        )
+        if struct_element is None:
+            return kEnumResultContinue
+
+        if struct_element.GetType(False) != "Formula":
+            return kEnumResultContinue
+
+        element_id: str = struct_element.GetId()
+        if element_id == "":
+            # This formula element does not have "id"
+            return kEnumResultContinue
+
+        formulas = self._formula_afs_formulas
+        if formulas is None:
+            return kEnumResultContinue
+
+        formula_index: int = next((i for i, data in enumerate(formulas) if str(data[0]) == element_id), -1)
+        if formula_index < 0:
+            # We don't have data for this formula "id"
+            return kEnumResultContinue
+
+        formula: tuple[int, str] = formulas.pop(formula_index)
+        if self._formula_afs_pdfix is not None:
+            set_associated_file_math_ml(self._formula_afs_pdfix, struct_element, formula[1], MATH_ML_VERSION)
+
+        return kEnumResultContinue
+
+    def _resolve_struct_element(
+        self, struct_tree: Optional[PdsStructTree], parent_pointer: int, index: int
+    ) -> Optional[PdsStructElement]:
+        """
+        Resolve a struct element from enumeration parent pointer and child index.
+
+        Args:
+            struct_tree (Optional[PdsStructTree]): Document struct tree.
+            parent_pointer (int): Parent struct element pointer, or 0 for the root.
+            index (int): Child index under the parent.
+
+        Returns:
+            Resolved struct element, or None if the child is not a struct element.
+        """
+        if struct_tree is None:
+            return None
+
+        parent: PdsStructElement
+        if parent_pointer:
+            parent = PdsStructElement(parent_pointer)
+        else:
+            root_object: Optional[PdsObject] = struct_tree.GetObject()
+            if root_object is None:
+                return None
+            root_element: Optional[PdsStructElement] = struct_tree.GetStructElementFromObject(root_object)
+            if root_element is None:
+                return None
+            parent = root_element
+
+        if parent.GetChildType(index) != kPdsStructChildElement:
+            return None
+
+        child_object: Optional[PdsObject] = parent.GetChildObject(index)
         if child_object is None:
-            raise PdfixNoTagsException(pdfix, "PDF has no child objects in structure tree")
+            return None
 
-        child_element: Optional[PdsStructElement] = struct_tree.GetStructElementFromObject(child_object)
-        if child_element is None:
-            raise PdfixNoTagsException(pdfix, "PDF has no elements in structure tree")
-
-        items: list[PdsStructElement] = browse_tags_recursive(child_element, "Formula")
-        for formula_element in items:
-            element_id: str = formula_element.GetId()
-            if element_id == "":
-                # This formula element does not have "id"
-                continue
-
-            index: int = next((i for i, data in enumerate(formulas) if str(data[0]) == element_id), -1)
-            if index < 0:
-                # We don't have data for this formula "id"
-                continue
-            formula: tuple[int, str] = formulas.pop(index)
-            set_associated_file_math_ml(pdfix, formula_element, formula[1], MATH_ML_VERSION)
+        return struct_tree.GetStructElementFromObject(child_object)
