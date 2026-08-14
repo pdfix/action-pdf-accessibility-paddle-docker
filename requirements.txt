@@ -4,7 +4,8 @@ paddlepaddle==3.0.0
 paddlex==3.0.0rc1
 paddlex[ocr]==3.0.0rc1
 pillow==12.3.0
-pdfix-sdk==8.7.1
+pdfix-sdk @ https://dl.pdfix.net/builds/pdfix-sdk/master/f47c80aae3bf2db87ed96ec84b62e1b6d4343a92/python/pdfix_sdk-9.2.0-py3-none-any.whl
+# pdfix-sdk==9.2.0
 requests==2.33.1
 setuptools==84.0.0
 tqdm==4.67.1
