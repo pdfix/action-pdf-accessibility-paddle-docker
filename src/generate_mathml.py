@@ -155,12 +155,12 @@ class GenerateMathmlInPdf:
             progress_bar.set_description("Done")
             progress_bar.refresh()
 
-    def enumerate_struct_tree(self, documnet_pointer: int, parent_pointer: int, index: int, client_data: int) -> int:
+    def enumerate_struct_tree(self, document_pointer: int, parent_pointer: int, index: int, client_data: int) -> int:
         """
         Callback invoked for each struct element during struct tree enumeration.
 
         Args:
-            documnet_pointer (int): Document pointer passed by PDFix SDK (unused).
+            document_pointer (int): Document pointer passed by PDFix SDK (unused).
             parent_pointer (int): Parent struct element pointer, or 0 for the root.
             index (int): Child index under the parent.
             client_data (int): Client data pointer passed by PDFix SDK (unused).

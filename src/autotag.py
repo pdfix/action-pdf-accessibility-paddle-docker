@@ -294,14 +294,12 @@ class AutotagUsingPaddleXRecognition:
             self._formula_afs_formulas = None
             self._formula_afs_pdfix = None
 
-    def _enumerate_formula_afs(
-        self, documnet_pointer: int, parent_pointer: int, index: int, client_data: int
-    ) -> int:
+    def _enumerate_formula_afs(self, document_pointer: int, parent_pointer: int, index: int, client_data: int) -> int:
         """
         Callback invoked for each struct element while attaching formula associated files.
 
         Args:
-            documnet_pointer (int): Document pointer passed by PDFix SDK (unused).
+            document_pointer (int): Document pointer passed by PDFix SDK (unused).
             parent_pointer (int): Parent struct element pointer, or 0 for the root.
             index (int): Child index under the parent.
             client_data (int): Client data pointer passed by PDFix SDK (unused).
