@@ -75,38 +75,38 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: ${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}
 
-      - name: Tag as latest on Docker Hub
-        if: env.tag != 'latest'
-        run: |
-          docker buildx imagetools create -t ${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}:latest \
-            ${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}:${{ env.tag }}
+      # - name: Tag as latest on Docker Hub
+      #   if: env.tag != 'latest'
+      #   run: |
+      #     docker buildx imagetools create -t ${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}:latest \
+      #       ${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}:${{ env.tag }}
 
-      - name: Upload to FTP
-        run: |
-          curl -T config.json ftp.pdfix.net/update-service/v1/actions/${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}/config.json --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" --ftp-create-dirs
+      # - name: Upload to FTP
+      #   run: |
+      #     curl -T config.json ftp.pdfix.net/update-service/v1/actions/${{ env.DOCKER_HUB_NAMESPACE }}/${{ env.DOCKER_HUB_REPOSITORY }}/config.json --user "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" --ftp-create-dirs
 
-      - name: Prepare directory for versions repository
-        run: mkdir -p pdfix-version-updates
+      # - name: Prepare directory for versions repository
+      #   run: mkdir -p pdfix-version-updates
 
-      - name: Generate GitHub App token
-        id: app-token
-        # v2.2.2 last stable version pinned by sha commit to avoid what happened to Lite LLM
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          owner: pdfix
-          repositories: pdfix-version-updates
+      # - name: Generate GitHub App token
+      #   id: app-token
+      #   # v2.2.2 last stable version pinned by sha commit to avoid what happened to Lite LLM
+      #   uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      #   with:
+      #     app-id: ${{ secrets.APP_ID }}
+      #     private-key: ${{ secrets.APP_PRIVATE_KEY }}
+      #     owner: pdfix
+      #     repositories: pdfix-version-updates
 
-      - name: Checkout versions repo
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          repository: pdfix/pdfix-version-updates
-          path: pdfix-version-updates
-          token: ${{ steps.app-token.outputs.token }}
-          ref: main
-          fetch-depth: 0
-          fetch-tags: true
+      # - name: Checkout versions repo
+      #   uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      #   with:
+      #     repository: pdfix/pdfix-version-updates
+      #     path: pdfix-version-updates
+      #     token: ${{ steps.app-token.outputs.token }}
+      #     ref: main
+      #     fetch-depth: 0
+      #     fetch-tags: true
 
-      - name: Update versions repository with new version
-        run: chmod +x update_versions_repository.sh && ./update_versions_repository.sh ${{ env.DOCKER_HUB_NAMESPACE }} ${{ env.DOCKER_HUB_REPOSITORY }} ${{ env.tag }}
+      # - name: Update versions repository with new version
+      #   run: chmod +x update_versions_repository.sh && ./update_versions_repository.sh ${{ env.DOCKER_HUB_NAMESPACE }} ${{ env.DOCKER_HUB_REPOSITORY }} ${{ env.tag }}
