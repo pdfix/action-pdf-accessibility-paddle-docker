@@ -455,9 +455,7 @@ def formula_to_mathml(
         regex_template (str | Path): Regex or path to template JSON for matching tags.
     """
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
-        generateMathml = GenerateMathmlInPdf(
-            license_name, license_key, input_path, output_path, regex_template
-        )
+        generateMathml = GenerateMathmlInPdf(license_name, license_key, input_path, output_path, regex_template)
         generateMathml.process_file()
     elif re.search(IMAGE_FILE_EXT_REGEX, input_path, re.IGNORECASE) and output_path.lower().endswith(".xml"):
         ai = GenerateMathmlFromImage(input_path, output_path)
