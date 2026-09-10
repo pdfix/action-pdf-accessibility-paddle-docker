@@ -9,6 +9,7 @@ Uses PaddleX models for layout and formula recognition, running fully offline. F
   - [Usage](#usage)
   - [Commands](#commands)
   - [Arguments](#arguments)
+  - [Params JSON](#params-json)
   - [Examples](#examples)
   - [Help \& support](#help--support)
   - [Licenses](#licenses)
@@ -87,8 +88,41 @@ Each value is clamped to **0.05–0.95**.
 |---|:---:|---|---|
 | `--input`, `-i` | yes | Path to `.pdf` or supported image file | Input |
 | `--output`, `-o` | yes | Path to `.pdf` or `.xml` matching mode | Output |
+| `--params` | for PDF → PDF | Path to a `.json` file | Tag filter parameters (see [Params JSON](#params-json)) |
 | `--name` | no | String (PDFix license); use for PDF → PDF without watermarks | PDFix license name |
 | `--key` | no | String (PDFix license); use for PDF → PDF without watermarks | PDFix license key |
+
+Default tag filter when `--params` is omitted: `Formula`.
+
+## Params JSON
+
+`--params` points to a JSON array of parameter objects. Each object has at least `name` and `value`; the CLI reads those fields to decide which tags to process (PDF → PDF `mathml` only).
+
+### `tag_names`
+
+`tag_names` is an ECMAScript regular expression matching tag names, or a template `tag_update` object.
+
+Example (`tests/params_mathml.json`) — match `Formula` tags:
+
+```json
+[
+    {
+        "title": "Tags",
+        "desc": "Specify the tags using a ECMAScript regular expression or define them by template tag_update",
+        "name": "tag_names",
+        "type": "tag",
+        "value": "Formula",
+        "values": [
+            {
+                "desc": "All tags",
+                "value": ".*"
+            }
+        ]
+    }
+]
+```
+
+Use `"value": ".*"` to match all tags.
 
 ## Examples
 
@@ -107,6 +141,14 @@ docker run --rm -v "$(pwd)":/data -w /data pdfix/pdf-accessibility-paddle:latest
   template -i /data/input.pdf -o /data/template.json --zoom 3.0 --threshold_text 0.6
 ```
 
+MathML for Formula tags in a PDF:
+
+```bash
+docker run --rm -v "$(pwd)":/data -w /data pdfix/pdf-accessibility-paddle:latest \
+  mathml --name "${LICENSE_NAME}" --key "${LICENSE_KEY}" \
+  -i /data/input.pdf -o /data/output.pdf --params /data/tests/params_mathml.json
+```
+
 MathML from one formula image:
 
 ```bash
@@ -122,4 +164,3 @@ For PDFix SDK licensing or issues, contact `support@pdfix.net`.
 
 - [PDFix Terms](https://pdfix.net/terms)
 - [PaddleX](https://github.com/PaddlePaddle/PaddleX) — [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
-

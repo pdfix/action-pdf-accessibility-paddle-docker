@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 import cv2
@@ -7,12 +8,16 @@ from pdfixsdk import (
     Pdfix,
     PdfRect,
     PdfStructElemEnumProcType,
+    PdfTemplateQuery,
     PdsObject,
     PdsStructElement,
     PdsStructTree,
+    PsFileStream,
+    kDataFormatJson,
     kEnumNone,
     kEnumResultContinue,
     kPdsStructChildElement,
+    kPsReadOnly,
     kSaveFull,
 )
 from tqdm import tqdm
@@ -20,6 +25,7 @@ from tqdm import tqdm
 from ai import PaddleXEngine
 from constants import MATH_ML_VERSION
 from exceptions import (
+    PdfixFailedToLoadTemplateException,
     PdfixFailedToOpenException,
     PdfixFailedToSaveException,
     PdfixInitializeException,
@@ -85,6 +91,7 @@ class GenerateMathmlInPdf:
         license_key: Optional[str],
         input_path: str,
         output_path: str,
+        regex_template: str | Path,
     ) -> None:
         """
         Initialize class for generating mathmls for formulas in pdf.
@@ -94,15 +101,18 @@ class GenerateMathmlInPdf:
             license_key (Optional[str]): Pdfix sdk license key
             input_path (str): Path to PDF document
             output_path (str): Path where tagged PDF should be saved
+            regex_template (str | Path): Regex or path to template JSON for matching tags.
         """
         self.license_name: Optional[str] = license_name
         self.license_key: Optional[str] = license_key
         self.input_path_str: str = input_path
         self.output_path_str: str = output_path
+        self.regex_template: str | Path = regex_template
 
         self.pdfix: Optional[Pdfix] = None
         self.doc: Optional[PdfDoc] = None
         self.struct_tree: Optional[PdsStructTree] = None
+        self.template_query: Optional[PdfTemplateQuery] = None
         self.ai: Optional[PaddleXEngine] = None
 
     def process_file(self) -> None:
@@ -131,6 +141,8 @@ class GenerateMathmlInPdf:
             if self.struct_tree is None:
                 raise PdfixNoTagsException(self.pdfix, "PDF has no structure tree")
 
+            self.template_query = self._load_template_query(self.doc)
+
             progress_bar.update(10)
             progress_bar.set_description("Processing elements")
 
@@ -142,6 +154,7 @@ class GenerateMathmlInPdf:
                 raise
             finally:
                 self.struct_tree = None
+                self.template_query = None
 
             progress_bar.n = 95
             progress_bar.set_description("Saving document")
@@ -154,6 +167,36 @@ class GenerateMathmlInPdf:
             progress_bar.n = 100
             progress_bar.set_description("Done")
             progress_bar.refresh()
+
+    def _load_template_query(self, doc: PdfDoc) -> PdfTemplateQuery:
+        """
+        Load a PdfTemplateQuery from a regex string or a template JSON file.
+
+        Args:
+            doc (PdfDoc): Open PDF document.
+
+        Returns:
+            Loaded template query used to test structure elements.
+        """
+        if self.pdfix is None:
+            raise PdfixInitializeException()
+
+        template_query: Optional[PdfTemplateQuery] = doc.CreateTemplateQuery()
+        if template_query is None:
+            raise PdfixFailedToLoadTemplateException(self.pdfix, "Failed to create Template query")
+
+        if isinstance(self.regex_template, str):
+            if not template_query.LoadFromRegex(self.regex_template):
+                raise PdfixFailedToLoadTemplateException(self.pdfix, "Failed to load template from regex")
+        else:
+            string_path: str = str(self.regex_template)
+            stream: Optional[PsFileStream] = self.pdfix.CreateFileStream(string_path, kPsReadOnly)
+            if stream is None:
+                raise PdfixFailedToLoadTemplateException(self.pdfix, "Failed to create file stream for template")
+            if not template_query.LoadFromStream(stream, kDataFormatJson):
+                raise PdfixFailedToLoadTemplateException(self.pdfix, "Failed to load template from stream")
+
+        return template_query
 
     def enumerate_struct_tree(self, document_pointer: int, parent_pointer: int, index: int, client_data: int) -> int:
         """
@@ -174,9 +217,14 @@ class GenerateMathmlInPdf:
         if struct_element is None:
             return kEnumResultContinue
 
-        if struct_element.GetType(False) == "Formula":
-            self._process_element(struct_element)
+        if self.template_query is None:
+            print("Template query is not initialized")
+            return kEnumResultContinue
 
+        if not self.template_query.TestStructElement(struct_element):
+            return kEnumResultContinue
+
+        self._process_element(struct_element)
         return kEnumResultContinue
 
     def resolve_struct_element(

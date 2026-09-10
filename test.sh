@@ -73,7 +73,7 @@ else
 fi
 
 info "Test #05: Run mathml pdf->pdf"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE mathml -i $TEMPORARY_DIRECTORY/air_quality-tagged.pdf -o $TEMPORARY_DIRECTORY/air_quality-mathml.pdf > /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE mathml -i $TEMPORARY_DIRECTORY/air_quality-tagged.pdf -o $TEMPORARY_DIRECTORY/air_quality-mathml.pdf --params tests/params_mathml.json > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/air_quality-mathml.pdf" ]; then
     success "passed"
 else

@@ -1,0 +1,15 @@
+[
+    {
+        "title": "Tags",
+        "desc": "Specify the tags using a ECMAScript regular expression or define them by template tag_update",
+        "name": "tag_names",
+        "type": "tag",
+        "value": "Formula",
+        "values": [
+            {
+                "desc": "All tags",
+                "value": ".*"
+            }
+        ]
+    }
+]

@@ -1,6 +1,8 @@
 import argparse
+import json
 import re
 import sys
+import tempfile
 import threading
 import traceback
 from pathlib import Path
@@ -17,9 +19,13 @@ from exceptions import (
     ArgumentInputPdfOutputPdfException,
     ArgumentZoomException,
     ExpectedException,
+    InvalidRegexOrTemplateException,
 )
 from generate_mathml import GenerateMathmlFromImage, GenerateMathmlInPdf
 from image_update import DockerImageContainerUpdateChecker
+from params_parser import ParamsParser
+
+DEFAULT_TAGS_MATHML: str = "Formula"
 
 
 def str2bool(value: Any) -> bool:
@@ -93,6 +99,13 @@ def set_arguments(
             case "output":
                 parser.add_argument(
                     "--output", "-o", type=str, required=required_output, help=f"The output {output_file_type} file."
+                )
+            case "params":
+                parser.add_argument(
+                    "--params",
+                    type=str,
+                    required=False,
+                    help="Path to JSON file with tag filter parameters (required for PDF → PDF).",
                 )
             case "process_formula":
                 parser.add_argument(
@@ -391,11 +404,45 @@ def create_template_json(
 
 
 def run_mathml_subcommand(args) -> None:
-    formula_to_mathml(args.name, args.key, args.input, args.output)
+    tag_filter: str | Path | dict = resolve_regex_template(getattr(args, "params", None))
+    if isinstance(tag_filter, dict):
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".json") as template_file:
+            with open(template_file.name, "w", encoding="utf-8") as template_file_write:
+                json.dump(tag_filter, template_file_write)
+            formula_to_mathml(args.name, args.key, args.input, args.output, Path(template_file.name))
+    else:
+        formula_to_mathml(args.name, args.key, args.input, args.output, tag_filter)
+
+
+def resolve_regex_template(params_path: Optional[str]) -> str | Path | dict:
+    """
+    Resolve tag filter from --params (regex or template) or the default Formula regex.
+
+    Args:
+        params_path (Optional[str]): Path to params JSON, or None.
+
+    Returns:
+        Either a regex string or a template dict.
+    """
+    if not params_path:
+        return DEFAULT_TAGS_MATHML
+
+    params_parser = ParamsParser(params_path)
+    params_parser.parse()
+    tag_names: Any = params_parser.params.get("tag_names")
+    if isinstance(tag_names, str):
+        return tag_names
+    if isinstance(tag_names, dict):
+        return tag_names
+    raise InvalidRegexOrTemplateException()
 
 
 def formula_to_mathml(
-    license_name: Optional[str], license_key: Optional[str], input_path: str, output_path: str
+    license_name: Optional[str],
+    license_key: Optional[str],
+    input_path: str,
+    output_path: str,
+    regex_template: str | Path,
 ) -> None:
     """
     Processing all formulas in PDF document and adding Associate Files to them.
@@ -405,9 +452,12 @@ def formula_to_mathml(
         license_key (Optional[str]): Key used in authorization in PDFix-SDK.
         input_path (str): Path to PDF document.
         output_path (str): Path to PDF document.
+        regex_template (str | Path): Regex or path to template JSON for matching tags.
     """
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
-        generateMathml = GenerateMathmlInPdf(license_name, license_key, input_path, output_path)
+        generateMathml = GenerateMathmlInPdf(
+            license_name, license_key, input_path, output_path, regex_template
+        )
         generateMathml.process_file()
     elif re.search(IMAGE_FILE_EXT_REGEX, input_path, re.IGNORECASE) and output_path.lower().endswith(".xml"):
         ai = GenerateMathmlFromImage(input_path, output_path)
@@ -518,7 +568,7 @@ def main() -> None:
     mathml_help += " Second mode takes image and outputs XML file with MathML representation of formula in image."
     mathml_help += f" Supported image files are: {SUPPORTED_IMAGE_EXT}."
     mathml_subparser = subparsers.add_parser("mathml", help=mathml_help)
-    set_arguments(mathml_subparser, ["name", "key", "input", "output"], True, "PDF or IMG", "PDF or XML")
+    set_arguments(mathml_subparser, ["name", "key", "input", "output", "params"], True, "PDF or IMG", "PDF or XML")
     mathml_subparser.set_defaults(func=run_mathml_subcommand)
 
     # Parse arguments
