@@ -121,8 +121,9 @@ def set_associated_file_math_ml(pdfix: Pdfix, element: PdsStructElement, math_ml
         return
     associated_file_data.PutName("Type", "Filespec")
     associated_file_data.PutName("AFRelationshhip", "Supplement")
-    associated_file_data.PutString("F", math_ml_version)
-    associated_file_data.PutString("UF", math_ml_version)
+    file_name: str = f"{math_ml_version}.xml"
+    associated_file_data.PutString("F", file_name)
+    associated_file_data.PutString("UF", file_name)
     associated_file_data.PutString("Desc", math_ml_version)
 
     raw_data: ctypes.Array[ctypes.c_ubyte] = bytearray_to_data(bytearray(math_ml.encode("utf-8")))
