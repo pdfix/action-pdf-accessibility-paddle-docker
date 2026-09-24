@@ -618,7 +618,7 @@
                 "name": "pdfix/pdf-accessibility-paddle",
                 "tag": "latest"
             },
-            "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest mathml --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --params \"${params}\"",
+            "program": "docker run -v \"${working_directory}:/data\" -w /data --rm pdfix/pdf-accessibility-paddle:latest mathml --name \"${license_name}\" --key \"${license_key}\" -i \"/data/${input_pdf}\" -o \"/data/${output_pdf}\" --params \"${params}\" --overwrite \"${overwrite}\"",
             "args": [
                 {
                     "name": "input_pdf",
@@ -635,6 +635,13 @@
                     "type": "file_path",
                     "ext": "pdf",
                     "value": ""
+                },
+                {
+                    "title": "Overwrite",
+                    "name": "overwrite",
+                    "desc": "Replace the MathML associated file if one already exists for MathML 3",
+                    "type": "bool",
+                    "value": false
                 }
             ],
             "params": [

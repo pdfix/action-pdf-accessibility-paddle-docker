@@ -107,6 +107,16 @@ def set_arguments(
                     required=False,
                     help="Path to JSON file with tag filter parameters (required for PDF → PDF).",
                 )
+            case "overwrite":
+                parser.add_argument(
+                    "--overwrite",
+                    type=str2bool,
+                    default=False,
+                    help=(
+                        "Overwrite existing MathML associated file for the current version "
+                        "(PDF → PDF only). Default is false."
+                    ),
+                )
             case "process_formula":
                 parser.add_argument(
                     "--process_formula",
@@ -409,9 +419,11 @@ def run_mathml_subcommand(args) -> None:
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".json") as template_file:
             with open(template_file.name, "w", encoding="utf-8") as template_file_write:
                 json.dump(tag_filter, template_file_write)
-            formula_to_mathml(args.name, args.key, args.input, args.output, Path(template_file.name))
+            formula_to_mathml(
+                args.name, args.key, args.input, args.output, Path(template_file.name), args.overwrite
+            )
     else:
-        formula_to_mathml(args.name, args.key, args.input, args.output, tag_filter)
+        formula_to_mathml(args.name, args.key, args.input, args.output, tag_filter, args.overwrite)
 
 
 def resolve_regex_template(params_path: Optional[str]) -> str | Path | dict:
@@ -443,6 +455,7 @@ def formula_to_mathml(
     input_path: str,
     output_path: str,
     regex_template: str | Path,
+    overwrite: bool,
 ) -> None:
     """
     Processing all formulas in PDF document and adding Associate Files to them.
@@ -453,9 +466,12 @@ def formula_to_mathml(
         input_path (str): Path to PDF document.
         output_path (str): Path to PDF document.
         regex_template (str | Path): Regex or path to template JSON for matching tags.
+        overwrite (bool): Replace existing MathML associated files of the current version.
     """
     if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
-        generateMathml = GenerateMathmlInPdf(license_name, license_key, input_path, output_path, regex_template)
+        generateMathml = GenerateMathmlInPdf(
+            license_name, license_key, input_path, output_path, regex_template, overwrite
+        )
         generateMathml.process_file()
     elif re.search(IMAGE_FILE_EXT_REGEX, input_path, re.IGNORECASE) and output_path.lower().endswith(".xml"):
         ai = GenerateMathmlFromImage(input_path, output_path)
@@ -566,7 +582,9 @@ def main() -> None:
     mathml_help += " Second mode takes image and outputs XML file with MathML representation of formula in image."
     mathml_help += f" Supported image files are: {SUPPORTED_IMAGE_EXT}."
     mathml_subparser = subparsers.add_parser("mathml", help=mathml_help)
-    set_arguments(mathml_subparser, ["name", "key", "input", "output", "params"], True, "PDF or IMG", "PDF or XML")
+    set_arguments(
+        mathml_subparser, ["name", "key", "input", "output", "params", "overwrite"], True, "PDF or IMG", "PDF or XML"
+    )
     mathml_subparser.set_defaults(func=run_mathml_subcommand)
 
     # Parse arguments

@@ -89,6 +89,7 @@ Each value is clamped to **0.05–0.95**.
 | `--input`, `-i` | yes | Path to `.pdf` or supported image file | Input |
 | `--output`, `-o` | yes | Path to `.pdf` or `.xml` matching mode | Output |
 | `--params` | for PDF → PDF | Path to a `.json` file | Tag filter parameters (see [Params JSON](#params-json)) |
+| `--overwrite` | no | Boolean string (default: `false`) | PDF → PDF only: replace existing MathML associated file when its name contains `mathml-3` |
 | `--name` | no | String (PDFix license); use for PDF → PDF without watermarks | PDFix license name |
 | `--key` | no | String (PDFix license); use for PDF → PDF without watermarks | PDFix license key |
 

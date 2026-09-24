@@ -32,7 +32,7 @@ from exceptions import (
     PdfixNoTagsException,
 )
 from page_renderer import render_element_to_image
-from utils_sdk import authorize_sdk, set_associated_file_math_ml
+from utils_sdk import authorize_sdk, index_of_associated_file, set_associated_file_math_ml
 
 
 class GenerateMathmlFromImage:
@@ -92,6 +92,7 @@ class GenerateMathmlInPdf:
         input_path: str,
         output_path: str,
         regex_template: str | Path,
+        overwrite: bool,
     ) -> None:
         """
         Initialize class for generating mathmls for formulas in pdf.
@@ -102,12 +103,15 @@ class GenerateMathmlInPdf:
             input_path (str): Path to PDF document
             output_path (str): Path where tagged PDF should be saved
             regex_template (str | Path): Regex or path to template JSON for matching tags.
+            overwrite (bool): When False, skip formulas that already have a MathML associated
+                file for the current version. When True, replace matching associated files.
         """
         self.license_name: Optional[str] = license_name
         self.license_key: Optional[str] = license_key
         self.input_path_str: str = input_path
         self.output_path_str: str = output_path
         self.regex_template: str | Path = regex_template
+        self.overwrite: bool = overwrite
 
         self.pdfix: Optional[Pdfix] = None
         self.doc: Optional[PdfDoc] = None
@@ -286,6 +290,13 @@ class GenerateMathmlInPdf:
         element_type: str = element.GetType(False)
         log_id: str = f"{element_type} [obj: {element_object_id}, id: {element_id}]"
 
+        # Skip when MathML associated file for this version already exists and overwrite is off
+        af_index: int = index_of_associated_file(element, MATH_ML_VERSION)
+        has_mathml_af: bool = af_index > -1
+        if has_mathml_af and not self.overwrite:
+            print(f"Skipping [{log_id}] Formula tag — MathML associated file already exists")
+            return
+
         # Get page number
         page_number: int = element.GetPageNumber(0)
         if page_number == -1:
@@ -316,5 +327,10 @@ class GenerateMathmlInPdf:
         # Recognize formula
         mathml_formula: str = self.ai.process_formula_image_with_ai(image)
 
-        # Set AF
+        # For overwrite, remove existing MathML associated files
+        while af_index > -1:
+            element.RemoveAssociatedFile(af_index)
+            af_index = index_of_associated_file(element, MATH_ML_VERSION)
+
+        # Add new MathMLassociate file
         set_associated_file_math_ml(self.pdfix, element, mathml_formula, MATH_ML_VERSION)

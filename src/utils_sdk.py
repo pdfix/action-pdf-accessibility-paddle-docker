@@ -7,6 +7,7 @@ from pdfixsdk import (
     Pdfix,
     PdsArray,
     PdsDictionary,
+    PdsFileSpec,
     PdsObject,
     PdsStream,
     PdsStructElement,
@@ -16,6 +17,29 @@ from pdfixsdk import (
 )
 
 from exceptions import PdfixActivationException, PdfixAuthorizationException
+
+
+def index_of_associated_file(element: PdsStructElement, math_ml_version: str) -> int:
+    """
+    Find the index of an associated file whose name contains the MathML version marker.
+
+    Match is case-insensitive and uses substring containment (e.g. ``mathml-3`` and
+    ``mathml-3.xml`` both match ``mathml-3``).
+
+    Args:
+        element (PdsStructElement): Structure element to inspect.
+        math_ml_version (str): Version marker to look for in the filespec name.
+
+    Returns:
+        Index of the first matching associated file, or ``-1`` if none found.
+    """
+    for index in range(element.GetNumAssociatedFiles()):
+        file_spec: Optional[PdsFileSpec] = element.GetAssociatedFile(index)
+        if file_spec is None:
+            continue
+        if math_ml_version.lower() in file_spec.GetFileName().lower():
+            return index
+    return -1
 
 
 def authorize_sdk(pdfix: Pdfix, license_name: Optional[str], license_key: Optional[str]) -> None:
