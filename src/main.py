@@ -419,9 +419,7 @@ def run_mathml_subcommand(args) -> None:
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".json") as template_file:
             with open(template_file.name, "w", encoding="utf-8") as template_file_write:
                 json.dump(tag_filter, template_file_write)
-            formula_to_mathml(
-                args.name, args.key, args.input, args.output, Path(template_file.name), args.overwrite
-            )
+            formula_to_mathml(args.name, args.key, args.input, args.output, Path(template_file.name), args.overwrite)
     else:
         formula_to_mathml(args.name, args.key, args.input, args.output, tag_filter, args.overwrite)
 
