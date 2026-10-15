@@ -10,4 +10,4 @@ requests==2.33.1
 setuptools==84.0.0
 tqdm==4.67.1
 types-requests==2.33.0.20260408
-urllib3==2.7.0
+urllib3==2.8.0
