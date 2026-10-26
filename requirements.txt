@@ -3,7 +3,7 @@ opencv-python==4.11.0.86
 paddlepaddle==3.0.0
 paddlex==3.0.0rc1
 paddlex[ocr]==3.0.0rc1
-pillow==12.3.0
+pillow==13.0.0
 pdfix-sdk @ https://dl.pdfix.net/builds/pdfix-sdk/master/24a3408b0469970da0748b5bf362597d85e54283/python/pdfix_sdk-10.0.0-py3-none-any.whl
 # pdfix-sdk==10.0.0
 requests==2.33.1
