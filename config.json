@@ -539,7 +539,7 @@
             "progress_regex": "^(?<text>[^:]+):\\s+(?<progress>\\d{1,3})%"
         },
         {
-            "title": "Set Formula MathML (Paddle)",
+            "title": "Set Formula MathML from Image (Paddle)",
             "name": "pdfix_generate_formula_mathml_from_image_to_xml_paddle",
             "desc": "Automatically generates MathML from an image file using Paddle, saving it as an XML file [Local]",
             "version": "v0.0.0",
@@ -607,7 +607,7 @@
             "progress_regex": "^(?<text>[^:]+):\\s+(?<progress>\\d{1,3})%"
         },
         {
-            "title": "Set Formula MathML  (Paddle)",
+            "title": "Set Formula MathML (Paddle)",
             "name": "pdfix_generate_formula_mathml_paddle",
             "desc": "Automatically generates MathML for Formula tags using Paddle, attaching it as an associated file to each tag [Local]",
             "version": "v0.0.0",
