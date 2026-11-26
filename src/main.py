@@ -525,7 +525,7 @@ def main() -> None:
         description="Autotag PDF document Paddle Engine and PDFix SDK",
     )
 
-    subparsers = parser.add_subparsers(dest="subparser")
+    subparsers = parser.add_subparsers(title="Commands", dest="command", required=True)
 
     threshold_arguments = [
         "threshold_paragraph_title",
