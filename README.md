@@ -11,6 +11,7 @@ Uses PaddleX models for layout and formula recognition, running fully offline. F
   - [Arguments](#arguments)
   - [Params JSON](#params-json)
   - [How it works](#how-it-works)
+  - [Exit codes](#exit-codes)
   - [Examples](#examples)
   - [Help \& support](#help--support)
   - [Licenses](#licenses)
