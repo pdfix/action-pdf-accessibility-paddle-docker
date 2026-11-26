@@ -183,3 +183,41 @@ APPENDIX: How to apply the Apache License to your work.
        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
        See the License for the specific language governing permissions and
        limitations under the License.
+
+===========================================================================
+Third-Party License: PaddleX models
+Project Author / Provider: PaddlePaddle Authors
+Source: https://github.com/PaddlePaddle/PaddleX (official inference models: PP-DocLayout-L,
+        RT-DETR-H_layout_17cls, PP-LCNet_x1_0_table_cls, RT-DETR-L_wired_table_cell_det,
+        RT-DETR-L_wireless_table_cell_det, PP-FormulaNet-L)
+License: Apache-2.0 (as PaddleX, see above)
+===========================================================================
+
+===========================================================================
+Third-Party License: latex2mathml
+Project Author / Provider: Ronie Martinez
+Source: https://github.com/roniemartinez/latex2mathml
+License: MIT
+===========================================================================
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial
+portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+===========================================================================
+Third-Party License: OpenCV (opencv-python, opencv-contrib-python)
+Project Author / Provider: OpenCV team
+Source: https://github.com/opencv/opencv-python
+License: Apache-2.0 (see the Apache License 2.0 text above)
+===========================================================================

@@ -34,6 +34,6 @@ COPY src/ /usr/paddlex/src/
 
 # License
 COPY THIRD_PARTY_LICENSES.md /THIRD_PARTY_LICENSES.md
-LABEL license="https://pdfix.net/terms (PDFix SDK) and Apache-2.0 (PaddleX / PaddlePaddle)"
+LABEL license="https://pdfix.net/terms (PDFix SDK), Apache-2.0 (PaddleX / PaddlePaddle and models, OpenCV), MIT (latex2mathml)"
 
 ENTRYPOINT ["/usr/paddlex/venv/bin/python3", "/usr/paddlex/src/main.py"]

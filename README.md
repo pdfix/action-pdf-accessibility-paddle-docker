@@ -164,4 +164,6 @@ For PDFix SDK licensing or issues, contact `support@pdfix.net`.
 ## Licenses
 
 - [PDFix Terms](https://pdfix.net/terms)
-- [PaddleX](https://github.com/PaddlePaddle/PaddleX) — [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+- [PaddleX](https://github.com/PaddlePaddle/PaddleX) — [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) (also the bundled PaddleX models)
+- [latex2mathml](https://github.com/roniemartinez/latex2mathml) — MIT
+- [OpenCV](https://github.com/opencv/opencv-python) — [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
