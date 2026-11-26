@@ -1,7 +1,6 @@
 import argparse
 import json
 import logging
-import re
 import sys
 import tempfile
 import threading
@@ -11,14 +10,18 @@ from pathlib import Path
 from typing import Any, Optional
 
 from autotag import AutotagUsingPaddleXRecognition
-from constants import CONFIG_FILE, IMAGE_FILE_EXT_REGEX, SUPPORTED_IMAGE_EXT
+from constants import CONFIG_FILE, SUPPORTED_IMAGE_EXT
 from create_template import CreateTemplateJsonUsingPaddleXRecognition
 from exceptions import (
     EC_ARG_GENERAL,
     MESSAGE_ARG_GENERAL,
-    ArgumentInputOutputNotAllowedException,
-    ArgumentInputPdfOutputJsonException,
-    ArgumentInputPdfOutputPdfException,
+    MESSAGE_ARG_OUTPUT_NOT_JSON,
+    MESSAGE_ARG_OUTPUT_NOT_PDF,
+    MESSAGE_ARG_OUTPUT_NOT_PDF_OR_XML,
+    ArgumentInputNotImageException,
+    ArgumentInputNotPdfException,
+    ArgumentOutputExtensionException,
+    ArgumentOutputFolderNotExistsException,
     ArgumentZoomException,
     ExpectedException,
     InvalidRegexOrTemplateException,
@@ -299,7 +302,10 @@ def set_arguments(
                 )
             case "zoom":
                 parser.add_argument(
-                    "--zoom", type=float, default=2.0, help="Zoom level for the PDF page rendering (default: 2.0)."
+                    "--zoom",
+                    type=float,
+                    default=2.0,
+                    help="Zoom level for the PDF page rendering, from 1.0 to 4.0 (default: 2.0).",
                 )
 
 
@@ -324,7 +330,66 @@ def get_pdfix_config(path: str) -> None:
                 out.write(file.read())
 
 
+def check_output_file(output_path: str, extensions: tuple[str, ...], message: str) -> str:
+    """
+    Check the output file extension and that its folder exists before any processing.
+
+    Args:
+        output_path (str): Path to the output file.
+        extensions (tuple[str, ...]): Allowed lowercase extensions, for example (".pdf",).
+        message (str): Error message when the extension is not allowed.
+
+    Returns:
+        Lowercase extension of the output file.
+    """
+    extension: str = Path(output_path).suffix.lower()
+    if extension not in extensions:
+        raise ArgumentOutputExtensionException(message)
+    output_folder: Path = Path(output_path).resolve().parent
+    if not output_folder.is_dir():
+        raise ArgumentOutputFolderNotExistsException(output_folder.as_posix())
+    return extension
+
+
+def check_input_pdf(input_path: str) -> None:
+    """
+    Check that the input is an existing PDF file.
+
+    Args:
+        input_path (str): Path to the input PDF file.
+    """
+    path: Path = Path(input_path)
+    if path.suffix.lower() != ".pdf" or not path.is_file():
+        raise ArgumentInputNotPdfException(input_path)
+
+
+def check_input_image(input_path: str) -> None:
+    """
+    Check that the input is an existing image file (JPG, JPEG, PNG or BMP).
+
+    Args:
+        input_path (str): Path to the input image file.
+    """
+    path: Path = Path(input_path)
+    if path.suffix.lower() not in SUPPORTED_IMAGE_EXT.split() or not path.is_file():
+        raise ArgumentInputNotImageException(input_path)
+
+
+def check_zoom(zoom: float) -> None:
+    """
+    Check the rendering zoom level.
+
+    Args:
+        zoom (float): Zoom level for rendering the page.
+    """
+    if zoom < 1.0 or zoom > 4.0:
+        raise ArgumentZoomException()
+
+
 def run_autotag_subcommand(args) -> None:
+    check_output_file(args.output, (".pdf",), MESSAGE_ARG_OUTPUT_NOT_PDF)
+    check_input_pdf(args.input)
+    check_zoom(args.zoom)
     thresholds = create_threshold_dictionary(args)
     autotagging_pdf(
         args.name,
@@ -364,19 +429,16 @@ def autotagging_pdf(
         process_table (bool): Whether to process tables.
         thresholds (dict): Thresholds for layout detection.
     """
-    if zoom < 1.0 or zoom > 10.0:
-        raise ArgumentZoomException()
-
-    if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
-        autotag = AutotagUsingPaddleXRecognition(
-            license_name, license_key, input_path, output_path, model, zoom, process_formula, process_table, thresholds
-        )
-        autotag.process_file()
-    else:
-        raise ArgumentInputPdfOutputPdfException()
+    autotag = AutotagUsingPaddleXRecognition(
+        license_name, license_key, input_path, output_path, model, zoom, process_formula, process_table, thresholds
+    )
+    autotag.process_file()
 
 
 def run_template_subcommand(args) -> None:
+    check_output_file(args.output, (".json",), MESSAGE_ARG_OUTPUT_NOT_JSON)
+    check_input_pdf(args.input)
+    check_zoom(args.zoom)
     thresholds = create_threshold_dictionary(args)
     create_template_json(
         args.name, args.key, args.input, args.output, args.model, args.zoom, args.process_table, thresholds
@@ -406,19 +468,21 @@ def create_template_json(
         process_table (bool): Whether to process tables.
         thresholds (dict): Thresholds for layout detection.
     """
-    if zoom < 1.0 or zoom > 10.0:
-        raise ArgumentZoomException()
-
-    if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".json"):
-        template_creator = CreateTemplateJsonUsingPaddleXRecognition(
-            license_name, license_key, input_path, output_path, model, zoom, process_table, thresholds
-        )
-        template_creator.process_file()
-    else:
-        raise ArgumentInputPdfOutputJsonException()
+    template_creator = CreateTemplateJsonUsingPaddleXRecognition(
+        license_name, license_key, input_path, output_path, model, zoom, process_table, thresholds
+    )
+    template_creator.process_file()
 
 
 def run_mathml_subcommand(args) -> None:
+    output_extension: str = check_output_file(args.output, (".pdf", ".xml"), MESSAGE_ARG_OUTPUT_NOT_PDF_OR_XML)
+    if output_extension == ".xml":
+        check_input_image(args.input)
+        ai = GenerateMathmlFromImage(args.input, args.output)
+        ai.process_image()
+        return
+
+    check_input_pdf(args.input)
     tag_filter: str | Path | dict = resolve_regex_template(getattr(args, "params", None))
     if isinstance(tag_filter, dict):
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".json") as template_file:
@@ -442,9 +506,9 @@ def resolve_regex_template(params_path: Optional[str]) -> str | Path | dict:
     if not params_path:
         return DEFAULT_TAGS_MATHML
 
-    params_parser = ParamsParser(params_path)
+    params_parser = ParamsParser(params_path, ["tag_names"])
     params_parser.parse()
-    tag_names: Any = params_parser.params.get("tag_names")
+    tag_names: Any = params_parser.params["tag_names"]
     if isinstance(tag_names, str):
         return tag_names
     if isinstance(tag_names, dict):
@@ -471,16 +535,8 @@ def formula_to_mathml(
         regex_template (str | Path): Regex or path to template JSON for matching tags.
         overwrite (bool): Replace existing MathML associated files of the current version.
     """
-    if input_path.lower().endswith(".pdf") and output_path.lower().endswith(".pdf"):
-        generateMathml = GenerateMathmlInPdf(
-            license_name, license_key, input_path, output_path, regex_template, overwrite
-        )
-        generateMathml.process_file()
-    elif re.search(IMAGE_FILE_EXT_REGEX, input_path, re.IGNORECASE) and output_path.lower().endswith(".xml"):
-        ai = GenerateMathmlFromImage(input_path, output_path)
-        ai.process_image()
-    else:
-        raise ArgumentInputOutputNotAllowedException()
+    generateMathml = GenerateMathmlInPdf(license_name, license_key, input_path, output_path, regex_template, overwrite)
+    generateMathml.process_file()
 
 
 def create_threshold_dictionary(args) -> dict:

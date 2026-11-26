@@ -2,7 +2,6 @@ CONFIG_FILE: str = "config.json"
 DOCKER_NAMESPACE: str = "pdfix"
 DOCKER_REPOSITORY: str = "pdf-accessibility-paddle"
 DOCKER_IMAGE: str = f"{DOCKER_NAMESPACE}/{DOCKER_REPOSITORY}"
-IMAGE_FILE_EXT_REGEX: str = r"\.(jpg|jpeg|png|bmp)$"
 MATH_ML_VERSION: str = "mathml-3"
 PERCENT_AI: float = 0.8
 PERCENT_RENDER: float = 0.1

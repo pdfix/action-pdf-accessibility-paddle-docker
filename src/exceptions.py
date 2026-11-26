@@ -1,11 +1,13 @@
 from pdfixsdk import Pdfix
 
 EC_ARG_GENERAL: int = 10
-EC_ARG_ZOOM: int = 11
-EC_ARG_INPUT_PDF_OUTPUT_JSON: int = 12
-EC_ARG_INPUT_PDF_OUTPUT_PDF: int = 13
-EC_ARG_INPUT_OUTPUT_NOT_ALLOWED: int = 14
-EC_ARG_INVALID_REGEX_OR_TEMPLATE: int = 15
+EC_ARG_INVALID_REGEX_OR_TEMPLATE: int = 11
+EC_ARG_PARAMS: int = 12
+EC_ARG_OUTPUT_FOLDER_NOT_EXISTS: int = 13
+EC_ARG_INPUT_NOT_PDF: int = 14
+EC_ARG_INPUT_NOT_IMAGE: int = 15
+EC_ARG_OUTPUT_EXTENSION: int = 16
+EC_ARG_ZOOM: int = 17
 
 EC_PDFIX_INITIALIZE: int = 20
 EC_PDFIX_ACTIVATION_FAILED: int = 21
@@ -19,11 +21,16 @@ EC_PDFIX_NO_TAGS: int = 28
 EC_PDFIX_FAILED_TO_LOAD_TEMPLATE: int = 29
 
 MESSAGE_ARG_GENERAL: str = "Failed to parse arguments. Please check the usage and try again."
-MESSAGE_ARG_ZOOM: str = "Zoom level must between 1.0 and 10.0."
-MESSAGE_ARG_INPUT_PDF_OUTPUT_JSON: str = "Input file must be PDF document and output file must be JSON."
-MESSAGE_ARG_INPUT_PDF_OUTPUT_PDF: str = "Input and output file must be PDF documents."
-MESSAGE_ARG_INPUT_OUTPUT_NOT_ALLOWED: str = "Not allowed input output file combination. Please see --help."
 MESSAGE_ARG_INVALID_REGEX_OR_TEMPLATE: str = "Invalid regex or template. Please check the usage and try again."
+MESSAGE_ARG_PARAMS: str = "Missing or invalid parameters."
+MESSAGE_ARG_OUTPUT_FOLDER_NOT_EXISTS: str = "Output folder does not exist."
+MESSAGE_ARG_INPUT_NOT_PDF: str = "Input file must be an existing PDF document."
+MESSAGE_ARG_INPUT_NOT_IMAGE: str = "Input file must be an existing image file (JPG, JPEG, PNG or BMP)."
+# Message of the output extension error depends on the command
+MESSAGE_ARG_OUTPUT_NOT_PDF: str = "Output file must be PDF document."
+MESSAGE_ARG_OUTPUT_NOT_JSON: str = "Output file must be JSON file."
+MESSAGE_ARG_OUTPUT_NOT_PDF_OR_XML: str = "Output file must be PDF document or XML file."
+MESSAGE_ARG_ZOOM: str = "Zoom level must be between 1.0 and 4.0."
 
 MESSAGE_PDFIX_INITIALIZE: str = "Failed to initialize PDFix SDK."
 MESSAGE_PDFIX_ACTIVATION_FAILED: str = "Failed to activate PDFix SDK account."
@@ -73,24 +80,34 @@ class ArgumentException(ExpectedException):
         self._add_note(message)
 
 
+class ArgumentParamsException(ArgumentException):
+    def __init__(self, detail: str) -> None:
+        super().__init__(f"{MESSAGE_ARG_PARAMS} {detail}", EC_ARG_PARAMS)
+
+
+class ArgumentOutputFolderNotExistsException(ArgumentException):
+    def __init__(self, path: str) -> None:
+        super().__init__(f"{MESSAGE_ARG_OUTPUT_FOLDER_NOT_EXISTS} {path}", EC_ARG_OUTPUT_FOLDER_NOT_EXISTS)
+
+
+class ArgumentInputNotPdfException(ArgumentException):
+    def __init__(self, path: str) -> None:
+        super().__init__(f"{MESSAGE_ARG_INPUT_NOT_PDF} {path}", EC_ARG_INPUT_NOT_PDF)
+
+
+class ArgumentInputNotImageException(ArgumentException):
+    def __init__(self, path: str) -> None:
+        super().__init__(f"{MESSAGE_ARG_INPUT_NOT_IMAGE} {path}", EC_ARG_INPUT_NOT_IMAGE)
+
+
+class ArgumentOutputExtensionException(ArgumentException):
+    def __init__(self, message: str) -> None:
+        super().__init__(message, EC_ARG_OUTPUT_EXTENSION)
+
+
 class ArgumentZoomException(ArgumentException):
     def __init__(self) -> None:
         super().__init__(MESSAGE_ARG_ZOOM, EC_ARG_ZOOM)
-
-
-class ArgumentInputPdfOutputJsonException(ArgumentException):
-    def __init__(self) -> None:
-        super().__init__(MESSAGE_ARG_INPUT_PDF_OUTPUT_JSON, EC_ARG_INPUT_PDF_OUTPUT_JSON)
-
-
-class ArgumentInputPdfOutputPdfException(ArgumentException):
-    def __init__(self) -> None:
-        super().__init__(MESSAGE_ARG_INPUT_PDF_OUTPUT_PDF, EC_ARG_INPUT_PDF_OUTPUT_PDF)
-
-
-class ArgumentInputOutputNotAllowedException(ArgumentException):
-    def __init__(self) -> None:
-        super().__init__(MESSAGE_ARG_INPUT_OUTPUT_NOT_ALLOWED, EC_ARG_INPUT_OUTPUT_NOT_ALLOWED)
 
 
 class InvalidRegexOrTemplateException(ArgumentException):
