@@ -1,6 +1,11 @@
 import json
+import logging
 from pathlib import Path
 from typing import Any, Optional
+
+from logger import get_logger
+
+logger: logging.Logger = get_logger("app_logger")
 
 
 class ParamsParser:
@@ -26,9 +31,9 @@ class ParamsParser:
                     if isinstance(item, dict):
                         self._parse_dictionary_item(item)
                     else:
-                        print(f"Not expecting '{type(item)}' under list for params.")
+                        logger.error(f"Not expecting '{type(item)}' under list for params.")
             else:
-                print(f"Invalid json data: {type(json_data)}")
+                logger.error(f"Invalid json data: {type(json_data)}")
 
     def _parse_dictionary_item(self, dict_item: dict[Any, Any]) -> None:
         """
@@ -47,4 +52,4 @@ class ParamsParser:
         if item_name is not None and item_value is not None:
             self.params[item_name] = item_value
         else:
-            print(f"Invalid param: {dict_item}")
+            logger.error(f"Invalid param: {dict_item}")

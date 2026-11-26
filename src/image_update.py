@@ -1,6 +1,6 @@
 import json
+import logging
 import os
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -8,6 +8,9 @@ from typing import Any, Optional
 import requests
 
 from constants import CONFIG_FILE, DOCKER_IMAGE, DOCKER_NAMESPACE, DOCKER_REPOSITORY
+from logger import get_logger
+
+logger: logging.Logger = get_logger("app_logger")
 
 
 class DockerImageContainerUpdateChecker:
@@ -29,7 +32,7 @@ class DockerImageContainerUpdateChecker:
                 latest_version: Optional[str] = self._get_latest_docker_version()
 
                 if latest_version and latest_version != current_version:
-                    print(
+                    logger.info(
                         f"🚀 A new Docker image version ({latest_version}) is available! "
                         f"Update with: `docker pull {DOCKER_IMAGE}:{latest_version}`"
                     )
@@ -52,7 +55,7 @@ class DockerImageContainerUpdateChecker:
                 config: Any = json.load(f)
                 return config.get("version", "unknown")
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Error reading {CONFIG_FILE}: {e}", file=sys.stderr)
+            logger.error(f"Error reading {CONFIG_FILE}: {e}")
             return "unknown"
 
     def _get_latest_docker_version(self) -> Optional[str]:
@@ -82,7 +85,7 @@ class DockerImageContainerUpdateChecker:
                             if name != "latest":
                                 return name
         except requests.RequestException as e:
-            print(f"Error checking for updates: {e}", file=sys.stderr)
+            logger.error(f"Error checking for updates: {e}")
         return None
 
     def _last_check_today(self) -> bool:
@@ -99,7 +102,7 @@ class DockerImageContainerUpdateChecker:
                     last_date: str = data.get("last_check", "")
                     return last_date == datetime.now().strftime("%Y-%m-%d")
             except (json.JSONDecodeError, FileNotFoundError) as e:
-                print(f"Error reading {self.LAST_CHECK_FILE}: {e}", file=sys.stderr)
+                logger.error(f"Error reading {self.LAST_CHECK_FILE}: {e}")
         return False
 
     def _update_last_check(self) -> None:
@@ -110,4 +113,4 @@ class DockerImageContainerUpdateChecker:
             with open(self.LAST_CHECK_FILE, "w", encoding="utf-8") as f:
                 json.dump({"last_check": datetime.now().strftime("%Y-%m-%d")}, f)
         except Exception as e:
-            print(f"Error writing {self.LAST_CHECK_FILE}: {e}", file=sys.stderr)
+            logger.error(f"Error writing {self.LAST_CHECK_FILE}: {e}")

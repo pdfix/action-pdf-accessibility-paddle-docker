@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -31,8 +32,11 @@ from exceptions import (
     PdfixInitializeException,
     PdfixNoTagsException,
 )
+from logger import get_logger
 from page_renderer import render_element_to_image
 from utils_sdk import authorize_sdk, index_of_associated_file, set_associated_file_math_ml
+
+logger: logging.Logger = get_logger("app_logger")
 
 
 class GenerateMathmlFromImage:
@@ -222,7 +226,7 @@ class GenerateMathmlInPdf:
             return kEnumResultContinue
 
         if self.template_query is None:
-            print("Template query is not initialized")
+            logger.error("Template query is not initialized")
             return kEnumResultContinue
 
         if not self.template_query.TestStructElement(struct_element):
@@ -294,7 +298,7 @@ class GenerateMathmlInPdf:
         af_index: int = index_of_associated_file(element, MATH_ML_VERSION)
         has_mathml_af: bool = af_index > -1
         if has_mathml_af and not self.overwrite:
-            print(f"Skipping [{log_id}] Formula tag — MathML associated file already exists")
+            logger.warning(f"Skipping [{log_id}] Formula tag — MathML associated file already exists")
             return
 
         # Get page number
@@ -306,7 +310,7 @@ class GenerateMathmlInPdf:
                     break
 
         if page_number == -1:
-            print(f"Skipping [{log_id}] Formula tag as we can't determine the page number")
+            logger.warning(f"Skipping [{log_id}] Formula tag as we can't determine the page number")
             return
 
         # Get bounding box
@@ -318,7 +322,7 @@ class GenerateMathmlInPdf:
             break
 
         if bbox.left == bbox.right or bbox.top == bbox.bottom:
-            print(f"Skipping [{log_id}] Formula tag as we can't determine the bounding box")
+            logger.warning(f"Skipping [{log_id}] Formula tag as we can't determine the bounding box")
             return
 
         # Create image

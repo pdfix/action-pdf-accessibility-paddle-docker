@@ -1,5 +1,6 @@
 import ctypes
 import json
+import logging
 from typing import Optional
 
 from pdfixsdk import (
@@ -17,6 +18,9 @@ from pdfixsdk import (
 )
 
 from exceptions import PdfixActivationException, PdfixAuthorizationException
+from logger import get_logger
+
+logger: logging.Logger = get_logger("app_logger")
 
 
 def index_of_associated_file(element: PdsStructElement, math_ml_version: str) -> int:
@@ -60,7 +64,7 @@ def authorize_sdk(pdfix: Pdfix, license_name: Optional[str], license_key: Option
         if standard_authorization is None or not standard_authorization.Activate(license_key):
             raise PdfixActivationException(pdfix)
     else:
-        print("No license name or key provided. Using PDFix SDK trial")
+        logger.info("No license name or key provided. Using PDFix SDK trial")
 
 
 def json_to_raw_data(json_dict: dict) -> tuple[ctypes.Array[ctypes.c_ubyte], int]:
@@ -109,15 +113,15 @@ def set_associated_file_math_ml(pdfix: Pdfix, element: PdsStructElement, math_ml
     # create mathML object
     structure_tree: Optional[PdsStructTree] = element.GetStructTree()
     if structure_tree is None:
-        print("Failed to get structure tree from element")
+        logger.error("Failed to get structure tree from element")
         return
     document: Optional[PdfDoc] = structure_tree.GetDoc()
     if document is None:
-        print("Failed to get document from structure tree")
+        logger.error("Failed to get document from structure tree")
         return
     associated_file_data: Optional[PdsDictionary] = document.CreateDictObject(True)
     if associated_file_data is None:
-        print("Failed to create dictionary in document")
+        logger.error("Failed to create dictionary in document")
         return
     associated_file_data.PutName("Type", "Filespec")
     associated_file_data.PutName("AFRelationshhip", "Supplement")
@@ -129,16 +133,16 @@ def set_associated_file_math_ml(pdfix: Pdfix, element: PdsStructElement, math_ml
     raw_data: ctypes.Array[ctypes.c_ubyte] = bytearray_to_data(bytearray(math_ml.encode("utf-8")))
     file_dictionary: Optional[PdsDictionary] = document.CreateDictObject(False)
     if file_dictionary is None:
-        print("Failed to create dictionary in document")
+        logger.error("Failed to create dictionary in document")
         return
     file_stream: Optional[PdsStream] = document.CreateStreamObject(True, file_dictionary, raw_data, len(math_ml))
     if file_stream is None:
-        print("Failed to create file stream object in document")
+        logger.error("Failed to create file stream object in document")
         return
 
     ef_dict: Optional[PdsDictionary] = associated_file_data.PutDict("EF")
     if ef_dict is None:
-        print("Failed to create dictionary in dictionary")
+        logger.error("Failed to create dictionary in dictionary")
         return
     ef_dict.Put("F", file_stream)
     ef_dict.Put("UF", file_stream)

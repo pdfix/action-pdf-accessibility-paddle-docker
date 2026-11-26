@@ -1,6 +1,6 @@
 import json
+import logging
 import math
-import sys
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -8,7 +8,10 @@ from typing import Any
 from pdfixsdk import PdfDevRect, PdfPageView, PdfRect, __version__, kPdeImage
 
 from constants import CONFIG_FILE
+from logger import get_logger
 from process_bboxes import bboxes_overlaps
+
+logger: logging.Logger = get_logger("app_logger")
 
 
 class TemplateJsonCreator:
@@ -110,7 +113,7 @@ class TemplateJsonCreator:
                 config = json.load(f)
                 return config.get("version", "unknown")
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Error reading {CONFIG_FILE}: {e}", file=sys.stderr)
+            logger.error(f"Error reading {CONFIG_FILE}: {e}")
             return "unknown"
 
     def _generate_unique_id(self, page_number: int, type: int, coordinate: list) -> int:

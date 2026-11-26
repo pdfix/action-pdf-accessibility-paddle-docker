@@ -37,10 +37,31 @@ MESSAGE_PDFIX_NO_TAGS: str = "PDF document has no tags."
 MESSAGE_PDFIX_FAILED_TO_LOAD_TEMPLATE: str = "Failed to load template file."
 
 
+def format_sdk_error(pdfix: Pdfix) -> str:
+    """
+    Latest PDFix SDK error as one readable line.
+
+    Args:
+        pdfix (Pdfix): Pdfix sdk instance.
+
+    Returns:
+        For example "PDFix SDK error 5: File or directory not found.".
+    """
+    pdfix_error_code: int = pdfix.GetErrorType()
+    # PDFix SDK returns error text as bytes
+    pdfix_error: bytes | str = pdfix.GetError()
+    pdfix_error_text: str = (
+        pdfix_error.decode("utf-8", errors="replace") if isinstance(pdfix_error, bytes) else str(pdfix_error)
+    )
+    return f"PDFix SDK error {pdfix_error_code}: {pdfix_error_text}"
+
+
 class ExpectedException(BaseException):
     def __init__(self, error_code: int) -> None:
         self.error_code: int = error_code
         self.message: str = ""
+        # Error text from PDFix SDK, logged on its own line after the message
+        self.sdk_error: str = ""
 
     def _add_note(self, note: str) -> None:
         self.message = note
@@ -86,13 +107,8 @@ class PdfixInitializeException(ExpectedException):
 class PdfixException(ExpectedException):
     def __init__(self, pdfix: Pdfix, error_code: int, message: str = "") -> None:
         super().__init__(error_code)
-        pdfix_error_code: int = pdfix.GetErrorType()
-        pdfix_error: str = str(pdfix.GetError())
-        self._add_note(
-            f"[{pdfix_error_code}] [{pdfix_error}]: {message}"
-            if len(message) > 0
-            else f"[{pdfix_error_code}] {pdfix_error}"
-        )
+        self._add_note(message.strip())
+        self.sdk_error = format_sdk_error(pdfix)
 
 
 class PdfixActivationException(PdfixException):
