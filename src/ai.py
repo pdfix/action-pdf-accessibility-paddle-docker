@@ -22,7 +22,7 @@ class PaddleXEngine:
         model: str = "PP-DocLayout-L",
         process_formula: bool = False,
         process_table: bool = False,
-        thresholds: dict = {},
+        thresholds: Optional[dict] = None,
     ) -> None:
         """
         Initializes Paddle Engine
@@ -39,7 +39,8 @@ class PaddleXEngine:
         self.model_name: str = model
         self.process_formula: bool = process_formula
         self.process_table: bool = process_table
-        self.threshold: dict = thresholds
+        # Copy, classes not in the model are removed below
+        self.threshold: dict = dict(thresholds or {})
 
         # Remove thresholds for classes that are not in model
         if model == "RT-DETR-H_layout_17cls":

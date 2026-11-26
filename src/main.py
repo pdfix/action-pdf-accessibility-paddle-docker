@@ -539,41 +539,57 @@ def formula_to_mathml(
     generateMathml.process_file()
 
 
+# Paddle layout class index of each threshold argument (order of the PP-DocLayout-L classes)
+THRESHOLD_ARGUMENTS: list[str] = [
+    "threshold_paragraph_title",
+    "threshold_image",
+    "threshold_text",
+    "threshold_number",
+    "threshold_abstract",
+    "threshold_content",
+    "threshold_figure_title",
+    "threshold_formula",
+    "threshold_table",
+    "threshold_table_title",
+    "threshold_reference",
+    "threshold_doc_title",
+    "threshold_footnote",
+    "threshold_header",
+    "threshold_algorithm",
+    "threshold_footer",
+    "threshold_seal",
+    "threshold_chart_title",
+    "threshold_chart",
+    "threshold_formula_number",
+    "threshold_header_image",
+    "threshold_footer_image",
+    "threshold_aside_text",
+]
+THRESHOLD_MIN: float = 0.05
+THRESHOLD_MAX: float = 0.95
+
+
 def create_threshold_dictionary(args) -> dict:
     """
-    Create a dictionary of threshold values from the provided arguments.
+    Create a dictionary of threshold values from the provided arguments. Values out of range are clamped and
+    the change is logged.
 
     Args:
         args (argparse.Namespace): Parsed command line arguments.
 
     Returns:
-        dict: Dictionary containing threshold values.
+        dict: Dictionary containing threshold values by Paddle layout class index.
     """
-    return {
-        0: clamp(float(args.threshold_paragraph_title), 0.05, 0.95),
-        1: clamp(float(args.threshold_image), 0.05, 0.95),
-        2: clamp(float(args.threshold_text), 0.05, 0.95),
-        3: clamp(float(args.threshold_number), 0.05, 0.95),
-        4: clamp(float(args.threshold_abstract), 0.05, 0.95),
-        5: clamp(float(args.threshold_content), 0.05, 0.95),
-        6: clamp(float(args.threshold_figure_title), 0.05, 0.95),
-        7: clamp(float(args.threshold_formula), 0.05, 0.95),
-        8: clamp(float(args.threshold_table), 0.05, 0.95),
-        9: clamp(float(args.threshold_table_title), 0.05, 0.95),
-        10: clamp(float(args.threshold_reference), 0.05, 0.95),
-        11: clamp(float(args.threshold_doc_title), 0.05, 0.95),
-        12: clamp(float(args.threshold_footnote), 0.05, 0.95),
-        13: clamp(float(args.threshold_header), 0.05, 0.95),
-        14: clamp(float(args.threshold_algorithm), 0.05, 0.95),
-        15: clamp(float(args.threshold_footer), 0.05, 0.95),
-        16: clamp(float(args.threshold_seal), 0.05, 0.95),
-        17: clamp(float(args.threshold_chart_title), 0.05, 0.95),
-        18: clamp(float(args.threshold_chart), 0.05, 0.95),
-        19: clamp(float(args.threshold_formula_number), 0.05, 0.95),
-        20: clamp(float(args.threshold_header_image), 0.05, 0.95),
-        21: clamp(float(args.threshold_footer_image), 0.05, 0.95),
-        22: clamp(float(args.threshold_aside_text), 0.05, 0.95),
-    }
+    thresholds: dict[int, float] = {}
+    for index, name in enumerate(THRESHOLD_ARGUMENTS):
+        value: float = float(getattr(args, name))
+        clamped: float = clamp(value, THRESHOLD_MIN, THRESHOLD_MAX)
+        if clamped != value:
+            logger.warning(
+                f"--{name} {value} is out of range {THRESHOLD_MIN} to {THRESHOLD_MAX}, using {clamped} instead."
+            )
+        thresholds[index] = clamped
+    return thresholds
 
 
 def main() -> None:
@@ -583,31 +599,7 @@ def main() -> None:
 
     subparsers = parser.add_subparsers(title="Commands", dest="command", required=True)
 
-    threshold_arguments = [
-        "threshold_paragraph_title",
-        "threshold_image",
-        "threshold_text",
-        "threshold_number",
-        "threshold_abstract",
-        "threshold_content",
-        "threshold_figure_title",
-        "threshold_formula",
-        "threshold_table",
-        "threshold_table_title",
-        "threshold_reference",
-        "threshold_doc_title",
-        "threshold_footnote",
-        "threshold_header",
-        "threshold_algorithm",
-        "threshold_footer",
-        "threshold_seal",
-        "threshold_chart_title",
-        "threshold_chart",
-        "threshold_formula_number",
-        "threshold_header_image",
-        "threshold_footer_image",
-        "threshold_aside_text",
-    ]
+    threshold_arguments = THRESHOLD_ARGUMENTS
 
     # Config subparser
     config_subparser = subparsers.add_parser(
