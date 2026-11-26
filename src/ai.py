@@ -9,6 +9,7 @@ from tqdm import tqdm
 from page_renderer import create_image_from_part_of_page
 from process_bboxes import PaddleXPostProcessingBBoxes
 from process_table import PaddleXPostProcessingTable
+from utils import add_mathml_metadata
 
 
 class PaddleXEngine:
@@ -191,7 +192,7 @@ class PaddleXEngine:
         try:
             # For most latex inputs creates mathml-3 representation
             # If it cannot convert it throws exception
-            return latex2mathml.converter.convert(latex_formula)
+            return add_mathml_metadata(latex2mathml.converter.convert(latex_formula), "Paddle")
         except Exception:
             pass
         return ""
