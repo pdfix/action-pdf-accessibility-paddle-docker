@@ -37,8 +37,6 @@ class PaddleXEngine:
                 default thresholds will be used.
         """
         self.model_name: str = model
-        model_path: str = Path(__file__).parent.joinpath(f"../models/{model}").resolve().as_posix()
-        self.model_dir: str = model_path
         self.process_formula: bool = process_formula
         self.process_table: bool = process_table
         self.threshold: dict = thresholds
@@ -47,6 +45,25 @@ class PaddleXEngine:
         if model == "RT-DETR-H_layout_17cls":
             for key in range(17, 23):
                 self.threshold.pop(key, None)
+
+        # Models are loaded with their first use and used for all pages, tables and formulas
+        self._models: dict[str, Any] = {}
+
+    def _model(self, model_name: str, **options: Any) -> Any:
+        """
+        Load a model from the models folder once and return it on every next call.
+
+        Args:
+            model_name (str): Name of the Paddle model (folder in models).
+            options (Any): Additional options for create_model (only used when loading).
+
+        Returns:
+            Loaded Paddle model.
+        """
+        if model_name not in self._models:
+            model_dir: str = Path(__file__).parent.joinpath(f"../models/{model_name}").resolve().as_posix()
+            self._models[model_name] = create_model(model_name=model_name, model_dir=model_dir, device="cpu", **options)
+        return self._models[model_name]
 
     def process_pdf_page_image_with_ai(
         self,
@@ -69,12 +86,7 @@ class PaddleXEngine:
         Returns:
             List of recognized elements with data about possition and type.
         """
-        model = create_model(
-            model_name=self.model_name,
-            model_dir=self.model_dir,
-            device="cpu",
-            threshold=self.threshold,
-        )
+        model = self._model(self.model_name, threshold=self.threshold)
 
         output: Generator[Any, Any, None] = model.predict(input=image, batch_size=1, layout_nms=True)
 
@@ -166,15 +178,8 @@ class PaddleXEngine:
         Returns:
             TBE, currently empty dictionary
         """
-        model_name: str = "PP-FormulaNet-L"
-        model_path: str = Path(__file__).parent.joinpath(f"../models/{model_name}").resolve().as_posix()
-
         # Formula model prediction
-        formula_model = create_model(
-            model_name=model_name,
-            model_dir=model_path,
-            device="cpu",
-        )
+        formula_model = self._model("PP-FormulaNet-L")
 
         output: Generator[Any, Any, None] = formula_model.predict(input=image, batch_size=1)
 
@@ -276,15 +281,8 @@ class PaddleXEngine:
         Returns:
             List of recognized cell elements with additional data
         """
-        model_name: str = "PP-LCNet_x1_0_table_cls"
-        model_path: str = Path(__file__).parent.joinpath(f"../models/{model_name}").resolve().as_posix()
-
         # Table classification model prediction
-        model = create_model(
-            model_name=model_name,
-            model_dir=model_path,
-            device="cpu",
-        )
+        model = self._model("PP-LCNet_x1_0_table_cls")
 
         output: Generator[Any, Any, None] = model.predict(input=image, batch_size=1)
 
@@ -295,15 +293,7 @@ class PaddleXEngine:
             table_cell_model_name: str = (
                 "RT-DETR-L_wired_table_cell_det" if is_wired else "RT-DETR-L_wireless_table_cell_det"
             )
-            table_cell_model_dir: str = (
-                Path(__file__).parent.parent.joinpath(f"models/{table_cell_model_name}").resolve().as_posix()
-            )
-
-            table_cell_model = create_model(
-                model_name=table_cell_model_name,
-                model_dir=table_cell_model_dir,
-                device="cpu",
-            )
+            table_cell_model = self._model(table_cell_model_name)
 
             cell_output = table_cell_model.predict(input=image, batch_size=1)
 
