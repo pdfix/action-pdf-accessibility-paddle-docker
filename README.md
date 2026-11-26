@@ -10,6 +10,7 @@ Uses PaddleX models for layout and formula recognition, running fully offline. F
   - [Commands](#commands)
   - [Arguments](#arguments)
   - [Params JSON](#params-json)
+  - [How it works](#how-it-works)
   - [Examples](#examples)
   - [Help \& support](#help--support)
   - [Licenses](#licenses)
@@ -43,7 +44,7 @@ docker run --rm -v "$(pwd)":/data -w /data pdfix/pdf-accessibility-paddle:latest
 | `--name` | no | String (PDFix account license name) | PDFix license name |
 | `--key` | no | String (PDFix account license key) | PDFix license key |
 | `--model` | no | `PP-DocLayout-L` or `RT-DETR-H_layout_17cls` (default: `PP-DocLayout-L`) | Layout model |
-| `--zoom` | no | Float, range **1.0–10.0** (default **2.0**) | Page render zoom |
+| `--zoom` | no | Float, range **1.0–4.0** (default **2.0**) | Page render zoom |
 | `--process_table` | no | Boolean string (default: `true`) | Process tables |
 
 ### `tag` only
@@ -54,7 +55,7 @@ docker run --rm -v "$(pwd)":/data -w /data pdfix/pdf-accessibility-paddle:latest
 
 ### Threshold options (`tag` / `template`)
 
-Each value is clamped to **0.05–0.95**.
+Each value is clamped to **0.05–0.95**; a clamped value is logged as a warning.
 
 | Option | Default | Type / expected value |
 |---|:---:|---|
@@ -89,7 +90,7 @@ Each value is clamped to **0.05–0.95**.
 | `--input`, `-i` | yes | Path to `.pdf` or supported image file | Input |
 | `--output`, `-o` | yes | Path to `.pdf` or `.xml` matching mode | Output |
 | `--params` | for PDF → PDF | Path to a `.json` file | Tag filter parameters (see [Params JSON](#params-json)) |
-| `--overwrite` | no | Boolean string (default: `false`) | PDF → PDF only: replace existing MathML associated file when its name contains `mathml-3` |
+| `--overwrite` | no | Boolean string (default: `false`) | PDF → PDF only: replace an existing MathML associated file whose file name contains `mathml-3` |
 | `--name` | no | String (PDFix license); use for PDF → PDF without watermarks | PDFix license name |
 | `--key` | no | String (PDFix license); use for PDF → PDF without watermarks | PDFix license key |
 
@@ -124,6 +125,32 @@ Example (`example/params_mathml.json`) — match `Formula` tags:
 ```
 
 Use `"value": ".*"` to match all tags.
+
+## How it works
+
+- **Existing tags are replaced.** `tag` removes the structure tree and all tags of the document, then tags it from the detected layout.
+- **Regions → tags:** text → `P`; every paragraph title → heading `H1` (Paddle gives no heading levels); document title → `Title`; figure, table and chart titles → `Caption`; images, charts and seals → `Figure`; tables keep rows, columns and spans (`--process_table`); formulas → `Formula`; headers and footers by their position.
+- **Formulas:** `tag` with `--process_formula` and `mathml` add the recognized formula as MathML 3 associated file (AF) to each `Formula` tag: file `mathml-3.xml`, AFRelationship `Supplement`, subtype `application/mathml+xml`, created by PDFix SDK like in PDFix Desktop. `Formula` tags get no alternate text. When no formula is recognized, the existing MathML is kept and a warning is logged. The image mode fails with error 31 only when nothing is recognized; a blank image can still give a formula such as `=`.
+- **Rendering:** pages (and formulas for `mathml`, at zoom 1) are rendered as JPG files `paddle_page_<n>.jpg` / `formula_<id>.jpg` into the working folder and deleted after they are read.
+- **Checks before processing:** output extension (16) and folder (13), input (14 / 15), zoom (17), params (12), then the license.
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| 0 | Success |
+| 1 | Unexpected error (`Failed to run the program:` + traceback) |
+| 10 | Invalid arguments or no command |
+| 11 | Invalid regex or template in `tag_names` |
+| 12 | Missing or invalid params file / parameters |
+| 13 | Output folder does not exist |
+| 14 | Input file is not an existing PDF |
+| 15 | Input file is not an existing image (JPG, JPEG, PNG or BMP) |
+| 16 | Wrong output extension (`.pdf` for `tag`, `.json` for `template`, `.pdf` or `.xml` for `mathml`) |
+| 17 | Zoom is not between 1.0 and 4.0 |
+| 20–29 | PDFix SDK errors (20 initialize, 21 activate, 22 authorize, 23 render, 24 open, 25 save, 26 tag, 27 template, 28 no tags, 29 load template); the SDK error is logged on its own line |
+| 30 | Image file cannot be read |
+| 31 | No formula was recognized in the image |
 
 ## Examples
 
