@@ -386,6 +386,150 @@ def check_zoom(zoom: float) -> None:
         raise ArgumentZoomException()
 
 
+# @KA:action pdfix_autotag_paddle
+# @KA:desc Tags a PDF document using Paddle AI models: every page is rendered as an image, the Paddle layout model finds
+# headings, paragraphs, lists, tables, images, formulas, headers and footers, and PDFix SDK tags the document from this
+# layout. Tables and formulas can be recognized in detail. The input file is not changed; the result is saved as the
+# output file.
+# @KA:context Use it to tag untagged PDFs, scanned PDFs with OCR text or PDFs with formulas and tables. Runs locally in
+# Docker and nothing leaves your computer; the first run downloads the image (about 5 GB) and takes longer.
+# @KA:param input_pdf
+# @KA:desc PDF document to process. It is only read, never changed.
+# @KA:problem "Input file must be an existing PDF document." (error 14)
+# @KA:solution The file shown in the message was not found or does not have the `.pdf` extension. Select an existing PDF
+# file.
+# @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 30" (error 24)
+# @KA:solution The file is not a valid PDF. Open and save it again in a PDF editor and run the action again.
+# @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 34" (error 24)
+# @KA:solution The PDF is password-protected. Remove the password and run the action again.
+# @KA:param output_pdf
+# @KA:desc Where the tagged PDF is saved, a file with the `.pdf` extension. The folder must already exist; an existing
+# file with the same name is overwritten. Both are checked before the document is processed.
+# @KA:problem "Output file must be PDF document." (error 16)
+# @KA:solution Select an output file with the `.pdf` extension.
+# @KA:problem "Output folder does not exist." (error 13)
+# @KA:solution Create the folder shown in the message or select another output file.
+# @KA:param model
+# @KA:desc Paddle layout model that finds the regions of each page. PP-DocLayout-L (default) knows 23 region types,
+# including charts, chart titles, seals, header and footer images and aside text. RT-DETR-H_layout_17cls knows 17 types;
+# the thresholds of the other 6 types are not used with it.
+# @KA:param zoom
+# @KA:desc Zoom level used to render pages for recognition, from 1.0 to 4.0 (default 2.0). A higher zoom can help with
+# small text and dense tables and takes longer.
+# @KA:problem "Zoom level must be between 1.0 and 4.0." (error 17)
+# @KA:solution Enter a zoom level from 1.0 to 4.0.
+# @KA:param process_formula
+# @KA:desc When on (default), every detected formula is recognized by the Paddle formula model and its MathML is
+# attached to the `Formula` tag as an associated file, like Set Formula MathML (Paddle) does. When off, formulas are
+# tagged without MathML.
+# @KA:param process_table
+# @KA:desc When on (default), every detected table is recognized by the Paddle table models (wired or wireless table,
+# then cells), so the table gets rows, columns and merged cells. When off, the table area is tagged without its cell
+# structure.
+# @KA:param threshold_paragraph_title
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.3) for detecting headings, tagged `H1`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_image
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting images, tagged `Figure`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_text
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting paragraphs, tagged `P`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_number
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting page numbers, artifacts. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_abstract
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting abstracts, tagged `P`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_content
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting tables of contents, tagged `P`. A lower
+# value finds more of them but also wrong ones.
+# @KA:param threshold_figure_title
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting figure titles, tagged `Caption`. A lower
+# value finds more of them but also wrong ones.
+# @KA:param threshold_formula
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.3) for detecting formulas, tagged `Formula`. A lower value
+# finds more of them but also wrong ones.
+# @KA:param threshold_table
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting tables, tagged `Table`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_table_title
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting table titles, tagged `Caption`. A lower
+# value finds more of them but also wrong ones.
+# @KA:param threshold_reference
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting references, tagged `P`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_doc_title
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting the document title, tagged `Title`. A lower
+# value finds more of them but also wrong ones.
+# @KA:param threshold_footnote
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting footnotes, tagged `P`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_header
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.3) for detecting page headers, artifacts. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_algorithm
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting algorithms, tagged `P`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_footer
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting page footers, artifacts. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_seal
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.3) for detecting seals and stamps, artifacts. A lower value
+# finds more of them but also wrong ones.
+# @KA:param threshold_chart_title
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting chart titles, tagged `Caption`. A lower
+# value finds more of them but also wrong ones. Used only with PP-DocLayout-L.
+# @KA:param threshold_chart
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting charts, tagged `Figure`. A lower value finds
+# more of them but also wrong ones. Used only with PP-DocLayout-L.
+# @KA:param threshold_formula_number
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting formula numbers, tagged `P`. A lower value
+# finds more of them but also wrong ones. Used only with PP-DocLayout-L.
+# @KA:param threshold_header_image
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.3) for detecting images in page headers, artifacts. A lower
+# value finds more of them but also wrong ones. Used only with PP-DocLayout-L.
+# @KA:param threshold_footer_image
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting images in page footers, artifacts. A lower
+# value finds more of them but also wrong ones. Used only with PP-DocLayout-L.
+# @KA:param threshold_aside_text
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting side notes, artifacts. A lower value finds
+# more of them but also wrong ones. Used only with PP-DocLayout-L.
+# @KA:logic Detection thresholds
+# @KA:desc Each region type has its own threshold. Lower it when regions of a type are missed, raise it when other
+# content is wrongly detected as that type. A value outside 0.05 to 0.95 is changed to the nearest limit and the log
+# shows a warning.
+# @KA:logic Existing tags
+# @KA:desc The whole document is tagged from scratch: the old structure tree and all old tags are removed first, nothing
+# of them is kept.
+# @KA:problem "Failed to tag PDF document." (error 26)
+# @KA:solution PDFix SDK could not tag the document with the detected layout. Try Create Layout Template JSON (Paddle),
+# check the template in the template editor and tag with AutoTag (PDFix).
+# @KA:logic How detected regions become tags
+# @KA:desc Text becomes `P`; every heading becomes `H1`, because Paddle gives no heading levels; the document title
+# becomes `Title`; figure, table and chart titles become `Caption`; images and charts become `Figure` without alternate
+# text; tables keep rows, columns and merged cells; formulas become `Formula` without alternate text; headers, footers,
+# page numbers, header and footer images, side notes and seals become artifacts.
+# @KA:problem All headings have level 1 (`H1`).
+# @KA:solution Paddle detects headings but not their levels. Set the heading levels in PDFix Desktop afterwards.
+# @KA:problem Figures or formulas have no alternate text.
+# @KA:solution The action does not describe images or formulas. Use Set Alternate Description (BLIP AI) for figures and
+# write the alternate text of formulas manually.
+# @KA:logic Page rendering
+# @KA:desc Each page is rendered into the JPG image `paddle_page_<n>.jpg` in the working folder with the selected
+# **Rendering Zoom Level** and deleted after it is read.
+# @KA:problem "Failed to render PDF Page into image." (error 23)
+# @KA:solution The page cannot be drawn by PDFix SDK. Open and save the PDF again in a PDF editor and run the action
+# again.
+# @KA:logic PDFix license
+# @KA:desc PDFix Desktop passes your PDFix license to the action automatically. Without a license the action runs in
+# trial mode, which adds watermarks and may redact random content in the output PDF.
+# @KA:problem The output PDF has watermarks or randomly redacted content.
+# @KA:solution Trial mode is active. Activate your PDFix license in PDFix Desktop and run the action again.
+# @KA:problem "Failed to authorize PDFix SDK account." and the next log line shows "PDFix SDK error 420" (error 22)
+# @KA:solution The license name or key is not valid. Check the license in PDFix Desktop settings.
+# @KA:problem "Failed to activate PDFix SDK account." and the next log line shows "PDFix SDK error 1205" (error 21)
+# @KA:solution The license key is not valid. Check the license in PDFix Desktop settings.
 def run_autotag_subcommand(args) -> None:
     check_output_file(args.output, (".pdf",), MESSAGE_ARG_OUTPUT_NOT_PDF)
     check_input_pdf(args.input)
@@ -435,6 +579,125 @@ def autotagging_pdf(
     autotag.process_file()
 
 
+# @KA:action pdfix_create_layout_template_json_paddle
+# @KA:desc Creates a PDFix layout template JSON from the page layout that the Paddle AI models find: headings,
+# paragraphs, tables with cells, images, formulas, headers and footers. The PDF is not changed and not tagged.
+# @KA:context Use it to check or edit the detected layout in the template editor before tagging, for example with
+# AutoTag (PDFix). Runs locally in Docker and nothing leaves your computer; the first run downloads the image (about 5
+# GB) and takes longer. The template is created in PDFix SDK trial mode, which does not affect the template.
+# @KA:param input_pdf
+# @KA:desc PDF document to process. It is only read, never changed.
+# @KA:problem "Input file must be an existing PDF document." (error 14)
+# @KA:solution The file shown in the message was not found or does not have the `.pdf` extension. Select an existing PDF
+# file.
+# @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 30" (error 24)
+# @KA:solution The file is not a valid PDF. Open and save it again in a PDF editor and run the action again.
+# @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 34" (error 24)
+# @KA:solution The PDF is password-protected. Remove the password and run the action again.
+# @KA:param output_json
+# @KA:desc Where the layout template is saved, a file with the `.json` extension. The folder must already exist; an
+# existing file with the same name is overwritten. Both are checked before the document is processed.
+# @KA:problem "Output file must be JSON file." (error 16)
+# @KA:solution Select an output file with the `.json` extension.
+# @KA:problem "Output folder does not exist." (error 13)
+# @KA:solution Create the folder shown in the message or select another output file.
+# @KA:param model
+# @KA:desc Paddle layout model that finds the regions of each page. PP-DocLayout-L (default) knows 23 region types,
+# including charts, chart titles, seals, header and footer images and aside text. RT-DETR-H_layout_17cls knows 17 types;
+# the thresholds of the other 6 types are not used with it.
+# @KA:param zoom
+# @KA:desc Zoom level used to render pages for recognition, from 1.0 to 4.0 (default 2.0). A higher zoom can help with
+# small text and dense tables and takes longer.
+# @KA:problem "Zoom level must be between 1.0 and 4.0." (error 17)
+# @KA:solution Enter a zoom level from 1.0 to 4.0.
+# @KA:param process_table
+# @KA:desc When on (default), every detected table is recognized by the Paddle table models (wired or wireless table,
+# then cells), so the table gets rows, columns and merged cells. When off, the table area is tagged without its cell
+# structure.
+# @KA:param threshold_paragraph_title
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.3) for detecting headings, tagged `H1`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_image
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting images, tagged `Figure`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_text
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting paragraphs, tagged `P`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_number
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting page numbers, artifacts. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_abstract
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting abstracts, tagged `P`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_content
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting tables of contents, tagged `P`. A lower
+# value finds more of them but also wrong ones.
+# @KA:param threshold_figure_title
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting figure titles, tagged `Caption`. A lower
+# value finds more of them but also wrong ones.
+# @KA:param threshold_formula
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.3) for detecting formulas, tagged `Formula`. A lower value
+# finds more of them but also wrong ones.
+# @KA:param threshold_table
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting tables, tagged `Table`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_table_title
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting table titles, tagged `Caption`. A lower
+# value finds more of them but also wrong ones.
+# @KA:param threshold_reference
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting references, tagged `P`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_doc_title
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting the document title, tagged `Title`. A lower
+# value finds more of them but also wrong ones.
+# @KA:param threshold_footnote
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting footnotes, tagged `P`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_header
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.3) for detecting page headers, artifacts. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_algorithm
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting algorithms, tagged `P`. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_footer
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting page footers, artifacts. A lower value finds
+# more of them but also wrong ones.
+# @KA:param threshold_seal
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.3) for detecting seals and stamps, artifacts. A lower value
+# finds more of them but also wrong ones.
+# @KA:param threshold_chart_title
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting chart titles, tagged `Caption`. A lower
+# value finds more of them but also wrong ones. Used only with PP-DocLayout-L.
+# @KA:param threshold_chart
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting charts, tagged `Figure`. A lower value finds
+# more of them but also wrong ones. Used only with PP-DocLayout-L.
+# @KA:param threshold_formula_number
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting formula numbers, tagged `P`. A lower value
+# finds more of them but also wrong ones. Used only with PP-DocLayout-L.
+# @KA:param threshold_header_image
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.3) for detecting images in page headers, artifacts. A lower
+# value finds more of them but also wrong ones. Used only with PP-DocLayout-L.
+# @KA:param threshold_footer_image
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting images in page footers, artifacts. A lower
+# value finds more of them but also wrong ones. Used only with PP-DocLayout-L.
+# @KA:param threshold_aside_text
+# @KA:desc Minimum confidence from 0.05 to 0.95 (default 0.5) for detecting side notes, artifacts. A lower value finds
+# more of them but also wrong ones. Used only with PP-DocLayout-L.
+# @KA:logic Detection thresholds
+# @KA:desc Each region type has its own threshold. Lower it when regions of a type are missed, raise it when other
+# content is wrongly detected as that type. A value outside 0.05 to 0.95 is changed to the nearest limit and the log
+# shows a warning.
+# @KA:logic Template content
+# @KA:desc The template has one `element_create` rule per page with the detected regions in PDF coordinates, and
+# metadata with the image version, the layout model and the zoom. Formulas are not recognized in the template.
+# @KA:problem "Failed to create template JSON." (error 27)
+# @KA:solution The template could not be created from the detected layout. Run the action again; if it fails again, send
+# the log to PDFix support.
+# @KA:logic How detected regions become tags
+# @KA:desc Text becomes `P`; every heading becomes `H1`, because Paddle gives no heading levels; the document title
+# becomes `Title`; figure, table and chart titles become `Caption`; images and charts become `Figure` without alternate
+# text; tables keep rows, columns and merged cells; formulas become `Formula` without alternate text; headers, footers,
+# page numbers, header and footer images, side notes and seals become artifacts.
 def run_template_subcommand(args) -> None:
     check_output_file(args.output, (".json",), MESSAGE_ARG_OUTPUT_NOT_JSON)
     check_input_pdf(args.input)
@@ -474,6 +737,91 @@ def create_template_json(
     template_creator.process_file()
 
 
+# @KA:action pdfix_generate_formula_mathml_paddle
+# @KA:desc Recognizes the formulas of a tagged PDF with the Paddle formula model and attaches the result as MathML 3 to
+# each selected tag as an associated file. The area of each tag is rendered as an image, recognized as LaTeX and
+# converted to MathML. The input file is not changed; the result is saved as the output file.
+# @KA:context Use it on a tagged PDF whose `Formula` tags need MathML, for example for PDF/UA-2 or for assistive
+# technology that reads MathML. Runs locally in Docker and nothing leaves your computer; the first run downloads the
+# image (about 5 GB) and takes longer.
+# @KA:param input_pdf
+# @KA:desc PDF document to process. It is only read, never changed.
+# @KA:problem "Input file must be an existing PDF document." (error 14)
+# @KA:solution The file shown in the message was not found or does not have the `.pdf` extension. Select an existing PDF
+# file.
+# @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 30" (error 24)
+# @KA:solution The file is not a valid PDF. Open and save it again in a PDF editor and run the action again.
+# @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 34" (error 24)
+# @KA:solution The PDF is password-protected. Remove the password and run the action again.
+# @KA:problem "PDF document has no tags." (error 28)
+# @KA:solution The PDF is not tagged. Tag it first, for example with AutoTag (Paddle), and run the action again.
+# @KA:param output_pdf
+# @KA:desc Where the PDF with MathML is saved, a file with the `.pdf` extension. The folder must already exist; an
+# existing file with the same name is overwritten. Both are checked before the document is processed.
+# @KA:problem "Output file must be PDF document or XML file." (error 16)
+# @KA:solution Select an output file with the `.pdf` extension.
+# @KA:problem "Output folder does not exist." (error 13)
+# @KA:solution Create the folder shown in the message or select another output file.
+# @KA:param overwrite
+# @KA:desc When off (default), tags that already have a MathML 3 associated file keep it. When on, it is replaced by the
+# new MathML.
+# @KA:param tag_names
+# @KA:desc Which tags get MathML: a regular expression of tag types (default `Formula`), or a template `tag_update` that
+# selects tags by their properties.
+# @KA:problem "Missing or invalid parameters." (error 12)
+# @KA:solution The parameters from PDFix Desktop could not be read or do not contain **Tags**. Select the tags again and
+# run the action again.
+# @KA:problem "Invalid regex or template. Please check the usage and try again." (error 11)
+# @KA:solution **Tags** is neither a regular expression nor a template. Enter a regular expression such as `Formula`.
+# @KA:problem "Failed to load template file." (error 29)
+# @KA:solution PDFix SDK cannot read the regular expression or template of **Tags**. Check it and run the action again.
+# @KA:logic MathML associated file
+# @KA:desc The MathML is attached like PDFix Desktop does: file `mathml-3.xml`, description "Presentation MathML
+# alternative for Formula", AFRelationship `Supplement`, type `application/mathml+xml`. Each tag is rendered at zoom 1
+# from its bounding box on its first page. When no formula is recognized, the tag keeps its MathML and the log shows a
+# warning.
+# @KA:problem A formula has no MathML and the log says that no formula was recognized or the bounding box is missing.
+# @KA:solution The formula model could not read the area of the tag, or the tag has no content on a page. Check that the
+# tag contains the formula and write the MathML manually if needed.
+# @KA:problem The MathML does not match the formula.
+# @KA:solution Formula recognition makes mistakes, mostly with handwritten, very small or complex formulas. Check the
+# MathML and correct it manually.
+# @KA:logic PDFix license
+# @KA:desc PDFix Desktop passes your PDFix license to the action automatically. Without a license the action runs in
+# trial mode, which adds watermarks and may redact random content in the output PDF.
+# @KA:problem The output PDF has watermarks or randomly redacted content.
+# @KA:solution Trial mode is active. Activate your PDFix license in PDFix Desktop and run the action again.
+# @KA:problem "Failed to authorize PDFix SDK account." and the next log line shows "PDFix SDK error 420" (error 22)
+# @KA:solution The license name or key is not valid. Check the license in PDFix Desktop settings.
+# @KA:problem "Failed to activate PDFix SDK account." and the next log line shows "PDFix SDK error 1205" (error 21)
+# @KA:solution The license key is not valid. Check the license in PDFix Desktop settings.
+# @KA:action pdfix_generate_formula_mathml_from_image_to_xml_paddle
+# @KA:desc Recognizes the formula in an image file with the Paddle formula model and saves it as MathML 3 in an XML
+# file.
+# @KA:context PDFix Desktop runs it for a selected `Formula` tag: the tag is rendered into an image, recognized, and the
+# MathML is attached to the tag. Runs locally in Docker and nothing leaves your computer; the first run downloads the
+# image (about 5 GB) and takes longer.
+# @KA:param input_jpg
+# @KA:desc Image of one formula (JPG; the action also accepts JPEG, PNG and BMP).
+# @KA:problem "Input file must be an existing image file (JPG, JPEG, PNG or BMP)." (error 15)
+# @KA:solution The file shown in the message was not found or is not an image of a supported type.
+# @KA:problem "Failed to read image file." (error 30)
+# @KA:solution The image is damaged or is not really an image. Save it again as JPG or PNG.
+# @KA:problem "No formula was recognized in the image." (error 31)
+# @KA:solution The formula model found nothing in the image. Use an image that shows only the formula. An almost empty
+# image can still give a formula such as `=`.
+# @KA:param output_xml
+# @KA:desc Where the MathML is saved, a file with the `.xml` extension. The folder must already exist; an existing file
+# with the same name is overwritten. Both are checked before the document is processed.
+# @KA:problem "Output file must be PDF document or XML file." (error 16)
+# @KA:solution Select an output file with the `.xml` extension.
+# @KA:problem "Output folder does not exist." (error 13)
+# @KA:solution Create the folder shown in the message or select another output file.
+# @KA:param zoom
+# @KA:desc Used by PDFix Desktop to render the selected tag into the image (default 2.0).
+# @KA:param overwrite
+# @KA:desc Used by PDFix Desktop: when on, an existing MathML 3 associated file of the selected tag is replaced; when
+# off (default), it is kept.
 def run_mathml_subcommand(args) -> None:
     output_extension: str = check_output_file(args.output, (".pdf", ".xml"), MESSAGE_ARG_OUTPUT_NOT_PDF_OR_XML)
     if output_extension == ".xml":
