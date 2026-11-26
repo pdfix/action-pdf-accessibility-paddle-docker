@@ -1,5 +1,5 @@
 import base64
-import tempfile
+import os
 from typing import Optional
 
 import cv2
@@ -24,15 +24,48 @@ from pdfixsdk import (
 from exceptions import PdfixFailedToRenderException
 
 
-def create_image_from_pdf_page(pdfix: Pdfix, pdf_page: PdfPage, page_view: PdfPageView) -> cv2.typing.MatLike:
+def save_and_read_image(pdfix: Pdfix, image: PsImage, image_name: str) -> cv2.typing.MatLike:
     """
-    Renders the PDF page into an opencv image of size 792x612.
+    Save the rendered image as JPG into the working folder, read it with OpenCV and delete the file.
+
+    Args:
+        pdfix (Pdfix): Pdfix SDK.
+        image (PsImage): Rendered image.
+        image_name (str): File name in the working folder, for example "paddle_page_1.jpg".
+
+    Returns:
+        Image as MatLike object.
+    """
+    file_stream: Optional[PsFileStream] = pdfix.CreateFileStream(image_name, kPsTruncate)
+    if file_stream is None:
+        raise PdfixFailedToRenderException(pdfix, "Unable to create file stream")
+    try:
+        try:
+            image_params: PdfImageParams = PdfImageParams()
+            image_params.format = kImageFormatJpg
+            image_params.quality = 100
+            if not image.SaveToStream(file_stream, image_params):
+                raise PdfixFailedToRenderException(pdfix, "Unable to save the image to the stream")
+        finally:
+            file_stream.Destroy()
+        return cv2.imread(image_name)
+    finally:
+        if os.path.exists(image_name):
+            os.remove(image_name)
+
+
+def create_image_from_pdf_page(
+    pdfix: Pdfix, pdf_page: PdfPage, page_view: PdfPageView, image_name: str
+) -> cv2.typing.MatLike:
+    """
+    Renders the PDF page into an opencv image.
 
     Args:
         pdfix (Pdfix): Pdfix SDK.
         pdf_page (PdfPage): The page to render.
         page_view (PdfPageView): The view of the PDF page used
             for coordinate conversion.
+        image_name (str): File name of the image in the working folder while it is read.
 
     Returns:
         Rendered page as MatLike object.
@@ -56,37 +89,12 @@ def create_image_from_pdf_page(pdfix: Pdfix, pdf_page: PdfPage, page_view: PdfPa
         if not pdf_page.DrawContent(render_params):
             raise PdfixFailedToRenderException(pdfix, "Unable to draw the content")
 
-        # Save the renderred image to a temporary file in JPG format
-        with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-            file_stream: Optional[PsFileStream] = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
-            if file_stream is None:
-                raise PdfixFailedToRenderException(pdfix, "Unable to create file stream")
-
-            try:
-                # Set image parameters (format and quality)
-                image_params: PdfImageParams = PdfImageParams()
-                image_params.format = kImageFormatJpg
-                image_params.quality = 100
-
-                # Save the image to the file stream
-                if not page_image.SaveToStream(file_stream, image_params):
-                    raise PdfixFailedToRenderException(pdfix, "Unable to save the image to the stream")
-
-            except Exception:
-                raise
-            finally:
-                # Clean up resources
-                file_stream.Destroy()
-
-            # Return the saved image as a NumPy array using OpenCV
-            return cv2.imread(temp_file.name)
+        # Image goes to the working folder while it is read, then it is deleted (like in other actions)
+        return save_and_read_image(pdfix, page_image, image_name)
     except Exception:
         raise
     finally:
         page_image.Destroy()
-
-    black_pixel: cv2.typing.MatLike = np.zeros((1, 1, 3), dtype=np.uint8)
-    return black_pixel
 
 
 def create_image_from_part_of_page(image: cv2.typing.MatLike, box: list, offset: int) -> cv2.typing.MatLike:
@@ -124,7 +132,9 @@ def convert_base64_image_to_matlike_image(base64_data: str) -> cv2.typing.MatLik
     return cv2.imdecode(numpy_array, cv2.IMREAD_COLOR)
 
 
-def render_element_to_image(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfRect, zoom: float) -> cv2.typing.MatLike:
+def render_element_to_image(
+    pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfRect, zoom: float, image_name: str
+) -> cv2.typing.MatLike:
     """
     Render element from document into opencv image.
 
@@ -134,6 +144,7 @@ def render_element_to_image(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfR
         page_num (int): The page number where element is located.
         bbox (PdfRect): The bounding box of element to render.
         zoom (float): The zoom level for rendering.
+        image_name (str): File name of the image in the working folder while it is read.
 
     Returns:
         The rendered element as MatLike object.
@@ -170,28 +181,8 @@ def render_element_to_image(pdfix: Pdfix, doc: PdfDoc, page_num: int, bbox: PdfR
                 if not page.DrawContent(render_parameters):
                     raise PdfixFailedToRenderException(pdfix, "Unable to draw the content")
 
-                with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-                    file_stream: Optional[PsFileStream] = pdfix.CreateFileStream(temp_file.name, kPsTruncate)
-                    if file_stream is None:
-                        raise PdfixFailedToRenderException(pdfix, "Unable to create file stream")
-
-                    try:
-                        # Set image parameters (format and quality)
-                        image_params: PdfImageParams = PdfImageParams()
-                        image_params.format = kImageFormatJpg
-                        image_params.quality = 100
-
-                        # Save the image to the file stream
-                        if not render_parameters.image.SaveToStream(file_stream, image_params):
-                            raise PdfixFailedToRenderException(pdfix, "Unable to save the image to the stream")
-
-                    except Exception:
-                        raise
-                    finally:
-                        file_stream.Destroy()
-
-                    # Return the saved image as a NumPy array using OpenCV
-                    return cv2.imread(temp_file.name)
+                # Image goes to the working folder while it is read, then it is deleted (like in other actions)
+                return save_and_read_image(pdfix, render_parameters.image, image_name)
             except Exception:
                 raise
             finally:

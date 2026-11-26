@@ -91,12 +91,6 @@ class PaddleXEngine:
         output: Generator[Any, Any, None] = model.predict(input=image, batch_size=1, layout_nms=True)
 
         for res in output:
-            output_name: str = f"{id}-page{page_number}.png"
-            output_path: str = Path(__file__).parent.joinpath(f"../output/{output_name}").resolve().as_posix()
-            res.save_to_img(save_path=output_path)
-
-            table_index: int = 0
-
             # How many tables and formulas we will process
             number_of_tables: int = len([box for box in res["boxes"] if box["label"] == "table"])
             number_of_formulas: int = len([box for box in res["boxes"] if box["label"] == "formula"])
@@ -126,14 +120,7 @@ class PaddleXEngine:
                             table_image: cv2.typing.MatLike = create_image_from_part_of_page(image, coordinate, 1)
 
                             # Process table
-                            output_file_name: str = f"{id}_{page_number}-table{table_index}.png"
-                            output_file_path: str = (
-                                Path(__file__).parent.joinpath(f"../output/{output_file_name}").resolve().as_posix()
-                            )
-                            table_index += 1
-                            table_dict: dict = self._process_table_image_with_ai_v2(
-                                table_image, coordinate, output_file_path
-                            )
+                            table_dict: dict = self._process_table_image_with_ai_v2(table_image, coordinate)
 
                             # Save as additional data to PaddleX result
                             box["custom"] = table_dict
@@ -267,16 +254,13 @@ class PaddleXEngine:
         # Return the modified XML as string
         return ET.tostring(root, encoding="unicode")
 
-    def _process_table_image_with_ai_v2(
-        self, image: cv2.typing.MatLike, coordinate: list, output_file_path: str
-    ) -> dict:
+    def _process_table_image_with_ai_v2(self, image: cv2.typing.MatLike, coordinate: list) -> dict:
         """
         Let AI do its magic for table image.
 
         Args:
             image (cv2.typing.MatLike): Rendered image of table.
             coordinate (list): Bounding box of table in rendered PDF page
-            output_file_path (string): Unique absolute file path.
 
         Returns:
             List of recognized cell elements with additional data
@@ -298,8 +282,6 @@ class PaddleXEngine:
             cell_output = table_cell_model.predict(input=image, batch_size=1)
 
             for cell_results in cell_output:
-                cell_results.save_to_img(save_path=output_file_path)
-
                 # We are processing 1 table so we are expecting just 1 result:
                 post_processing: PaddleXPostProcessingTable = PaddleXPostProcessingTable()
                 return post_processing.create_custom_result_from_paddlex_cell_result(cell_results, coordinate)

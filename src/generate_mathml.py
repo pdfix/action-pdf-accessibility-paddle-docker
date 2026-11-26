@@ -332,7 +332,9 @@ class GenerateMathmlInPdf:
             return
 
         # Create image
-        image: cv2.typing.MatLike = render_element_to_image(self.pdfix, self.doc, page_num, bbox, 1)
+        image: cv2.typing.MatLike = render_element_to_image(
+            self.pdfix, self.doc, page_num, bbox, 1, f"formula_{element_object_id}.jpg"
+        )
 
         # Recognize formula first, the existing MathML is changed only when there is a new one
         mathml_formula: str = self.ai.process_formula_image_with_ai(image)

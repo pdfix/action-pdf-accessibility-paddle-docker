@@ -173,7 +173,9 @@ class CreateTemplateJsonUsingPaddleXRecognition:
 
         try:
             # Render the page as an image
-            image: cv2.typing.MatLike = create_image_from_pdf_page(pdfix, page, page_view)
+            image: cv2.typing.MatLike = create_image_from_pdf_page(
+                pdfix, page, page_view, f"paddle_page_{page_number}.jpg"
+            )
             progress_bar.update(render_step_units)
 
             # Run layout model analysis and formula and table model analysis using the PaddleX engine

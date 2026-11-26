@@ -48,8 +48,7 @@ RUN font_path=/usr/paddlex/venv/lib/python3.12/site-packages/paddlex/utils/fonts
 
 
 # Create required folders
-RUN mkdir -p /usr/paddlex/output \
-    && mkdir -p /data
+RUN mkdir -p /data
 
 # Copy config and sources
 COPY config.json /usr/paddlex/

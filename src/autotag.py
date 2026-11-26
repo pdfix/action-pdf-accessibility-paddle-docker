@@ -1,4 +1,3 @@
-import json
 from pathlib import Path
 from typing import Optional
 
@@ -152,11 +151,6 @@ class AutotagUsingPaddleXRecognition:
             # Create template for whole document
             template_json_dict: dict = template_json_creator.create_json_dict_for_document(self.model, self.zoom)
 
-            # Save template to file
-            template_path: Path = Path(__file__).parent.joinpath(f"../output/{id}-template_json.json").resolve()
-            with open(template_path, "w") as file:
-                file.write(json.dumps(template_json_dict, indent=2))
-
             progress_bar.n = PROGRESS_FIRST_STEP + PROGRESS_SECOND_STEP + PROGRESS_THIRD_STEP
             progress_bar.set_description("Autotagging document")
             progress_bar.refresh()
@@ -214,7 +208,9 @@ class AutotagUsingPaddleXRecognition:
 
         try:
             # Render the page as an image
-            image: cv2.typing.MatLike = create_image_from_pdf_page(pdfix, page, page_view)
+            image: cv2.typing.MatLike = create_image_from_pdf_page(
+                pdfix, page, page_view, f"paddle_page_{page_number}.jpg"
+            )
             progress_bar.update(render_step_units)
 
             # Run layout model analysis and formula and table model analysis using the PaddleX engine
