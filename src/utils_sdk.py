@@ -6,17 +6,14 @@ from typing import Optional
 from pdfixsdk import (
     PdfDoc,
     Pdfix,
-    PdsArray,
-    PdsDictionary,
     PdsFileSpec,
-    PdsObject,
-    PdsStream,
     PdsStructElement,
     PdsStructTree,
     PsAccountAuthorization,
     PsStandardAuthorization,
 )
 
+from constants import MATH_ML_DESCRIPTION
 from exceptions import PdfixActivationException, PdfixAuthorizationException
 from logger import get_logger
 
@@ -81,7 +78,8 @@ def json_to_raw_data(json_dict: dict) -> tuple[ctypes.Array[ctypes.c_ubyte], int
     """
     json_str: str = json.dumps(json_dict)
     json_data: bytearray = bytearray(json_str.encode("utf-8"))
-    json_data_size: int = len(json_str)
+    # Size in bytes, not characters
+    json_data_size: int = len(json_data)
     json_data_raw: ctypes.Array[ctypes.c_ubyte] = (ctypes.c_ubyte * json_data_size).from_buffer(json_data)
     return json_data_raw, json_data_size
 
@@ -100,88 +98,36 @@ def bytearray_to_data(byte_array: bytearray) -> ctypes.Array[ctypes.c_ubyte]:
     return (ctypes.c_ubyte * size).from_buffer(byte_array)
 
 
-def set_associated_file_math_ml(pdfix: Pdfix, element: PdsStructElement, math_ml: str, math_ml_version: str) -> None:
+def set_associated_file_math_ml(element: PdsStructElement, math_ml: str, math_ml_version: str) -> bool:
     """
-    Set the MathML associated file for a structure element.
+    Attach MathML as associated file (AF) to a structure element, like PDFix Desktop does.
+
+    The file specification is created by PDFix SDK: file name "<version>.xml", AFRelationship Supplement,
+    embedded file of subtype application/mathml+xml.
 
     Args:
-        pdfix (Pdfix): PDFix SDK.
         element (PdsStructElement): The structure element to set the MathML for.
         math_ml (str): The MathML content to set.
-        math_ml_version (str): The MathML version to set.
+        math_ml_version (str): The MathML version, for example "mathml-3".
+
+    Returns:
+        True when the associated file was added.
     """
-    # create mathML object
     structure_tree: Optional[PdsStructTree] = element.GetStructTree()
-    if structure_tree is None:
-        logger.error("Failed to get structure tree from element")
-        return
-    document: Optional[PdfDoc] = structure_tree.GetDoc()
+    document: Optional[PdfDoc] = structure_tree.GetDoc() if structure_tree else None
     if document is None:
-        logger.error("Failed to get document from structure tree")
-        return
-    associated_file_data: Optional[PdsDictionary] = document.CreateDictObject(True)
-    if associated_file_data is None:
-        logger.error("Failed to create dictionary in document")
-        return
-    associated_file_data.PutName("Type", "Filespec")
-    associated_file_data.PutName("AFRelationshhip", "Supplement")
-    file_name: str = f"{math_ml_version}.xml"
-    associated_file_data.PutString("F", file_name)
-    associated_file_data.PutString("UF", file_name)
-    associated_file_data.PutString("Desc", math_ml_version)
+        logger.warning("Failed to get document of the structure element")
+        return False
 
-    raw_data: ctypes.Array[ctypes.c_ubyte] = bytearray_to_data(bytearray(math_ml.encode("utf-8")))
-    file_dictionary: Optional[PdsDictionary] = document.CreateDictObject(False)
-    if file_dictionary is None:
-        logger.error("Failed to create dictionary in document")
-        return
-    file_stream: Optional[PdsStream] = document.CreateStreamObject(True, file_dictionary, raw_data, len(math_ml))
-    if file_stream is None:
-        logger.error("Failed to create file stream object in document")
-        return
-
-    ef_dict: Optional[PdsDictionary] = associated_file_data.PutDict("EF")
-    if ef_dict is None:
-        logger.error("Failed to create dictionary in dictionary")
-        return
-    ef_dict.Put("F", file_stream)
-    ef_dict.Put("UF", file_stream)
-
-    add_associated_file(pdfix, element, associated_file_data)
-
-
-def add_associated_file(pdfix: Pdfix, element: PdsStructElement, associated_file_data: PdsDictionary) -> None:
-    """
-    Add an associated file to a structure element.
-
-    Args:
-        pdfix (Pdfix): PDFix SDK.
-        element (PdsStructElement): The structure element to add the associated file to.
-        associated_file_data (PdsDictionary): The associated file data to add.
-    """
-    element_obj: Optional[PdsObject] = element.GetObject()
-    if element_obj is None:
-        return
-    element_object: PdsDictionary = PdsDictionary(element_obj.obj)
-    associated_file_dictionary: Optional[PdsDictionary] = element_object.GetDictionary("AF")
-    if associated_file_dictionary:
-        # convert dict to an array
-        struct_tree: Optional[PdsStructTree] = element.GetStructTree()
-        if struct_tree is None:
-            return
-        document: Optional[PdfDoc] = struct_tree.GetDoc()
-        if document is None:
-            return
-        associated_file_array: Optional[PdsArray] = document.CreateArrayObject(False)
-        if associated_file_array:
-            cloned: Optional[PdsObject] = associated_file_dictionary.Clone(False)
-            if cloned is None:
-                return
-            associated_file_array.Put(0, cloned)
-            element_object.Put("AF", associated_file_array)
-
-    associated_file_array = element_object.GetArray("AF")
-    if associated_file_array is None:
-        associated_file_array = element_object.PutArray("AF")
-    if associated_file_array:
-        associated_file_array.Put(associated_file_array.GetNumObjects(), associated_file_data)
+    data: bytes = math_ml.encode("utf-8")
+    raw_data: ctypes.Array[ctypes.c_ubyte] = bytearray_to_data(bytearray(data))
+    file_spec: Optional[PdsFileSpec] = document.CreateFileSpec(
+        f"{math_ml_version}.xml", MATH_ML_DESCRIPTION, "Supplement", "application/mathml+xml", raw_data, len(data)
+    )
+    if file_spec is None:
+        logger.warning("Failed to create file specification for MathML")
+        return False
+    if not element.AddAssociatedFile(file_spec, 0):
+        logger.warning("Failed to add MathML associated file to the structure element")
+        return False
+    return True

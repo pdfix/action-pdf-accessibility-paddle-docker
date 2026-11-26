@@ -328,13 +328,17 @@ class GenerateMathmlInPdf:
         # Create image
         image: cv2.typing.MatLike = render_element_to_image(self.pdfix, self.doc, page_num, bbox, 1)
 
-        # Recognize formula
+        # Recognize formula first, the existing MathML is changed only when there is a new one
         mathml_formula: str = self.ai.process_formula_image_with_ai(image)
+        if not mathml_formula:
+            logger.warning(f"Skipping [{log_id}] Formula tag as no formula was recognized, MathML is not changed")
+            return
 
         # For overwrite, remove existing MathML associated files
         while af_index > -1:
             element.RemoveAssociatedFile(af_index)
             af_index = index_of_associated_file(element, MATH_ML_VERSION)
 
-        # Add new MathMLassociate file
-        set_associated_file_math_ml(self.pdfix, element, mathml_formula, MATH_ML_VERSION)
+        # Add new MathML associated file
+        if set_associated_file_math_ml(element, mathml_formula, MATH_ML_VERSION):
+            logger.info(f"MathML added to [{log_id}] on page {page_num + 1}")

@@ -332,7 +332,7 @@ class AutotagUsingPaddleXRecognition:
 
         formula: tuple[int, str] = formulas.pop(formula_index)
         if self._formula_afs_pdfix is not None:
-            set_associated_file_math_ml(self._formula_afs_pdfix, struct_element, formula[1], MATH_ML_VERSION)
+            set_associated_file_math_ml(struct_element, formula[1], MATH_ML_VERSION)
 
         return kEnumResultContinue
 
