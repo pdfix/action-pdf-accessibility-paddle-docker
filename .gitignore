@@ -31,3 +31,6 @@ models
 
 # Side products
 output
+
+# Local unit tests
+tests/
