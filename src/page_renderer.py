@@ -109,10 +109,13 @@ def create_image_from_part_of_page(image: cv2.typing.MatLike, box: list, offset:
     Returns:
         Cut image as MatLike object.
     """
-    min_x: int = int(box[0]) - offset
-    min_y: int = int(box[1]) - offset
-    max_x: int = int(box[2]) + offset
-    max_y: int = int(box[3]) + offset
+    # Keep the area inside the image: a negative index would cut from the other side (empty image)
+    height: int = image.shape[0]
+    width: int = image.shape[1]
+    min_x: int = max(0, int(box[0]) - offset)
+    min_y: int = max(0, int(box[1]) - offset)
+    max_x: int = min(width, int(box[2]) + offset)
+    max_y: int = min(height, int(box[3]) + offset)
     return image[min_y:max_y, min_x:max_x]
 
 
