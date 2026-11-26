@@ -26,6 +26,8 @@ from tqdm import tqdm
 from ai import PaddleXEngine
 from constants import MATH_ML_VERSION
 from exceptions import (
+    FormulaNotRecognizedException,
+    ImageNotReadableException,
     PdfixFailedToLoadTemplateException,
     PdfixFailedToOpenException,
     PdfixFailedToSaveException,
@@ -70,10 +72,14 @@ class GenerateMathmlFromImage:
         with tqdm(total=100) as progress_bar:
             progress_bar.set_description("Processing")
 
-            image: cv2.typing.MatLike = cv2.imread(self.input_path_str)
+            image: Optional[cv2.typing.MatLike] = cv2.imread(self.input_path_str)
+            if image is None:
+                raise ImageNotReadableException(self.input_path_str)
 
             ai: PaddleXEngine = PaddleXEngine()
             mathml_formula: str = ai.process_formula_image_with_ai(image)
+            if not mathml_formula:
+                raise FormulaNotRecognizedException(self.input_path_str)
 
             with open(self.output_path_str, "w", encoding="utf-8") as output_file:
                 output_file.write(mathml_formula)

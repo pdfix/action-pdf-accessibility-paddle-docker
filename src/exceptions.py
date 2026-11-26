@@ -20,6 +20,9 @@ EC_PDFIX_FAILED_TO_CREATE_TEMPLATE: int = 27
 EC_PDFIX_NO_TAGS: int = 28
 EC_PDFIX_FAILED_TO_LOAD_TEMPLATE: int = 29
 
+EC_IMAGE_NOT_READABLE: int = 30
+EC_FORMULA_NOT_RECOGNIZED: int = 31
+
 MESSAGE_ARG_GENERAL: str = "Failed to parse arguments. Please check the usage and try again."
 MESSAGE_ARG_INVALID_REGEX_OR_TEMPLATE: str = "Invalid regex or template. Please check the usage and try again."
 MESSAGE_ARG_PARAMS: str = "Missing or invalid parameters."
@@ -42,6 +45,9 @@ MESSAGE_PDFIX_FAILED_TO_TAG: str = "Failed to tag PDF document."
 MESSAGE_PDFIX_FAILED_TO_CREATE_TEMPLATE: str = "Failed to create template JSON."
 MESSAGE_PDFIX_NO_TAGS: str = "PDF document has no tags."
 MESSAGE_PDFIX_FAILED_TO_LOAD_TEMPLATE: str = "Failed to load template file."
+
+MESSAGE_IMAGE_NOT_READABLE: str = "Failed to read image file."
+MESSAGE_FORMULA_NOT_RECOGNIZED: str = "No formula was recognized in the image."
 
 
 def format_sdk_error(pdfix: Pdfix) -> str:
@@ -173,3 +179,15 @@ class PdfixNoTagsException(PdfixException):
 class PdfixFailedToLoadTemplateException(PdfixException):
     def __init__(self, pdfix: Pdfix, message: str = "") -> None:
         super().__init__(pdfix, EC_PDFIX_FAILED_TO_LOAD_TEMPLATE, f"{MESSAGE_PDFIX_FAILED_TO_LOAD_TEMPLATE} {message}")
+
+
+class ImageNotReadableException(ExpectedException):
+    def __init__(self, path: str) -> None:
+        super().__init__(EC_IMAGE_NOT_READABLE)
+        self._add_note(f"{MESSAGE_IMAGE_NOT_READABLE} {path}")
+
+
+class FormulaNotRecognizedException(ExpectedException):
+    def __init__(self, path: str) -> None:
+        super().__init__(EC_FORMULA_NOT_RECOGNIZED)
+        self._add_note(f"{MESSAGE_FORMULA_NOT_RECOGNIZED} {path}")
