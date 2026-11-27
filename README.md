@@ -107,7 +107,7 @@ Default tag filter when `--params` is omitted: `Formula`.
 
 `tag_names` is an ECMAScript regular expression matching tag names, or a template `tag_update` object.
 
-Example (`example/params_mathml.json`) — match `Formula` tags:
+Example (`examples/params_mathml.json`) — match `Formula` tags:
 
 ```json
 [
@@ -178,7 +178,7 @@ MathML for Formula tags in a PDF:
 ```bash
 docker run --rm -v "$(pwd)":/data -w /data pdfix/pdf-accessibility-paddle:latest \
   mathml --name "${LICENSE_NAME}" --key "${LICENSE_KEY}" \
-  -i /data/input.pdf -o /data/output.pdf --params /data/example/params_mathml.json
+  -i /data/input.pdf -o /data/output.pdf --params /data/examples/params_mathml.json
 ```
 
 MathML from one formula image:

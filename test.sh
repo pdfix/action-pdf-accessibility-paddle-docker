@@ -55,25 +55,25 @@ else
 fi
 
 info "Test #03: Run autotag"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE tag -i example/air_quality.pdf -o $TEMPORARY_DIRECTORY/air_quality-tagged.pdf > /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE tag -i examples/air_quality.pdf -o $TEMPORARY_DIRECTORY/air_quality-tagged.pdf > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/air_quality-tagged.pdf" ]; then
     success "passed"
 else
-    error "autotag failed on example/air_quality.pdf"
+    error "autotag failed on examples/air_quality.pdf"
     EXIT_STATUS=1
 fi
 
 info "Test #04: Run create template"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE template -i example/air_quality.pdf -o $TEMPORARY_DIRECTORY/air_quality.json > /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE template -i examples/air_quality.pdf -o $TEMPORARY_DIRECTORY/air_quality.json > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/air_quality.json" ]; then
     success "passed"
 else
-    error "create template failed on example/air_quality.pdf"
+    error "create template failed on examples/air_quality.pdf"
     EXIT_STATUS=1
 fi
 
 info "Test #05: Run mathml pdf->pdf"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE mathml -i $TEMPORARY_DIRECTORY/air_quality-tagged.pdf -o $TEMPORARY_DIRECTORY/air_quality-mathml.pdf --params example/params_mathml.json > /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE mathml -i $TEMPORARY_DIRECTORY/air_quality-tagged.pdf -o $TEMPORARY_DIRECTORY/air_quality-mathml.pdf --params examples/params_mathml.json > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/air_quality-mathml.pdf" ]; then
     success "passed"
 else
@@ -82,11 +82,11 @@ else
 fi
 
 info "Test #06: Run mathml img->xml"
-docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE mathml -i example/formula_example.jpg -o $TEMPORARY_DIRECTORY/formula_example.xml > /dev/null
+docker run --rm $PLATFORM -v $(pwd):/data -w /data $DOCKER_IMAGE mathml -i examples/formula_example.jpg -o $TEMPORARY_DIRECTORY/formula_example.xml > /dev/null
 if [ -f "$(pwd)/$TEMPORARY_DIRECTORY/formula_example.xml" ]; then
     success "passed"
 else
-    error "mathml img->xml failed on example/formula_example.jpg"
+    error "mathml img->xml failed on examples/formula_example.jpg"
     EXIT_STATUS=1
 fi
 
