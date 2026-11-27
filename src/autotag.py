@@ -34,6 +34,7 @@ from constants import (
     PROGRESS_FOURTH_STEP,
     PROGRESS_SECOND_STEP,
     PROGRESS_THIRD_STEP,
+    SDK_ERROR_INVALID_PASSWORD,
 )
 from exceptions import (
     PdfixFailedToOpenException,
@@ -41,6 +42,7 @@ from exceptions import (
     PdfixFailedToTagException,
     PdfixInitializeException,
     PdfixNoTagsException,
+    PdfPasswordException,
 )
 from page_renderer import create_image_from_pdf_page
 from template_json import TemplateJsonCreator
@@ -63,6 +65,7 @@ class AutotagUsingPaddleXRecognition:
         process_formula: bool,
         process_table: bool,
         thresholds: dict,
+        password: str = "",
     ) -> None:
         """
         Initialize class for tagging pdf.
@@ -77,6 +80,7 @@ class AutotagUsingPaddleXRecognition:
             process_formula (bool): Whether to process formulas.
             process_table (bool): Whether to process tables.
             thresholds (dict): Thresholds for layout detection.
+            password (str): Password of the PDF document, empty when it has none.
         """
         self.license_name: Optional[str] = license_name
         self.license_key: Optional[str] = license_key
@@ -87,6 +91,7 @@ class AutotagUsingPaddleXRecognition:
         self.process_formula: bool = process_formula
         self.process_table: bool = process_table
         self.thresholds: dict = thresholds
+        self.password: str = password
 
         self._formula_afs_pdfix: Optional[Pdfix] = None
         self._formula_afs_formulas: Optional[list[tuple[int, str]]] = None
@@ -112,8 +117,10 @@ class AutotagUsingPaddleXRecognition:
             authorize_sdk(pdfix, self.license_name, self.license_key)
 
             # Open the document
-            doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_path_str, "")
+            doc: Optional[PdfDoc] = pdfix.OpenDoc(self.input_path_str, self.password)
             if doc is None:
+                if pdfix.GetErrorType() == SDK_ERROR_INVALID_PASSWORD:
+                    raise PdfPasswordException(pdfix, self.input_path_str)
                 raise PdfixFailedToOpenException(pdfix, self.input_path_str)
 
             # Process images of each page

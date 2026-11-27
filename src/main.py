@@ -108,6 +108,10 @@ def set_arguments(
                 parser.add_argument(
                     "--output", "-o", type=str, required=required_output, help=f"The output {output_file_type} file."
                 )
+            case "password":
+                parser.add_argument(
+                    "--password", type=str, default="", help="Password to open a password-protected PDF document."
+                )
             case "params":
                 parser.add_argument(
                     "--params",
@@ -400,8 +404,9 @@ def check_zoom(zoom: float) -> None:
 # file.
 # @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 30" (error 24)
 # @KA:solution The file is not a valid PDF. Open and save it again in a PDF editor and run the action again.
-# @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 34" (error 24)
-# @KA:solution The PDF is password-protected. Remove the password and run the action again.
+# @KA:problem "PDF document is password-protected. Remove the password with another action first." (error 32)
+# @KA:solution The PDF needs a password to open. Remove the password with another action or in a PDF editor and run the
+# action again. From the command line, pass the password with `--password`.
 # @KA:param output_pdf
 # @KA:desc Where the tagged PDF is saved, a file with the `.pdf` extension. The folder must already exist; an existing
 # file with the same name is overwritten. Both are checked before the document is processed.
@@ -545,6 +550,7 @@ def run_autotag_subcommand(args) -> None:
         args.process_formula,
         args.process_table,
         thresholds,
+        args.password,
     )
 
 
@@ -558,6 +564,7 @@ def autotagging_pdf(
     process_formula: bool,
     process_table: bool,
     thresholds: dict,
+    password: str = "",
 ) -> None:
     """
     Autotagging PDF document with provided arguments
@@ -572,9 +579,19 @@ def autotagging_pdf(
         process_formula (bool): Whether to process formulas.
         process_table (bool): Whether to process tables.
         thresholds (dict): Thresholds for layout detection.
+        password (str): Password of the PDF document, empty when it has none.
     """
     autotag = AutotagUsingPaddleXRecognition(
-        license_name, license_key, input_path, output_path, model, zoom, process_formula, process_table, thresholds
+        license_name,
+        license_key,
+        input_path,
+        output_path,
+        model,
+        zoom,
+        process_formula,
+        process_table,
+        thresholds,
+        password,
     )
     autotag.process_file()
 
@@ -592,8 +609,9 @@ def autotagging_pdf(
 # file.
 # @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 30" (error 24)
 # @KA:solution The file is not a valid PDF. Open and save it again in a PDF editor and run the action again.
-# @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 34" (error 24)
-# @KA:solution The PDF is password-protected. Remove the password and run the action again.
+# @KA:problem "PDF document is password-protected. Remove the password with another action first." (error 32)
+# @KA:solution The PDF needs a password to open. Remove the password with another action or in a PDF editor and run the
+# action again. From the command line, pass the password with `--password`.
 # @KA:param output_json
 # @KA:desc Where the layout template is saved, a file with the `.json` extension. The folder must already exist; an
 # existing file with the same name is overwritten. Both are checked before the document is processed.
@@ -704,7 +722,15 @@ def run_template_subcommand(args) -> None:
     check_zoom(args.zoom)
     thresholds = create_threshold_dictionary(args)
     create_template_json(
-        args.name, args.key, args.input, args.output, args.model, args.zoom, args.process_table, thresholds
+        args.name,
+        args.key,
+        args.input,
+        args.output,
+        args.model,
+        args.zoom,
+        args.process_table,
+        thresholds,
+        args.password,
     )
 
 
@@ -717,6 +743,7 @@ def create_template_json(
     zoom: float,
     process_table: bool,
     thresholds: dict,
+    password: str = "",
 ) -> None:
     """
     Creating template json for PDF document using provided arguments
@@ -730,9 +757,10 @@ def create_template_json(
         zoom (float): Zoom level for rendering the page.
         process_table (bool): Whether to process tables.
         thresholds (dict): Thresholds for layout detection.
+        password (str): Password of the PDF document, empty when it has none.
     """
     template_creator = CreateTemplateJsonUsingPaddleXRecognition(
-        license_name, license_key, input_path, output_path, model, zoom, process_table, thresholds
+        license_name, license_key, input_path, output_path, model, zoom, process_table, thresholds, password
     )
     template_creator.process_file()
 
@@ -751,10 +779,11 @@ def create_template_json(
 # file.
 # @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 30" (error 24)
 # @KA:solution The file is not a valid PDF. Open and save it again in a PDF editor and run the action again.
-# @KA:problem "Failed to open PDF document." and the next log line shows "PDFix SDK error 34" (error 24)
-# @KA:solution The PDF is password-protected. Remove the password and run the action again.
 # @KA:problem "PDF document has no tags." (error 28)
 # @KA:solution The PDF is not tagged. Tag it first, for example with AutoTag (Paddle), and run the action again.
+# @KA:problem "PDF document is password-protected. Remove the password with another action first." (error 32)
+# @KA:solution The PDF needs a password to open. Remove the password with another action or in a PDF editor and run the
+# action again. From the command line, pass the password with `--password`.
 # @KA:param output_pdf
 # @KA:desc Where the PDF with MathML is saved, a file with the `.pdf` extension. The folder must already exist; an
 # existing file with the same name is overwritten. Both are checked before the document is processed.
@@ -836,9 +865,11 @@ def run_mathml_subcommand(args) -> None:
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".json") as template_file:
             with open(template_file.name, "w", encoding="utf-8") as template_file_write:
                 json.dump(tag_filter, template_file_write)
-            formula_to_mathml(args.name, args.key, args.input, args.output, Path(template_file.name), args.overwrite)
+            formula_to_mathml(
+                args.name, args.key, args.input, args.output, Path(template_file.name), args.overwrite, args.password
+            )
     else:
-        formula_to_mathml(args.name, args.key, args.input, args.output, tag_filter, args.overwrite)
+        formula_to_mathml(args.name, args.key, args.input, args.output, tag_filter, args.overwrite, args.password)
 
 
 def resolve_regex_template(params_path: Optional[str]) -> str | Path | dict:
@@ -871,6 +902,7 @@ def formula_to_mathml(
     output_path: str,
     regex_template: str | Path,
     overwrite: bool,
+    password: str = "",
 ) -> None:
     """
     Processing all formulas in PDF document and adding Associate Files to them.
@@ -882,8 +914,11 @@ def formula_to_mathml(
         output_path (str): Path to PDF document.
         regex_template (str | Path): Regex or path to template JSON for matching tags.
         overwrite (bool): Replace existing MathML associated files of the current version.
+        password (str): Password of the PDF document, empty when it has none.
     """
-    generateMathml = GenerateMathmlInPdf(license_name, license_key, input_path, output_path, regex_template, overwrite)
+    generateMathml = GenerateMathmlInPdf(
+        license_name, license_key, input_path, output_path, regex_template, overwrite, password
+    )
     generateMathml.process_file()
 
 
@@ -962,7 +997,17 @@ def main() -> None:
         "tag",
         help="Run AutoTag of PDF document.",
     )
-    tagging_arguments = ["name", "key", "input", "output", "model", "zoom", "process_formula", "process_table"]
+    tagging_arguments = [
+        "name",
+        "key",
+        "input",
+        "output",
+        "password",
+        "model",
+        "zoom",
+        "process_formula",
+        "process_table",
+    ]
     set_arguments(autotag_subparser, tagging_arguments + threshold_arguments, True, "PDF", "PDF")
     autotag_subparser.set_defaults(func=run_autotag_subcommand)
 
@@ -971,7 +1016,7 @@ def main() -> None:
         "template",
         help="Create layout template JSON.",
     )
-    template_arguments = ["name", "key", "input", "output", "model", "zoom", "process_table"]
+    template_arguments = ["name", "key", "input", "output", "password", "model", "zoom", "process_table"]
     set_arguments(template_subparser, template_arguments + threshold_arguments, True, "PDF", "JSON")
     template_subparser.set_defaults(func=run_template_subcommand)
 
@@ -982,7 +1027,11 @@ def main() -> None:
     mathml_help += f" Supported image files are: {SUPPORTED_IMAGE_EXT}."
     mathml_subparser = subparsers.add_parser("mathml", help=mathml_help)
     set_arguments(
-        mathml_subparser, ["name", "key", "input", "output", "params", "overwrite"], True, "PDF or IMG", "PDF or XML"
+        mathml_subparser,
+        ["name", "key", "input", "output", "password", "params", "overwrite"],
+        True,
+        "PDF or IMG",
+        "PDF or XML",
     )
     mathml_subparser.set_defaults(func=run_mathml_subcommand)
 

@@ -12,3 +12,4 @@ PROGRESS_FOURTH_STEP: int = 80  # Autotagging and saving document/data
 PROGRESS_SECOND_STEP: int = 900  # Run AI heavy workload (+ rendering + template conversion)
 PROGRESS_THIRD_STEP: int = 10  # Save template or prepare it for autotagging
 SUPPORTED_IMAGE_EXT: str = ".jpg .jpeg .png .bmp"
+SDK_ERROR_INVALID_PASSWORD: int = 34  # PDFix SDK error type of OpenDoc with a missing or wrong password

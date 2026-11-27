@@ -22,6 +22,7 @@ EC_PDFIX_FAILED_TO_LOAD_TEMPLATE: int = 29
 
 EC_IMAGE_NOT_READABLE: int = 30
 EC_FORMULA_NOT_RECOGNIZED: int = 31
+EC_PDF_PASSWORD: int = 32
 
 MESSAGE_ARG_GENERAL: str = "Failed to parse arguments. Please check the usage and try again."
 MESSAGE_ARG_INVALID_REGEX_OR_TEMPLATE: str = "Invalid regex or template. Please check the usage and try again."
@@ -48,6 +49,7 @@ MESSAGE_PDFIX_FAILED_TO_LOAD_TEMPLATE: str = "Failed to load template file."
 
 MESSAGE_IMAGE_NOT_READABLE: str = "Failed to read image file."
 MESSAGE_FORMULA_NOT_RECOGNIZED: str = "No formula was recognized in the image."
+MESSAGE_PDF_PASSWORD: str = "PDF document is password-protected. Remove the password with another action first."
 
 
 def format_sdk_error(pdfix: Pdfix) -> str:
@@ -191,3 +193,8 @@ class FormulaNotRecognizedException(ExpectedException):
     def __init__(self, path: str) -> None:
         super().__init__(EC_FORMULA_NOT_RECOGNIZED)
         self._add_note(f"{MESSAGE_FORMULA_NOT_RECOGNIZED} {path}")
+
+
+class PdfPasswordException(PdfixException):
+    def __init__(self, pdfix: Pdfix, pdf_path: str = "") -> None:
+        super().__init__(pdfix, EC_PDF_PASSWORD, f"{MESSAGE_PDF_PASSWORD} {pdf_path}")

@@ -24,7 +24,7 @@ from pdfixsdk import (
 from tqdm import tqdm
 
 from ai import PaddleXEngine
-from constants import MATH_ML_VERSION
+from constants import MATH_ML_VERSION, SDK_ERROR_INVALID_PASSWORD
 from exceptions import (
     FormulaNotRecognizedException,
     ImageNotReadableException,
@@ -33,6 +33,7 @@ from exceptions import (
     PdfixFailedToSaveException,
     PdfixInitializeException,
     PdfixNoTagsException,
+    PdfPasswordException,
 )
 from logger import get_logger
 from page_renderer import render_element_to_image
@@ -103,6 +104,7 @@ class GenerateMathmlInPdf:
         output_path: str,
         regex_template: str | Path,
         overwrite: bool,
+        password: str = "",
     ) -> None:
         """
         Initialize class for generating mathmls for formulas in pdf.
@@ -115,6 +117,7 @@ class GenerateMathmlInPdf:
             regex_template (str | Path): Regex or path to template JSON for matching tags.
             overwrite (bool): When False, skip formulas that already have a MathML associated
                 file for the current version. When True, replace matching associated files.
+            password (str): Password of the PDF document, empty when it has none.
         """
         self.license_name: Optional[str] = license_name
         self.license_key: Optional[str] = license_key
@@ -122,6 +125,7 @@ class GenerateMathmlInPdf:
         self.output_path_str: str = output_path
         self.regex_template: str | Path = regex_template
         self.overwrite: bool = overwrite
+        self.password: str = password
 
         self.pdfix: Optional[Pdfix] = None
         self.doc: Optional[PdfDoc] = None
@@ -144,8 +148,10 @@ class GenerateMathmlInPdf:
             authorize_sdk(self.pdfix, self.license_name, self.license_key)
 
             # Open the document
-            self.doc = self.pdfix.OpenDoc(self.input_path_str, "")
+            self.doc = self.pdfix.OpenDoc(self.input_path_str, self.password)
             if self.doc is None:
+                if self.pdfix.GetErrorType() == SDK_ERROR_INVALID_PASSWORD:
+                    raise PdfPasswordException(self.pdfix, self.input_path_str)
                 raise PdfixFailedToOpenException(self.pdfix, self.input_path_str)
 
             self.ai = PaddleXEngine()

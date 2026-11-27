@@ -42,6 +42,7 @@ docker run --rm -v "$(pwd)":/data -w /data pdfix/pdf-accessibility-paddle:latest
 |---|:---:|---|---|
 | `--input`, `-i` | yes | Path to an existing `.pdf` file | Input PDF |
 | `--output`, `-o` | yes | Path for `.pdf`/`.json` depending on command | Output file |
+| `--password` | no | String (default: empty) | Password to open a password-protected PDF |
 | `--name` | no | String (PDFix account license name) | PDFix license name |
 | `--key` | no | String (PDFix account license key) | PDFix license key |
 | `--model` | no | `PP-DocLayout-L` or `RT-DETR-H_layout_17cls` (default: `PP-DocLayout-L`) | Layout model |
@@ -90,6 +91,7 @@ Each value is clamped to **0.05–0.95**; a clamped value is logged as a warning
 |---|:---:|---|---|
 | `--input`, `-i` | yes | Path to `.pdf` or supported image file | Input |
 | `--output`, `-o` | yes | Path to `.pdf` or `.xml` matching mode | Output |
+| `--password` | no | String (default: empty) | Password to open a password-protected PDF |
 | `--params` | for PDF → PDF | Path to a `.json` file | Tag filter parameters (see [Params JSON](#params-json)) |
 | `--overwrite` | no | Boolean string (default: `false`) | PDF → PDF only: replace an existing MathML associated file whose file name contains `mathml-3` |
 | `--name` | no | String (PDFix license); use for PDF → PDF without watermarks | PDFix license name |
@@ -152,6 +154,7 @@ Use `"value": ".*"` to match all tags.
 | 20–29 | PDFix SDK errors (20 initialize, 21 activate, 22 authorize, 23 render, 24 open, 25 save, 26 tag, 27 template, 28 no tags, 29 load template); the SDK error is logged on its own line |
 | 30 | Image file cannot be read |
 | 31 | No formula was recognized in the image |
+| 32 | PDF is password-protected (remove the password, or pass it with `--password`) |
 
 ## Examples
 
