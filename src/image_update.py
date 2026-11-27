@@ -7,7 +7,8 @@ from typing import Any, Optional
 
 import requests
 
-from constants import CONFIG_FILE, DOCKER_IMAGE, DOCKER_NAMESPACE, DOCKER_REPOSITORY
+import constants
+from constants import DOCKER_IMAGE, DOCKER_NAMESPACE, DOCKER_REPOSITORY
 from logger import get_logger
 
 logger: logging.Logger = get_logger("app_logger")
@@ -44,18 +45,23 @@ class DockerImageContainerUpdateChecker:
 
     def _get_current_version(self) -> str:
         """
-        Read the current version from config.json.
+        Read the current version from config.json, or from constants.py in images without config.json (veraPDF).
+        Both are set by update_version.sh at release.
 
         Returns:
             The current version of the Docker image.
         """
-        config_path: Path = Path(__file__).parent.parent.joinpath(CONFIG_FILE).resolve()
+        version: Optional[str] = getattr(constants, "VERSION", None)
+        if version:
+            return version
+        config_file: str = getattr(constants, "CONFIG_FILE", "config.json")
+        config_path: Path = Path(__file__).parent.parent.joinpath(config_file).resolve()
         try:
-            with open(config_path, "r", encoding="utf-8") as f:
-                config: Any = json.load(f)
+            with open(config_path, "r", encoding="utf-8") as file:
+                config: Any = json.load(file)
                 return config.get("version", "unknown")
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            logger.error(f"Error reading {CONFIG_FILE}: {e}")
+            logger.error(f"Error reading {config_file}: {e}")
             return "unknown"
 
     def _get_latest_docker_version(self) -> Optional[str]:
@@ -97,8 +103,8 @@ class DockerImageContainerUpdateChecker:
         """
         if os.path.exists(self.LAST_CHECK_FILE):
             try:
-                with open(self.LAST_CHECK_FILE, "r", encoding="utf-8") as f:
-                    data: Any = json.load(f)
+                with open(self.LAST_CHECK_FILE, "r", encoding="utf-8") as file:
+                    data: Any = json.load(file)
                     last_date: str = data.get("last_check", "")
                     return last_date == datetime.now().strftime("%Y-%m-%d")
             except (json.JSONDecodeError, FileNotFoundError) as e:
@@ -110,7 +116,7 @@ class DockerImageContainerUpdateChecker:
         Store today's date in last_check.json.
         """
         try:
-            with open(self.LAST_CHECK_FILE, "w", encoding="utf-8") as f:
-                json.dump({"last_check": datetime.now().strftime("%Y-%m-%d")}, f)
+            with open(self.LAST_CHECK_FILE, "w", encoding="utf-8") as file:
+                json.dump({"last_check": datetime.now().strftime("%Y-%m-%d")}, file)
         except Exception as e:
             logger.error(f"Error writing {self.LAST_CHECK_FILE}: {e}")
