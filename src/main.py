@@ -523,7 +523,7 @@ def check_zoom(zoom: float) -> None:
 # @KA:logic Page rendering
 # @KA:desc Each page is rendered into the JPG image `paddle_page_<n>.jpg` in the working folder with the selected
 # **Rendering Zoom Level** and deleted after it is read.
-# @KA:problem "Failed to render PDF Page into image." (error 23)
+# @KA:problem "Failed to render PDF page into image." (error 23)
 # @KA:solution The page cannot be drawn by PDFix SDK. Open and save the PDF again in a PDF editor and run the action
 # again.
 # @KA:logic PDFix license
