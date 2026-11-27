@@ -23,13 +23,35 @@ TEMPORARY_FILE="tmp_versions.json"
 if jq -e --arg name "$DOCKER_NAME" '.["pdfix-actions"][] | select(.name == $name)' "$VERSIONS_JSON" > /dev/null; then
     echo "App found in version history."
 
-    # Step 2: Update action version and date
+    # Step 2: Update action version, date and image size
     TODAY=$(date +%Y-%m-%d)
-    jq --indent 4 --arg name "$DOCKER_NAME" --arg version "$TAG" --arg date "$TODAY" \
-        '(.["pdfix-actions"][] | select(.name == $name)) |= . + {
+
+    # Image size from Docker Hub (download size, same format as src/update_sizes.py of pdfix-version-updates).
+    # Only docker actions; the tag was pushed a moment ago, so try a few times and keep the old size without it.
+    SIZE=""
+    TYPE=$(jq -r --arg name "$DOCKER_NAME" '.["pdfix-actions"][] | select(.name == $name) | .type' "$VERSIONS_JSON")
+    if [ "$TYPE" = "docker" ]; then
+        for attempt in 1 2 3 4 5; do
+            SIZE_BYTES=$(curl -fsS "https://hub.docker.com/v2/repositories/${DOCKER_NAME}/tags/${TAG}" | jq -r '.full_size // empty' || true)
+            if [ -n "$SIZE_BYTES" ] && [ "$SIZE_BYTES" -gt 0 ]; then
+                SIZE=$(awk -v b="$SIZE_BYTES" 'BEGIN { g = b / 1073741824; if (g >= 1) printf "%.1f GB", g; else printf "%.1f MB", b / 1048576 }')
+                break
+            fi
+            echo "Docker Hub has no size for ${DOCKER_NAME}:${TAG} yet (attempt ${attempt}), waiting..."
+            sleep 10
+        done
+        if [ -n "$SIZE" ]; then
+            echo "Image size: $SIZE"
+        else
+            echo "WARNING: image size not found on Docker Hub, keeping the old size."
+        fi
+    fi
+
+    jq --indent 4 --arg name "$DOCKER_NAME" --arg version "$TAG" --arg date "$TODAY" --arg size "$SIZE" \
+        '(.["pdfix-actions"][] | select(.name == $name)) |= (. + {
             "version": $version,
             "release_date": $date
-        }' $VERSIONS_JSON > $TEMPORARY_FILE
+        } + (if $size != "" then {"size": $size} else {} end))' $VERSIONS_JSON > $TEMPORARY_FILE
     mv $TEMPORARY_FILE $VERSIONS_JSON
 
     # Step 3: Commit and push changes
